@@ -1,5 +1,5 @@
 SHORTSWORD = {
-	View : require('./View'),
-	Scene : require('./Scene'),
-	Object3D : require('./Object3D'),
+	View : require('./view/View'),
+	Scene : require('./model/Scene'),
+	Object3D : require('./model/Object3D'),
 }

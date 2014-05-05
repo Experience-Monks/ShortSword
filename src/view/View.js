@@ -1,7 +1,7 @@
 function View(props) {
 	props = props || {};
-	this.canvasID = props.canvasID || "ShortSwordCanvas";
-	this.scene = props.scene || new (require('./Scene'))();
+	this.scene = props.scene || new (require('../model/Scene'))();
+	this.renderer = props.renderer || new (require('./renderers/Canvas'))(this, props.renderer);
 	this.autoStartRender = props.autoStartRender !== undefined ? props.autoStartRender : true;
 
 	console.log('View initialized!');
@@ -12,7 +12,7 @@ function View(props) {
 
 View.prototype = {
 	render: function () {
-		console.log('View render');
+		this.renderer.render(this.scene);
 	}
 };
 

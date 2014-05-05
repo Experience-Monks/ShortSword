@@ -1,6 +1,10 @@
 function RenderManager(view) {
 	this.view = view;
 	this.renderLoop = this.renderLoop.bind(this);
+
+	console.log('RenderManager initialized!');
+
+
 };
 
 RenderManager.prototype = {

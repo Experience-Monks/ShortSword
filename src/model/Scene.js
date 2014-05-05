@@ -1,12 +1,10 @@
 var Object3D = require('./Object3D');
-function Scene(props) {
-	props = props || {};
-
+function Scene() {
 	Object3D.call( this );
 
 	console.log('Scene initialized!');
 	
-	this.test();
+	//this.test();
 }
 
 Scene.prototype = Object.create(Object3D.prototype);
