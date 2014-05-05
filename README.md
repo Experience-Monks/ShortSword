@@ -2,10 +2,9 @@ ShortSword
 ==========
 
 ShortSword is a canvas-based realtime animation engine for voxels and effects.
+Written in javascript, using npm and grunt
 
 ###Development###
-
-This library is built using npm and grunt
 
 To develop and test, run ```grunt```
 
@@ -20,3 +19,7 @@ Development is example-driven. When adding a feature, create a basic, clear, con
 Run ```grunt build```
 
 This will browserify the library into ```dist/```
+
+###Usage###
+
+```dist/ShortSword.js``` is the engine module. Simply include it in your page and follow the code in any of the ```examples/``` folder to get started.
