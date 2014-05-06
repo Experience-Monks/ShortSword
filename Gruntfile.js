@@ -42,7 +42,8 @@ module.exports = function(grunt) {
         },
         tasks: ['copy:examples'],
         files: [
-          '<%= config.src %>}/**/*.{js},examples/**/*.{html}'
+          '<%= config.src %>}/**/*.{js}',
+          'examples/**/*.{js,html}'
         ]
       }
     },
