@@ -41,7 +41,17 @@ View.prototype = {
 		}
 	},
 	setDOMMode: function(mode) {
-
+		var style = this.canvas.style;
+		switch(mode) {
+			case DOMMode.FULLSCREEN:
+				style.position = "fixed";
+				style.left = "0px";
+				style.top = "0px";
+				style.width = window.innerWidth;
+				style.height = window.innerHeight;
+				break;
+			default:
+		}
 	}
 };
 
