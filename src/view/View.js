@@ -41,7 +41,7 @@ View.prototype = {
 		}
 	},
 	setDOMMode: function(mode) {
-		
+
 	}
 };
 
