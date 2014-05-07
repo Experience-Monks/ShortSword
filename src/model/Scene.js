@@ -1,16 +1,17 @@
 var Object3D = require('./Object3D');
+/**
+ * The basic root Object3D to build a scene
+ */
 function Scene() {
 	Object3D.call( this );
 
 	console.log('Scene initialized!');
-	
-	//this.test();
+
 }
 
+/**
+ * Scene extends Object3D
+ */
 Scene.prototype = Object.create(Object3D.prototype);
-
-Scene.prototype.test = function() {
-	console.log("SCENE TEST!!!!");
-}
 
 module.exports = Scene;
