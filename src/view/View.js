@@ -1,4 +1,6 @@
 var DOMMode = require('./DOMMode');
+var EventUtils = require('../utils/Events');
+var signals = require('../vendor/signals');
 /**
  * View is the viewport canvas and the renderer
  * @param {Object} props an object of properties to override default dehaviours
@@ -8,28 +10,50 @@ function View(props) {
 
 	props = props || {};
 	this.scene = props.scene || new (require('../model/Scene'))();
-	this.renderer = props.renderer || new (require('./renderers/Canvas'))(this, props.renderer);
+	if(props.camera) {
+		this.camera = props.camera;
+	} else {
+		this.camera = new (require('../model/Camera3D'))();
+		this.scene.add(this.camera);
+		this.camera.position.z = 200;
+		this.camera.position.y = 100;
+		this.camera.lookAt(this.scene.position);
+	}
 	this.autoStartRender = props.autoStartRender !== undefined ? props.autoStartRender : true;
 	this.canvasID = props.canvasID || "ShortSwordCanvas";
 	this.domMode = props.domMode || DOMMode.FULLSCREEN;
 	
 	//use provided canvas or make your own
 	this.canvas = document.getElementById(this.canvasID) || this.createCanvas();
+	this.renderer = props.renderer || new (require('./renderers/Canvas'))(this.canvas, props.renderer);
 
 	console.log('View initialized!');
 
 	this.renderManager = new(require('./RenderManager'))(this);
 	this.setDOMMode(this.domMode);
 	if(this.autoStartRender) this.renderManager.start();
+	this.setupResizing();
 }
 
 View.prototype = {
+	setupResizing: function() {
+		this.onResize = new signals.Signal();
+		this.setSize = this.setSize.bind(this);
+		EventUtils.addEvent(window, "resize", function(event) {
+			console.log(event);
+			this.onResize.dispatch(window.innerWidth, window.innerHeight);
+		}.bind(this));
+		this.onResize.add(this.setSize);
+		this.onResize.add(this.renderer.setSize);
+		this.setSize(window.innerWidth, window.innerHeight);
+
+	},
 	/**
 	 * Renders the scene to the canvas using the renderer
 	 * @return {[type]} [description]
 	 */
 	render: function () {
-		this.renderer.render(this.scene);
+		this.renderer.render(this.scene, this.camera);
 	},
 
 	/**
@@ -39,6 +63,8 @@ View.prototype = {
 	createCanvas: function() {
 		var canvas = document.createElement("canvas");
 		canvas.id = this.canvasID;
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
 		this.addCanvasToDOMBody(canvas);
 		return canvas;
 	},
@@ -75,6 +101,14 @@ View.prototype = {
 				break;
 			default:
 		}
+	},
+
+	setSize: function(w, h) {
+		this.canvas.width = w;
+		this.canvas.height = h;
+		this.canvas.style.width = w;
+		this.canvas.style.height = h;
+		this.camera.setAspect(w/h);
 	}
 };
 

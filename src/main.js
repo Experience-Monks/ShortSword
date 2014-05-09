@@ -12,5 +12,11 @@
 SHORTSWORD = {
 	View : require('./view/View'),
 	Scene : require('./model/Scene'),
+	BlendMesh : require('./model/BlendMesh'),
+	Mesh : require('./model/Mesh'),
 	Object3D : require('./model/Object3D'),
+	Camera3D : require('./model/Camera3D'),
+	Loader : require('./loader/Loader'),
+	ColorUtils : require('./utils/Color'),
+	TestFactory : require('./utils/TestFactory')
 }

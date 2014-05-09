@@ -382,8 +382,6 @@ Object3D.prototype = {
 		object.quaternion.copy( this.quaternion );
 		object.scale.copy( this.scale );
 
-		object.renderDepth = this.renderDepth;
-
 		object.rotationAutoUpdate = this.rotationAutoUpdate;
 
 		object.matrix.copy( this.matrix );
@@ -393,13 +391,6 @@ Object3D.prototype = {
 		object.matrixWorldNeedsUpdate = this.matrixWorldNeedsUpdate;
 
 		object.visible = this.visible;
-
-		object.castShadow = this.castShadow;
-		object.receiveShadow = this.receiveShadow;
-
-		object.frustumCulled = this.frustumCulled;
-
-		object.userData = JSON.parse( JSON.stringify( this.userData ) );
 
 		if ( recursive === true ) {
 

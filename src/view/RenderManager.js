@@ -1,9 +1,14 @@
+var signals = require('../vendor/signals');
+
 /**
  * Manages render timing, pause and unpause
  * @param {View} view the view to manage
  */
 function RenderManager(view) {
 	this.view = view;
+	this.skipFrames = 0;
+	this.skipFramesCounter = 0;
+	this.onEnterFrame = new signals.Signal();
 	this.renderLoop = this.renderLoop.bind(this);
 
 	console.log('RenderManager initialized!');
@@ -20,7 +25,13 @@ RenderManager.prototype = {
 	 * the repeating renderLoop calls itself with requestAnimationFrame to act as the render timer
 	 */
 	renderLoop : function() {
-		this.view.render();
+		if(this.skipFramesCounter < this.skipFrames) {
+			this.skipFramesCounter++;
+		} else {
+			this.onEnterFrame.dispatch();
+			this.view.render();
+			this.skipFramesCounter = 0;
+		}
 		if(!this._requestStop) requestAnimationFrame(this.renderLoop);
 	},
 
