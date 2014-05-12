@@ -19,6 +19,7 @@ SHORTSWORD = {
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
 	TestFactory : require('./utils/TestFactory'),
+	FPS : require('./utils/FPS'),
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
