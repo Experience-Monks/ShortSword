@@ -11,13 +11,15 @@ function Geometry(props) {
 	console.log('Geometry initialized!');
 }
 
-Geometry.prototype.clone = function() {
-	vertices = [];
-	for (var i = 0; i < this.vertices.length; i++) {
-		vertices[i] = this.vertices[i].clone();
-	};
-	return new Geometry({
-		vertices: vertices
-	});
+Geometry.prototype = {
+	clone: function() {
+		vertices = [];
+		for (var i = 0; i < this.vertices.length; i++) {
+			vertices[i] = this.vertices[i].clone();
+		};
+		return new Geometry({
+			vertices: vertices
+		});
+	}
 };
 module.exports = Geometry;
