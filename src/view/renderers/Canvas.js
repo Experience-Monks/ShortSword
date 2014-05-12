@@ -75,9 +75,9 @@ CanvasRenderer.prototype.render = function(scene, camera) {
 	this.viewProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
 
 	this.renderObjectToBuffer(scene, camera);
-	this.applyEffectsToBuffer();
 	this.imageData.data.set(this.bufferView8uint);
 	this.context.putImageData(this.imageData, 0, 0);
+	this.applyEffectsToBuffer();
 };
 
 CanvasRenderer.prototype.renderObjectToBuffer = function() {
@@ -114,10 +114,14 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 	}
 }();
 
+CanvasRenderer.prototype.addEffect = function(effect) {
+	this.effects.push(effect);
+};
+
 CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 	for (var i = 0; i < this.effects.length; i++) {
-		this.effects[i].apply(this.imageData);
+		this.effects[i].apply(this.context, this.screenWidth, this.screenHeight);
 	};
-}
+};
 
 module.exports = CanvasRenderer;

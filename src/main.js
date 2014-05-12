@@ -18,5 +18,9 @@ SHORTSWORD = {
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
-	TestFactory : require('./utils/TestFactory')
+	TestFactory : require('./utils/TestFactory'),
+	effects: {
+		GlitchOffset : require('./view/effects/GlitchOffset'),
+		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
+	}
 }

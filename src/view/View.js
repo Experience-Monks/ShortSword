@@ -15,8 +15,8 @@ function View(props) {
 	} else {
 		this.camera = new (require('../model/Camera3D'))();
 		this.scene.add(this.camera);
-		this.camera.position.z = 200;
-		this.camera.position.y = 100;
+		this.camera.position.z = 150;
+		this.camera.position.y = 60;
 		this.camera.lookAt(this.scene.position);
 	}
 	this.autoStartRender = props.autoStartRender !== undefined ? props.autoStartRender : true;
