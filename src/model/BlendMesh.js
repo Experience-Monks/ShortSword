@@ -1,13 +1,16 @@
 var Mesh = require('./Mesh');
+var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
 
 function BlendMesh(geometry1, geometry2, material) {
-	this.geometry1 = geometry1;
-	this.geometry2 = geometry2;
-	this.blend = 0;
-	Mesh.call( this, geometry1.clone(), material);
 	this.attributeList = ["vertices"];
+	GeometryUtils.pairGeometry(geometry1, geometry2, this.attributeList);
+	this.geometry1 = GeometryUtils.octTreeSort(geometry1);
+	this.geometry2 = GeometryUtils.octTreeSort(geometry2);
+	var geometry = geometry1.clone();
+	this.blend = 0;
+	Mesh.call( this, geometry, material);
 
 	console.log('BlendMesh initialized!');
 }
@@ -24,21 +27,14 @@ BlendMesh.prototype.updateGeometry = function() {
 		var attribute = this.geometry[attributeName];
 		var attribute1 = this.geometry1[attributeName];
 		var attribute2 = this.geometry2[attributeName];
-		var t1 = attribute1.length;
-		var t2 = attribute2.length;
-		var t = t1 > t2 ? t1 : t2;
-		if (attribute.length < t) {
-			for (var i = attribute.length; i < t; i++) {
-				attribute[i] = new THREE.Vector3();
-			};
-		}
+		var t = attribute1.length;
 		var temp = new THREE.Vector3();
 		for (var i = 0; i < t; i++) {
 			attribute[i].copy(
-				attribute1[i%t1]
+				attribute1[i]
 			).add(
-				temp.copy(attribute2[i%t2]).sub(
-					attribute1[i%t1]
+				temp.copy(attribute2[i]).sub(
+					attribute1[i]
 				).multiplyScalar(blend)
 			)
 		};
