@@ -1,4 +1,96 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var GeometryOBJParser = require('./parsers/GeometryOBJ');
+function Loader() {
+	console.log('Loader initialized!');
+}
+
+Loader.prototype = {
+	queue: [],
+	current: undefined,
+	loadGeometryOBJ:function (url, callback) {
+		this.load(url, callback, GeometryOBJParser);
+	},
+	load: function (url, callback, parser) {
+		this.queue.push({
+			url: url,
+			callback: callback,
+			parser: GeometryOBJParser
+		});
+		this.next();
+	},
+	next: function() {
+		if(this.queue.length == 0) return;
+		this.current = this.queue.shift();
+		this.requestFile(this.current);
+	},
+	requestFile: function(item) {
+	    var xmlhttp;
+	    if (window.XMLHttpRequest) {
+	        // code for IE7+, Firefox, Chrome, Opera, Safari
+	        xmlhttp = new XMLHttpRequest();
+	    } else {
+	        // code for IE6, IE5
+	        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	    }
+
+	    xmlhttp.onreadystatechange = function() {
+	        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+	            item.callback(item.parser.parse(xmlhttp.responseText));
+	            this.next();
+	        }
+	    }.bind(this);
+
+	    xmlhttp.open("GET", item.url, true);
+	    xmlhttp.send();
+	}
+};
+
+module.exports = new Loader();
+},{"./parsers/GeometryOBJ":2}],2:[function(require,module,exports){
+var Geometry = require('../../model/Geometry');
+
+function GeometryOBJParser() {
+	console.log('GeometryOBJParser initialized!');
+}
+
+GeometryOBJParser.prototype = {
+	parse: function(data) {
+		var dataLines = data.split('\n');
+		var vertices = [];
+		for (var i = dataLines.length - 1; i >= 0; i--) {
+			if(dataLines[i].indexOf("v ") == 0) {
+				var vertData = dataLines[i].split(" ");
+				vertices.push(new THREE.Vector3(
+						parseFloat(vertData[2]),
+						parseFloat(vertData[3]),
+						parseFloat(vertData[4])
+					)
+				);
+			}
+		};
+
+		var jump = 100;
+		var totalSamples = 0;
+		var centroid = new THREE.Vector3();
+		for (var i = 0; i < vertices.length; i+=jump) {
+			totalSamples++;
+			centroid.add(vertices[i]);
+		};
+		centroid.multiplyScalar(1/totalSamples);
+		console.log("recentered", centroid);
+		for (var i = vertices.length - 1; i >= 0; i--) {
+			vertices[i].x -= centroid.x;
+			vertices[i].y -= centroid.y;
+			vertices[i].z -= centroid.z;
+		};
+		return new Geometry({
+			vertices:vertices
+		});
+	}
+};
+
+module.exports = new GeometryOBJParser();
+},{"../../model/Geometry":6}],3:[function(require,module,exports){
 /**
  * ShortSword is a library for rendering realtime animated voxels to a canvas.
  * Supports standard canvas element.
@@ -13,51 +105,578 @@
 SHORTSWORD = {
 	View : require('./view/View'),
 	Scene : require('./model/Scene'),
+	BlendMesh : require('./model/BlendMesh'),
+	Mesh : require('./model/Mesh'),
 	Object3D : require('./model/Object3D'),
+	Camera3D : require('./model/Camera3D'),
+	Loader : require('./loader/Loader'),
+	ColorUtils : require('./utils/Color'),
+	TestFactory : require('./utils/TestFactory'),
+	FPS : require('./utils/FPS'),
+	effects: {
+		GlitchOffset : require('./view/effects/GlitchOffset'),
+		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
+	}
 }
-},{"./model/Object3D":2,"./model/Scene":3,"./view/View":7}],2:[function(require,module,exports){
+},{"./loader/Loader":1,"./model/BlendMesh":4,"./model/Camera3D":5,"./model/Mesh":7,"./model/Object3D":8,"./model/Scene":9,"./utils/Color":11,"./utils/FPS":13,"./utils/TestFactory":15,"./view/View":20,"./view/effects/GlitchOffset":21,"./view/effects/GlitchOffsetSmearBlock":22}],4:[function(require,module,exports){
+var Mesh = require('./Mesh');
+var GeometryUtils = require('../utils/Geometry');
+require('../vendor/three');
+var VoxelGradientMaterial = require('./materials/VoxelGradient');
+
+function BlendMesh(geometry1, geometry2, material) {
+	this.attributeList = ["vertices"];
+	GeometryUtils.pairGeometry(geometry1, geometry2, this.attributeList);
+	this.geometry1 = GeometryUtils.octTreeSort(geometry1);
+	this.geometry2 = GeometryUtils.octTreeSort(geometry2);
+	var geometry = geometry1.clone();
+	this.blend = 0;
+	Mesh.call( this, geometry, material);
+
+	console.log('BlendMesh initialized!');
+}
+
+/**
+ * BlendMesh extends Object3D
+ */
+BlendMesh.prototype = Object.create(Mesh.prototype);
+
+BlendMesh.prototype.updateGeometry = function() {
+	var blend = this.blend;
+	for (var i = 0; i < this.attributeList.length; i++) {
+		var attributeName = this.attributeList[i];
+		var attribute = this.geometry[attributeName];
+		var attribute1 = this.geometry1[attributeName];
+		var attribute2 = this.geometry2[attributeName];
+		var t = attribute1.length;
+		var temp = new THREE.Vector3();
+		for (var i = 0; i < t; i++) {
+			attribute[i].copy(
+				attribute1[i]
+			).add(
+				temp.copy(attribute2[i]).sub(
+					attribute1[i]
+				).multiplyScalar(blend)
+			)
+		};
+	}
+};
+
+module.exports = BlendMesh;
+
+},{"../utils/Geometry":14,"../vendor/three":17,"./Mesh":7,"./materials/VoxelGradient":10}],5:[function(require,module,exports){
+var Object3D = require('./Object3D');
+require('../vendor/three');
+/**
+ * A camera to render a scene from
+ * @param {Object} props an object of properties to override default dehaviours
+ */
+function Camera3D(props) {
+	Object3D.call( this );
+	props = props || {};
+	this.fov = props.fov !== undefined ? fov : 50;
+	this.aspect = props.aspect !== undefined ? aspect : 1;
+	this.near = props.near !== undefined ? near : 0.1;
+	this.far = props.far !== undefined ? far : 2000;
+
+	this.matrixWorldInverse = new THREE.Matrix4();
+
+	this.projectionMatrix = new THREE.Matrix4();
+	this.projectionMatrixInverse = new THREE.Matrix4();
+
+	this.updateProjectionMatrix();
+
+	console.log('Camera3D initialized!');
+}
+
+/**
+ * Camera3D extends Object3D
+ */
+Camera3D.prototype = Object.create(Object3D.prototype);
+
+Camera3D.prototype.setLens = function ( focalLength, frameHeight ) {
+
+	if ( frameHeight === undefined ) frameHeight = 24;
+
+	this.fov = 2 * THREE.Math.radToDeg( Math.atan( frameHeight / ( focalLength * 2 ) ) );
+	this.updateProjectionMatrix();
+}
+
+Camera3D.prototype.updateProjectionMatrix = function () {
+
+	this.projectionMatrix.makePerspective( this.fov, this.aspect, this.near, this.far );
+
+};
+
+Camera3D.prototype.setAspect = function(aspect) {
+	this.aspect = aspect;
+	this.updateProjectionMatrix();
+}
+
+module.exports = Camera3D;
+
+},{"../vendor/three":17,"./Object3D":8}],6:[function(require,module,exports){
+require('../vendor/three');
+/**
+ * geometry is a collection of buffers
+ * vertices, edges, faces, indexes, etc
+ */
+function Geometry(props) {
+	props = props || {};
+
+	this.vertices = props.vertices || [];
+	
+	console.log('Geometry initialized!');
+}
+
+Geometry.prototype = {
+	clone: function() {
+		vertices = [];
+		for (var i = 0; i < this.vertices.length; i++) {
+			vertices[i] = this.vertices[i].clone();
+		};
+		return new Geometry({
+			vertices: vertices
+		});
+	}
+};
+module.exports = Geometry;
+
+},{"../vendor/three":17}],7:[function(require,module,exports){
+var Object3D = require('./Object3D');
+require('../vendor/three');
+var VoxelGradientMaterial = require('./materials/VoxelGradient');
+
+function Mesh(geometry, material) {
+	Object3D.call( this );
+	this.geometry = geometry;
+	this.material = material || new VoxelGradientMaterial();
+
+	console.log('Mesh initialized!');
+}
+
+/**
+ * Mesh extends Object3D
+ */
+Mesh.prototype = Object.create(Object3D.prototype);
+
+module.exports = Mesh;
+
+},{"../vendor/three":17,"./Object3D":8,"./materials/VoxelGradient":10}],8:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
  * Acts as base for other objects
- * @param {Object} props an object of properties to override default dehaviours
  */
-function Object3D(props) {
-	props = props || {};
+function Object3D() {
 	console.log('Object3D initialized!');
+
+	this.children = [];
+	this.parent = undefined;
+
+	this.up = new THREE.Vector3( 0, 1, 0 );
+
+	this.position = new THREE.Vector3();
+	this._rotation = new THREE.Euler();
+	this._quaternion = new THREE.Quaternion();
+	this.scale = new THREE.Vector3( 1, 1, 1 );
+
+	// keep rotation and quaternion in sync
+
+	this._rotation._quaternion = this.quaternion;
+	this._quaternion._euler = this.rotation;
+
+	this.rotationAutoUpdate = true;
+
+	this.matrix = new THREE.Matrix4();
+	this.matrixWorld = new THREE.Matrix4();
+
+	this.matrixAutoUpdate = true;
+	this.matrixWorldNeedsUpdate = true;
+
+	this.visible = true;
+
 }
 
 Object3D.prototype = {
-	/**
-	 * Array of children of this object
-	 * @type {Array}
-	 */
-	children : [],
 
-	/**
-	 * parent of this object
-	 * @type {[type]}
-	 */
-	parent : null,
+	get rotation () { 
+		return this._rotation; 
+	},
 
-	/**
-	 * The Matrix represention the position rotation and scale relative to the parent
-	 * @type {Matrix3D}
-	 */
-	matrix : new THREE.Matrix4(),
+	set rotation ( value ) {
+		
+		this._rotation = value;
+		this._rotation._quaternion = this._quaternion;
+		this._quaternion._euler = this._rotation;
+		this._rotation._updateQuaternion();
+		
+	},
 
-	/**
-	 * add a child object to this object
-	 * @param {Object3D} object the child
-	 */
-	add : function (object) {
-		console.log('object added');
+	get quaternion () { 
+		return this._quaternion; 
+	},
+	
+	set quaternion ( value ) {
+		
+		this._quaternion = value;
+		this._quaternion._euler = this._rotation;
+		this._rotation._quaternion = this._quaternion;
+		this._quaternion._updateEuler();
+		
+	},
+
+	applyMatrix: function () {
+
+		var m1 = new THREE.Matrix4();
+
+		return function ( matrix ) {
+
+			this.matrix.multiplyMatrices( matrix, this.matrix );
+
+			this.position.setFromMatrixPosition( this.matrix );
+
+			this.scale.setFromMatrixScale( this.matrix );
+
+			m1.extractRotation( this.matrix );
+
+			this.quaternion.setFromRotationMatrix( m1 );
+
+		}
+
+	}(),
+
+	setRotationFromAxisAngle: function ( axis, angle ) {
+
+		// assumes axis is normalized
+
+		this.quaternion.setFromAxisAngle( axis, angle );
+
+	},
+
+	setRotationFromEuler: function ( euler ) {
+
+		this.quaternion.setFromEuler( euler, true );
+
+	},
+
+	setRotationFromMatrix: function ( m ) {
+
+		// assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+
+		this.quaternion.setFromRotationMatrix( m );
+
+	},
+
+	setRotationFromQuaternion: function ( q ) {
+
+		// assumes q is normalized
+
+		this.quaternion.copy( q );
+
+	},
+
+	rotateOnAxis: function() {
+
+		// rotate object on axis in object space
+		// axis is assumed to be normalized
+
+		var q1 = new THREE.Quaternion();
+
+		return function ( axis, angle ) {
+
+			q1.setFromAxisAngle( axis, angle );
+
+			this.quaternion.multiply( q1 );
+
+			return this;
+
+		}
+
+	}(),
+
+	rotateX: function () {
+
+		var v1 = new THREE.Vector3( 1, 0, 0 );
+
+		return function ( angle ) {
+
+			return this.rotateOnAxis( v1, angle );
+
+		};
+
+	}(),
+
+	rotateY: function () {
+
+		var v1 = new THREE.Vector3( 0, 1, 0 );
+
+		return function ( angle ) {
+
+			return this.rotateOnAxis( v1, angle );
+
+		};
+
+	}(),
+
+	rotateZ: function () {
+
+		var v1 = new THREE.Vector3( 0, 0, 1 );
+
+		return function ( angle ) {
+
+			return this.rotateOnAxis( v1, angle );
+
+		};
+
+	}(),
+
+	translateOnAxis: function () {
+
+		// translate object by distance along axis in object space
+		// axis is assumed to be normalized
+
+		var v1 = new THREE.Vector3();
+
+		return function ( axis, distance ) {
+
+			v1.copy( axis );
+
+			v1.applyQuaternion( this.quaternion );
+
+			this.position.add( v1.multiplyScalar( distance ) );
+
+			return this;
+
+		}
+
+	}(),
+
+	translate: function ( distance, axis ) {
+
+		console.warn( 'DEPRECATED: Object3D\'s .translate() has been removed. Use .translateOnAxis( axis, distance ) instead. Note args have been changed.' );
+		return this.translateOnAxis( axis, distance );
+
+	},
+
+	translateX: function () {
+
+		var v1 = new THREE.Vector3( 1, 0, 0 );
+
+		return function ( distance ) {
+
+			return this.translateOnAxis( v1, distance );
+
+		};
+
+	}(),
+
+	translateY: function () {
+
+		var v1 = new THREE.Vector3( 0, 1, 0 );
+
+		return function ( distance ) {
+
+			return this.translateOnAxis( v1, distance );
+
+		};
+
+	}(),
+
+	translateZ: function () {
+
+		var v1 = new THREE.Vector3( 0, 0, 1 );
+
+		return function ( distance ) {
+
+			return this.translateOnAxis( v1, distance );
+
+		};
+
+	}(),
+
+	localToWorld: function ( vector ) {
+
+		return vector.applyMatrix4( this.matrixWorld );
+
+	},
+
+	worldToLocal: function () {
+
+		var m1 = new THREE.Matrix4();
+
+		return function ( vector ) {
+
+			return vector.applyMatrix4( m1.getInverse( this.matrixWorld ) );
+
+		};
+
+	}(),
+
+	lookAt: function () {
+
+		// This routine does not support objects with rotated and/or translated parent(s)
+
+		var m1 = new THREE.Matrix4();
+
+		return function ( vector ) {
+
+			m1.lookAt( vector, this.position, this.up );
+
+			this.quaternion.setFromRotationMatrix( m1 );
+
+		};
+
+	}(),
+
+	add: function ( object ) {
+
+		if ( object === this ) {
+
+			console.warn( 'Object3D.add: An object can\'t be added as a child of itself.' );
+			return;
+
+		}
+
+		if ( object instanceof Object3D ) {
+
+			if ( object.parent !== undefined ) {
+
+				object.parent.remove( object );
+
+			}
+
+			object.parent = this;
+
+			this.children.push( object );
+
+		}
+
+	},
+
+	remove: function ( object ) {
+
+		var index = this.children.indexOf( object );
+
+		if ( index !== - 1 ) {
+
+			object.parent = undefined;
+
+			this.children.splice( index, 1 );
+
+		}
+
+	},
+
+	traverse: function ( callback ) {
+
+		callback( this );
+
+		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+
+			this.children[ i ].traverse( callback );
+
+		}
+
+	},
+
+	getDescendants: function ( array ) {
+
+		if ( array === undefined ) array = [];
+
+		Array.prototype.push.apply( array, this.children );
+
+		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+
+			this.children[ i ].getDescendants( array );
+
+		}
+
+		return array;
+
+	},
+
+	updateMatrix: function () {
+
+		this.matrix.compose( this.position, this.quaternion, this.scale );
+
+		this.matrixWorldNeedsUpdate = true;
+
+	},
+
+	updateMatrixWorld: function ( force ) {
+
+		if ( this.matrixAutoUpdate === true ) this.updateMatrix();
+
+		if ( this.matrixWorldNeedsUpdate === true || force === true ) {
+
+			if ( this.parent === undefined ) {
+
+				this.matrixWorld.copy( this.matrix );
+
+			} else {
+
+				this.matrixWorld.multiplyMatrices( this.parent.matrixWorld, this.matrix );
+
+			}
+
+			this.matrixWorldNeedsUpdate = false;
+
+			force = true;
+
+		}
+
+		// update children
+
+		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+
+			this.children[ i ].updateMatrixWorld( force );
+
+		}
+
+	},
+
+	clone: function ( object, recursive ) {
+
+		if ( object === undefined ) object = new Object3D();
+		if ( recursive === undefined ) recursive = true;
+
+		object.up.copy( this.up );
+
+		object.position.copy( this.position );
+		object.quaternion.copy( this.quaternion );
+		object.scale.copy( this.scale );
+
+		object.rotationAutoUpdate = this.rotationAutoUpdate;
+
+		object.matrix.copy( this.matrix );
+		object.matrixWorld.copy( this.matrixWorld );
+
+		object.matrixAutoUpdate = this.matrixAutoUpdate;
+		object.matrixWorldNeedsUpdate = this.matrixWorldNeedsUpdate;
+
+		object.visible = this.visible;
+
+		if ( recursive === true ) {
+
+			for ( var i = 0; i < this.children.length; i ++ ) {
+
+				var child = this.children[ i ];
+				object.add( child.clone() );
+
+			}
+
+		}
+
+		return object;
+
 	}
+
 };
 
 module.exports = Object3D;
 
-},{"../vendor/three":4}],3:[function(require,module,exports){
+},{"../vendor/three":17}],9:[function(require,module,exports){
 var Object3D = require('./Object3D');
 /**
  * The basic root Object3D to build a scene
@@ -76,7 +695,610 @@ Scene.prototype = Object.create(Object3D.prototype);
 
 module.exports = Scene;
 
-},{"./Object3D":2}],4:[function(require,module,exports){
+},{"./Object3D":8}],10:[function(require,module,exports){
+var ColorUtils = require('../../utils/Color');
+
+function VoxelGradientMaterial(props) {
+	props = props || {};
+	this.size = props.size || 1;
+
+	this.vertices = props.vertices || [];
+	
+	console.log('VoxelGradientMaterial initialized!');
+}
+
+VoxelGradientMaterial.prototype = {
+	init: function(context, clearColor) {
+
+		if(this.initd || this.clearColor == clearColor) return;
+		this.clearColor = clearColor;
+
+		var a = 255;
+		var r = 255;
+		var g = 255;
+		var b = 255;
+		this.pixelColor = (a << 24) | (b << 16) | (g <<  8) | r;
+
+		var gradientSteps = 10;
+		this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
+		this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
+		for (var i = 0; i < gradientSteps; i++) {
+			this.gradientBufferView32uint[i] = ColorUtils.lerp(this.clearColor, this.pixelColor, (i+1)/gradientSteps);
+			console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
+		};
+
+		this.initd = true;
+	},
+
+	drawToBuffer: function(buffer, index, z) {
+		gradient = this.gradientBufferView32uint;
+		switch(buffer[index]){
+			case this.clearColor: buffer[index] = gradient[0]; break;
+			case gradient[0]: buffer[index] = gradient[1]; break;
+			case gradient[1]: buffer[index] = gradient[2]; break;
+			case gradient[2]: buffer[index] = gradient[3]; break;
+			case gradient[3]: buffer[index] = gradient[4]; break;
+			case gradient[4]: buffer[index] = gradient[5]; break;
+			case gradient[5]: buffer[index] = gradient[6]; break;
+			case gradient[6]: buffer[index] = gradient[7]; break;
+			case gradient[7]: buffer[index] = gradient[8]; break;
+			case gradient[8]: buffer[index] = gradient[9]; break;
+		}
+	}
+}
+
+module.exports = VoxelGradientMaterial;
+
+},{"../../utils/Color":11}],11:[function(require,module,exports){
+var ColorUtils = {
+	lerp: function(color1, color2, ratio) {
+		var a1 = (color1 >> 24) & 0xff;
+		var r1 = (color1 >> 16) & 0xff;
+		var g1 = (color1 >> 8) & 0xff;
+		var b1 = color1 & 0xff;
+		var a2 = (color2 >> 24) & 0xff;
+		var r2 = (color2 >> 16) & 0xff;
+		var g2 = (color2 >> 8) & 0xff;
+		var b2 = color2 & 0xff;
+		
+		//fun deviations from lerp
+		var ratio2 = 1 - Math.pow(1 - ratio, 2);
+		var ratio3 = 1 - Math.pow(1 - (Math.sin(ratio * Math.PI - Math.PI * .5) * .5 + .5), 2);
+		var ratio4 = Math.pow(ratio, 2);
+
+		return (~~(a1 + (a2 - a1) * ratio) << 24) |
+			(~~(r1 + (r2 - r1) * ratio2) << 16) |
+			(~~(g1 + (g2 - g1) * ratio3) << 8) |
+			~~(b1 + (b2 - b1) * ratio4);
+	},
+	pretty: function (color) {
+		var a = (color >> 24) & 0xff;
+		var r = (color >> 16) & 0xff;
+		var g = (color >> 8) & 0xff;
+		var b = color & 0xff;
+		return "A:"+a+" R:"+r+" G:"+g+" B:"+b;
+	}
+}
+module.exports = ColorUtils;
+},{}],12:[function(require,module,exports){
+var Events = {
+	addEvent : function(elem, type, eventHandle) {
+	    if (elem == null || typeof(elem) == 'undefined') return;
+	    if ( elem.addEventListener ) {
+	        elem.addEventListener( type, eventHandle, false );
+	    } else if ( elem.attachEvent ) {
+	        elem.attachEvent( "on" + type, eventHandle );
+	    } else {
+	        elem["on"+type]=eventHandle;
+	    }
+	}
+}
+
+module.exports = Events;
+},{}],13:[function(require,module,exports){
+function FPS() {
+	this.lastLoop = new Date;
+};
+
+FPS.prototype = {
+	filterStrength: 20,
+	frameTime: 0,
+	lastLoop: 0,
+	thisLoop: 0,
+	dirty: 0,
+	fps: 0,
+	
+	update: function(){
+		var thisFrameTime = (this.thisLoop = new Date) - this.lastLoop;
+		this.frameTime += (thisFrameTime - this.frameTime) / this.filterStrength;
+		this.lastLoop = this.thisLoop;
+		this.fps = 1000 / this.frameTime;
+		console.log(this.fps);
+	},
+	show: function() {
+		console.log("SHOW");
+	}
+};
+
+module.exports = new FPS();
+},{}],14:[function(require,module,exports){
+var GeometryUtils = {
+	octTreeSort: function() {
+		var tree = [];
+		var axises = ["x", "y", "z"];
+		var recurseTreeSort = function(vertices, axis) {
+			vertices.sort(function(a, b) {return b[axis] - a[axis]});
+			axis = axises[(axises.indexOf(axis) + 1) % axises.length];
+			var tempLow = vertices.slice(0, ~~(vertices.length * .5));
+			if (tempLow.length >= 2) tempLow = recurseTreeSort(tempLow, axis);
+			var tempHigh = vertices.slice(~~(vertices.length * .5), vertices.length);
+			if (tempHigh.length >= 2) tempHigh = recurseTreeSort(tempHigh, axis);
+			return [tempLow, tempHigh];
+		}
+
+		var recurseUnroll = function(arrTree, arrFlat) {
+			for (var i = 0; i < arrTree.length; i++) {
+				if (arrTree[i] instanceof Array) recurseUnroll(arrTree[i], arrFlat);
+				else arrFlat.push(arrTree[i]);
+			};
+		}
+
+		return function(geometry) {
+			geometry.vertices = recurseTreeSort(geometry.vertices, "x");
+			var arrFlat = [];
+			recurseUnroll(geometry.vertices, arrFlat);
+			geometry.vertices = arrFlat;
+			return geometry;
+		}
+	}(),
+	pairGeometry: function(geometry1, geometry2, attributeList) {
+		var small = geometry1.vertices.length < geometry2.vertices.length ? geometry1 : geometry2;
+		var large = small === geometry1 ? geometry2 : geometry1;
+		for (var i = 0; i < attributeList.length; i++) {
+			var attributeName = attributeList[i];
+			var attributeSmall = small[attributeName];
+			var attributeLarge = large[attributeName];
+			
+			var tS = attributeSmall.length;
+			var tL = attributeLarge.length;
+			for (var i = tS; i < tL; i++) {
+				attributeSmall[i] = new THREE.Vector3().copy(attributeSmall[i%tS]);
+			};
+		}
+	}
+}
+module.exports = GeometryUtils;
+},{}],15:[function(require,module,exports){
+var Geometry = require('../model/Geometry');
+var Mesh = require('../model/Mesh');
+function TestFactory() {
+	console.log('TestFactory initialized!');
+}
+
+TestFactory.prototype = {
+	createVoxelClusterMesh: function(totalVoxels, rangeBox3) {
+		rangeBox3 = rangeBox3 || new THREE.Box3(
+			new THREE.Vector3(-10, -10, -10),
+			new THREE.Vector3(10, 10, 10)
+		);
+		var vertices = [];
+		var basePos = rangeBox3.min;
+		var rangeBox3Size = rangeBox3.max.clone().sub(rangeBox3.min);
+		for (var i = 0; i < totalVoxels; i++) {
+			vertices[i] = new THREE.Vector3(
+				basePos.x + Math.random() * rangeBox3Size.x,
+				basePos.y + Math.random() * rangeBox3Size.y,
+				basePos.z + Math.random() * rangeBox3Size.z
+			);
+		};
+		var geometry = new Geometry({
+			vertices : vertices
+		});
+		return new Mesh(geometry);
+	},
+	createVoxelCubeMesh: function(totalVoxels, size) {
+		size = size || 10;
+		var sizeHalf = size * .5;
+		return this.createVoxelClusterMesh(
+			totalVoxels,
+			new THREE.Box3(
+				new THREE.Vector3(-sizeHalf, -sizeHalf, -sizeHalf),
+				new THREE.Vector3(sizeHalf, sizeHalf, sizeHalf)
+			)
+		);
+	}
+};
+
+module.exports = new TestFactory();
+},{"../model/Geometry":6,"../model/Mesh":7}],16:[function(require,module,exports){
+/**
+ * Signals for Node.js
+ * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
+ * Released under the MIT license <http://www.opensource.org/licenses/mit-license.php>
+ * @author Miller Medeiros
+ * @author Igor Urmincek
+ * @version 0.5.1
+ */
+
+	
+/**
+ * @namespace Signals Namespace - Custom event/messaging system based on AS3 Signals
+ * @name signals
+ */
+var signals = {};
+
+/**
+ * Signals Version Number
+ * @type string
+ * @const
+ */
+exports.VERSION = '0.5.1';
+
+
+/**
+ * Object that represents a binding between a Signal and a listener function.
+ * <br />- <strong>This is an internall constructor and shouldn't be called by regular user.</strong>
+ * <br />- inspired by Joa Ebert AS3 SignalBinding and Robert Penner's Slot classes.
+ * @author Miller Medeiros
+ * @constructor
+ * @name exports.SignalBinding
+ * @param {exports.Signal} signal	Reference to Signal object that listener is currently bound to.
+ * @param {Function} listener	Handler function bound to the signal.
+ * @param {boolean} isOnce	If binding should be executed just once.
+ * @param {Object} [listenerContext]	Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+ */
+ function SignalBinding(signal, listener, isOnce, listenerContext){
+	
+	/**
+	 * Handler function bound to the signal.
+	 * @type Function
+	 * @private
+	 */
+	this._listener = listener;
+	
+	/**
+	 * If binding should be executed just once.
+	 * @type boolean
+	 * @private
+	 */
+	this._isOnce = isOnce;
+	
+	/**
+	 * Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+	 * @memberOf exports.SignalBinding.prototype
+	 * @name context
+	 * @type {Object|undefined}
+	 */
+	this.context = listenerContext;
+	
+	/**
+	 * Reference to Signal object that listener is currently bound to.
+	 * @type exports.Signal
+	 * @private
+	 */
+	this._signal = signal;
+}
+
+SignalBinding.prototype = /** @lends exports.SignalBinding.prototype */ {
+	
+	/**
+	 * @type boolean
+	 * @private
+	 */
+	_isEnabled : true,
+	
+	/**
+	 * Call listener passing arbitrary parameters.
+	 * <p>If binding was added using `Signal.addOnce()` it will be automatically removed from signal dispatch queue, this method is used internally for the signal dispatch.</p> 
+	 * @param {Array} [paramsArr]	Array of parameters that should be passed to the listener
+	 * @return {*} Value returned by the listener.
+	 */
+	execute : function(paramsArr){
+		var r;
+		if(this._isEnabled){
+			r = this._listener.apply(this.context, paramsArr);
+			if(this._isOnce){
+				this.detach();
+			}
+		}
+		return r; //avoid warnings on some editors
+	},
+	
+	/**
+	 * Detach binding from signal.
+	 * - alias to: mySignal.remove(myBinding.getListener());
+	 * @return {Function} Handler function bound to the signal.
+	 */
+	detach : function(){
+		return this._signal.remove(this._listener);
+	},
+	
+	/**
+	 * @return {Function} Handler function bound to the signal.
+	 */
+	getListener : function(){
+		return this._listener;
+	},
+	
+	/**
+	 * Remove binding from signal and destroy any reference to external Objects (destroy SignalBinding object).
+	 * <p><strong>IMPORTANT:</strong> calling methods on the binding instance after calling dispose will throw errors.</p>
+	 */
+	dispose : function(){
+		this.detach();
+		this._destroy();
+	},
+	
+	/**
+	 * Delete all instance properties
+	 * @private
+	 */
+	_destroy : function(){
+		delete this._signal;
+		delete this._isOnce;
+		delete this._listener;
+		delete this.context;
+	},
+	
+	/**
+	 * Disable SignalBinding, block listener execution. Listener will only be executed after calling `enable()`.  
+	 * @see exports.SignalBinding.enable()
+	 */
+	disable : function(){
+		this._isEnabled = false;
+	},
+	
+	/**
+	 * Enable SignalBinding. Enable listener execution.
+	 * @see exports.SignalBinding.disable()
+	 */
+	enable : function(){
+		this._isEnabled = true;
+	},
+	
+	/**
+	 * @return {boolean} If SignalBinding is currently paused and won't execute listener during dispatch.
+	 */
+	isEnabled : function(){
+		return this._isEnabled;
+	},
+	
+	/**
+	 * @return {boolean} If SignalBinding will only be executed once.
+	 */
+	isOnce : function(){
+		return this._isOnce;
+	},
+	
+	/**
+	 * @return {string} String representation of the object.
+	 */
+	toString : function(){
+		return '[SignalBinding isOnce: '+ this._isOnce +', isEnabled: '+ this._isEnabled +']';
+	}
+	
+};
+
+/**
+ * Custom event broadcaster
+ * <br />- inspired by Robert Penner's AS3 Signals.
+ * @author Miller Medeiros
+ * @constructor
+ */
+exports.Signal = function(){
+	/**
+	 * @type Array.<SignalBinding>
+	 * @private
+	 */
+	this._bindings = [];
+};
+
+
+exports.Signal.prototype = {
+	
+	/**
+	 * @type boolean
+	 * @private
+	 */
+	_shouldPropagate : true,
+	
+	/**
+	 * @type boolean
+	 * @private
+	 */
+	_isEnabled : true,
+	
+	/**
+	 * @param {Function} listener
+	 * @param {boolean} isOnce
+	 * @param {Object} [scope]
+	 * @return {SignalBinding}
+	 * @private
+	 */
+	_registerListener : function(listener, isOnce, scope){
+		
+		if(typeof listener !== 'function'){
+			throw new Error('listener is a required param of add() and addOnce().');
+		}
+		
+		var prevIndex = this._indexOfListener(listener),
+			binding;
+		
+		if(prevIndex !== -1){ //avoid creating a new Binding for same listener if already added to list
+			binding = this._bindings[prevIndex];
+			if(binding.isOnce() !== isOnce){
+				throw new Error('You cannot add'+ (isOnce? '' : 'Once') +'() then add'+ (!isOnce? '' : 'Once') +'() the same listener without removing the relationship first.');
+			}
+		} else {
+			binding = new SignalBinding(this, listener, isOnce, scope);
+			this._addBinding(binding);
+		}
+		
+		return binding;
+	},
+	
+	/**
+	 * @param {SignalBinding} binding
+	 * @private
+	 */
+	_addBinding : function(binding){
+		this._bindings.push(binding);
+	},
+	
+	/**
+	 * @param {Function} listener
+	 * @return {number}
+	 * @private
+	 */
+	_indexOfListener : function(listener){
+		var n = this._bindings.length;
+		while(n--){
+			if(this._bindings[n]._listener === listener){
+				return n;
+			}
+		}
+		return -1;
+	},
+	
+	/**
+	 * Add a listener to the signal.
+	 * @param {Function} listener	Signal handler function.
+	 * @param {Object} [scope]	Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+	 * @return {SignalBinding} An Object representing the binding between the Signal and listener.
+	 */
+	add : function(listener, scope){
+		return this._registerListener(listener, false, scope);
+	},
+	
+	/**
+	 * Add listener to the signal that should be removed after first execution (will be executed only once).
+	 * @param {Function} listener	Signal handler function.
+	 * @param {Object} [scope]	Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+	 * @return {SignalBinding} An Object representing the binding between the Signal and listener.
+	 */
+	addOnce : function(listener, scope){
+		return this._registerListener(listener, true, scope);
+	},
+	
+	/**
+	 * @private
+	 */
+	_removeByIndex : function(i){
+		this._bindings[i]._destroy(); //no reason to a SignalBinding exist if it isn't attached to a signal
+		this._bindings.splice(i, 1);
+	},
+	
+	/**
+	 * Remove a single listener from the dispatch queue.
+	 * @param {Function} listener	Handler function that should be removed.
+	 * @return {Function} Listener handler function.
+	 */
+	remove : function(listener){
+		if(typeof listener !== 'function'){
+			throw new Error('listener is a required param of remove().');
+		}
+		
+		var i = this._indexOfListener(listener);
+		if(i !== -1){
+			this._removeByIndex(i);
+		}
+		return listener;
+	},
+	
+	/**
+	 * Remove all listeners from the Signal.
+	 */
+	removeAll : function(){
+		var n = this._bindings.length;
+		while(n--){
+			this._removeByIndex(n);
+		}
+	},
+	
+	/**
+	 * @return {number} Number of listeners attached to the Signal.
+	 */
+	getNumListeners : function(){
+		return this._bindings.length;
+	},
+	
+	/**
+	 * Disable Signal. Block dispatch to listeners until `enable()` is called.
+	 * <p><strong>IMPORTANT:</strong> If this method is called during a dispatch it will only have effect on the next dispatch, if you want to stop the propagation of a signal use `halt()` instead.</p>
+	 * @see exports.Signal.prototype.enable
+	 * @see exports.Signal.prototype.halt
+	 */
+	disable : function(){
+		this._isEnabled = false;
+	},
+	
+	/**
+	 * Enable broadcast to listeners.
+	 * @see exports.Signal.prototype.disable
+	 */
+	enable : function(){
+		this._isEnabled = true;
+	}, 
+	
+	/**
+	 * @return {boolean} If Signal is currently enabled and will broadcast message to listeners.
+	 */
+	isEnabled : function(){
+		return this._isEnabled;
+	},
+	
+	/**
+	 * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+	 * <p><strong>IMPORTANT:</strong> should be called only during signal dispatch, calling it before/after dispatch won't affect signal broadcast.</p>
+	 * @see exports.Signal.prototype.disable 
+	 */
+	halt : function(){
+		this._shouldPropagate = false;
+	},
+	
+	/**
+	 * Dispatch/Broadcast Signal to all listeners added to the queue. 
+	 * @param {...*} [params]	Parameters that should be passed to each handler.
+	 */
+	dispatch : function(params){
+		if(! this._isEnabled){
+			return;
+		}
+		
+		var paramsArr = Array.prototype.slice.call(arguments),
+			bindings = this._bindings.slice(), //clone array in case add/remove items during dispatch
+			i,
+			n = this._bindings.length;
+		
+		this._shouldPropagate = true; //in case `halt` was called before dispatch or during the previous dispatch.
+					
+		for(i=0; i<n; i++){
+			//execute all callbacks until end of the list or until a callback returns `false` or stops propagation
+			if(bindings[i].execute(paramsArr) === false || !this._shouldPropagate){
+				break;
+			}
+		}
+	},
+	
+	/**
+	 * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+	 * <p><strong>IMPORTANT:</strong> calling any method on the signal instance after calling dispose will throw errors.</p>
+	 */
+	dispose : function(){
+		this.removeAll();
+		delete this._bindings;
+	},
+	
+	/**
+	 * @return {string} String representation of the object.
+	 */
+	toString : function(){
+		return '[Signal isEnabled: '+ this._isEnabled +' numListeners: '+ this.getNumListeners() +']';
+	}
+	
+};
+
+},{}],17:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -6937,19 +8159,24 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],5:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],6:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
+var signals = require('../vendor/signals');
+
 /**
  * Manages render timing, pause and unpause
  * @param {View} view the view to manage
  */
 function RenderManager(view) {
 	this.view = view;
+	this.skipFrames = 0;
+	this.skipFramesCounter = 0;
+	this.onEnterFrame = new signals.Signal();
 	this.renderLoop = this.renderLoop.bind(this);
 
 	console.log('RenderManager initialized!');
@@ -6966,7 +8193,13 @@ RenderManager.prototype = {
 	 * the repeating renderLoop calls itself with requestAnimationFrame to act as the render timer
 	 */
 	renderLoop : function() {
-		this.view.render();
+		if(this.skipFramesCounter < this.skipFrames) {
+			this.skipFramesCounter++;
+		} else {
+			this.onEnterFrame.dispatch();
+			this.view.render();
+			this.skipFramesCounter = 0;
+		}
 		if(!this._requestStop) requestAnimationFrame(this.renderLoop);
 	},
 
@@ -6987,8 +8220,10 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{}],7:[function(require,module,exports){
+},{"../vendor/signals":16}],20:[function(require,module,exports){
 var DOMMode = require('./DOMMode');
+var EventUtils = require('../utils/Events');
+var signals = require('../vendor/signals');
 /**
  * View is the viewport canvas and the renderer
  * @param {Object} props an object of properties to override default dehaviours
@@ -6998,28 +8233,50 @@ function View(props) {
 
 	props = props || {};
 	this.scene = props.scene || new (require('../model/Scene'))();
-	this.renderer = props.renderer || new (require('./renderers/Canvas'))(this, props.renderer);
+	if(props.camera) {
+		this.camera = props.camera;
+	} else {
+		this.camera = new (require('../model/Camera3D'))();
+		this.scene.add(this.camera);
+		this.camera.position.z = 150;
+		this.camera.position.y = 60;
+		this.camera.lookAt(this.scene.position);
+	}
 	this.autoStartRender = props.autoStartRender !== undefined ? props.autoStartRender : true;
 	this.canvasID = props.canvasID || "ShortSwordCanvas";
 	this.domMode = props.domMode || DOMMode.FULLSCREEN;
 	
 	//use provided canvas or make your own
 	this.canvas = document.getElementById(this.canvasID) || this.createCanvas();
+	this.renderer = props.renderer || new (require('./renderers/Canvas'))(this.canvas, props.renderer);
 
 	console.log('View initialized!');
 
 	this.renderManager = new(require('./RenderManager'))(this);
 	this.setDOMMode(this.domMode);
 	if(this.autoStartRender) this.renderManager.start();
+	this.setupResizing();
 }
 
 View.prototype = {
+	setupResizing: function() {
+		this.onResize = new signals.Signal();
+		this.setSize = this.setSize.bind(this);
+		EventUtils.addEvent(window, "resize", function(event) {
+			console.log(event);
+			this.onResize.dispatch(window.innerWidth, window.innerHeight);
+		}.bind(this));
+		this.onResize.add(this.setSize);
+		this.onResize.add(this.renderer.setSize);
+		this.setSize(window.innerWidth, window.innerHeight);
+
+	},
 	/**
 	 * Renders the scene to the canvas using the renderer
 	 * @return {[type]} [description]
 	 */
 	render: function () {
-		this.renderer.render(this.scene);
+		this.renderer.render(this.scene, this.camera);
 	},
 
 	/**
@@ -7029,6 +8286,8 @@ View.prototype = {
 	createCanvas: function() {
 		var canvas = document.createElement("canvas");
 		canvas.id = this.canvasID;
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
 		this.addCanvasToDOMBody(canvas);
 		return canvas;
 	},
@@ -7065,11 +8324,75 @@ View.prototype = {
 				break;
 			default:
 		}
+	},
+
+	setSize: function(w, h) {
+		this.canvas.width = w;
+		this.canvas.height = h;
+		this.canvas.style.width = w;
+		this.canvas.style.height = h;
+		this.camera.setAspect(w/h);
 	}
 };
 
 module.exports = View;
-},{"../model/Scene":3,"./DOMMode":5,"./RenderManager":6,"./renderers/Canvas":9}],8:[function(require,module,exports){
+},{"../model/Camera3D":5,"../model/Scene":9,"../utils/Events":12,"../vendor/signals":16,"./DOMMode":18,"./RenderManager":19,"./renderers/Canvas":24}],21:[function(require,module,exports){
+function GlitchOffset(totalOffsets) {
+	this.totalOffsets = totalOffsets ? totalOffsets : 1;
+	console.log('GlitchOffset initialized!');
+}
+
+GlitchOffset.prototype = {
+	apply: function(context, width, height) {
+		for (var i = 0; i < this.totalOffsets; i++) {
+			if(Math.random() > .25) continue;
+			var x = ~~(Math.random() * width);
+			var y = ~~(Math.random() * height);
+			var w = ~~(Math.random() * (width * .7 - 20)) + 20;
+			var h = ~~(Math.random() * (height * .1 - 5)) + 5;
+
+			if ((x + w) > width) w -= (x + w) - width;
+			if ((y + h) > height) h -= (y + h) - height;
+
+			var offsetX = ~~(Math.random() * width * .1);
+			var offsetY = ~~(Math.random() * height * .1);
+
+			context.putImageData(context.getImageData(x, y, w, h), x+offsetX, y+offsetY);
+		}
+	}
+}
+
+module.exports = GlitchOffset;
+
+},{}],22:[function(require,module,exports){
+function GlitchOffsetSmearBlock(totalSmears) {
+	this.totalSmears = totalSmears ? totalSmears : 1;
+	console.log('GlitchOffsetSmearBlock initialized!');
+}
+
+GlitchOffsetSmearBlock.prototype = {
+	apply: function(context, width, height) {
+		for (var i = 0; i < this.totalSmears; i++) {
+			if(Math.random() > .25) continue;
+			var x = ~~(Math.random() * (width - 8));
+			var y = ~~(Math.random() * (height - 8));
+			var w = 8;
+			var h = 8;
+
+			var blockData = context.getImageData(x, y, w, h);
+
+			var startX = ~~(x * Math.random());
+			endX = width - ~~((width - x) * Math.random());
+			for (var ix = startX; ix < endX; ix+=8) {
+				context.putImageData(blockData, ix, y);
+			}
+		}
+	}
+}
+
+module.exports = GlitchOffsetSmearBlock;
+
+},{}],23:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -7102,14 +8425,34 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],9:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var BaseRenderer = require('./Base');
-
+var Mesh = require('../../model/Mesh');
+var BlendMesh = require('../../model/BlendMesh');
 /**
  * CanvasRenderer extends BaseRenderer and provides rendering functionality using native canvas API
  */
-function CanvasRenderer() {
-	BaseRenderer.call( this );
+function CanvasRenderer(canvas, props) {
+	this.setSize = this.setSize.bind(this);
+	props = props || {};
+
+	BaseRenderer.call( this, canvas, props);
+
+	this.clearColorBuffer = new ArrayBuffer(4);
+	this.clearColorBuffer32uint = new Uint32Array(this.clearColorBuffer);
+	if(props.clearColor === undefined) {
+		this.clearColorBuffer32uint[0] = (255 << 24) | (11 << 16) | (15 <<  8) | 30;
+	} else {
+		//set the color from props instead
+	}
+	this.context = canvas.getContext("2d");
+	this.autoClear = props.autoClear !== undefined ? props.autoClear : true;
+
+	this.viewProjectionMatrix = new THREE.Matrix4();
+
+	this.setSize(window.innerWidth, window.innerHeight);
+
+	this.effects = [];
 
 	//console.log('CanvasRenderer initialized!');
 }
@@ -7120,6 +8463,29 @@ function CanvasRenderer() {
  */
 CanvasRenderer.prototype = Object.create(BaseRenderer.prototype);
 
+CanvasRenderer.prototype.setSize = function(w, h) {
+	this.screenWidth = w;
+	this.screenHeight = h;
+	this.screenWidthHalf = w * .5;
+	this.screenHeightHalf = h * .5;
+	this.resetBuffer();
+	this.clear();
+};
+
+CanvasRenderer.prototype.resetBuffer = function() {
+	this.imageData = this.context.getImageData(0, 0, this.screenWidth, this.screenHeight);
+	this.buffer = new ArrayBuffer(this.imageData.data.length);
+	this.bufferView8uint = new Uint8ClampedArray(this.buffer);
+	this.bufferView32uint = new Uint32Array(this.buffer);
+};
+
+CanvasRenderer.prototype.clear = function() {
+	var bufferView32uint = this.bufferView32uint;
+	var clearColor = this.clearColorBuffer32uint[0];
+	for (var i = bufferView32uint.length - 1; i >= 0; i--) {
+		bufferView32uint[i] = clearColor;
+	};
+};
 /**
  * renders the scene to the canvas from the camera's perspective
  * @param  {Scene} scene  the scene to render
@@ -7127,7 +8493,64 @@ CanvasRenderer.prototype = Object.create(BaseRenderer.prototype);
  */
 CanvasRenderer.prototype.render = function(scene, camera) {
 	console.log("render");
-}
+
+	scene.updateMatrixWorld();
+
+	if ( this.autoClear === true ) this.clear();
+
+	camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+
+	this.viewProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
+
+	this.renderObjectToBuffer(scene, camera);
+	this.imageData.data.set(this.bufferView8uint);
+	this.context.putImageData(this.imageData, 0, 0);
+	this.applyEffectsToBuffer();
+};
+
+CanvasRenderer.prototype.renderObjectToBuffer = function() {
+	var screenVector = new THREE.Vector3();
+	return function(object, camera) {
+		var screenWidth = this.screenWidth;
+		var screenHeight = this.screenHeight;
+		var screenWidthHalf = this.screenWidthHalf;
+		var screenHeightHalf = this.screenHeightHalf;
+		var screenWidthMinusOne = screenWidth-1;
+		var screenHeightMinusOne = screenHeight-1;
+		var bufferView32uint = this.bufferView32uint;
+		if(object instanceof BlendMesh) object.updateGeometry();
+		if(object instanceof Mesh) {
+			var verts = object.geometry.vertices;
+			object.material.init(this.context, this.clearColorBuffer32uint[0]);
+			var material = object.material;
+			for (var i = verts.length - 1; i >= 0; i--) {
+				screenVector.copy(verts[i]).applyMatrix4(object.matrixWorld).applyProjection( this.viewProjectionMatrix );
+				if(screenVector.x <= -1 || screenVector.x >= 1) continue;
+				if(screenVector.y <= -1 || screenVector.y >= 1) continue;
+				var x = ~~(screenVector.x * screenWidthHalf + screenWidthHalf);
+				var y = ~~(screenVector.y * screenHeightHalf + screenHeightHalf);
+				material.drawToBuffer(
+					bufferView32uint, 
+					 x + y * screenWidth,
+					screenVector.z
+				);
+			};
+		}
+		for (var i = object.children.length - 1; i >= 0; i--) {
+			this.renderObjectToBuffer(object.children[i]);
+		};
+	}
+}();
+
+CanvasRenderer.prototype.addEffect = function(effect) {
+	this.effects.push(effect);
+};
+
+CanvasRenderer.prototype.applyEffectsToBuffer = function() {
+	for (var i = 0; i < this.effects.length; i++) {
+		this.effects[i].apply(this.context, this.screenWidth, this.screenHeight);
+	};
+};
 
 module.exports = CanvasRenderer;
-},{"./Base":8}]},{},[1])
+},{"../../model/BlendMesh":4,"../../model/Mesh":7,"./Base":23}]},{},[3])
