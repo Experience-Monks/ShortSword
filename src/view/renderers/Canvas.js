@@ -91,7 +91,8 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 		var screenHeightMinusOne = screenHeight-1;
 		var bufferView32uint = this.bufferView32uint;
 
-		object.updateGeometry();
+		if( object.updateGeometry )
+			object.updateGeometry();
 		
 		if(object instanceof Mesh) {
 			var verts = object.geometry.vertices;
