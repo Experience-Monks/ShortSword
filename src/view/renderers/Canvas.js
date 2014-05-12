@@ -90,7 +90,9 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 		var screenWidthMinusOne = screenWidth-1;
 		var screenHeightMinusOne = screenHeight-1;
 		var bufferView32uint = this.bufferView32uint;
-		if(object instanceof BlendMesh) object.updateGeometry();
+
+		object.updateGeometry();
+		
 		if(object instanceof Mesh) {
 			var verts = object.geometry.vertices;
 			object.material.init(this.context, this.clearColorBuffer32uint[0]);
