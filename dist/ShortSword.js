@@ -260,6 +260,8 @@ function Mesh(geometry, material) {
  */
 Mesh.prototype = Object.create(Object3D.prototype);
 
+Mesh.prototype.updateGeometry = function() {};
+
 module.exports = Mesh;
 
 },{"../vendor/three":17,"./Object3D":8,"./materials/VoxelGradient":10}],8:[function(require,module,exports){
@@ -8441,7 +8443,7 @@ function CanvasRenderer(canvas, props) {
 	this.clearColorBuffer = new ArrayBuffer(4);
 	this.clearColorBuffer32uint = new Uint32Array(this.clearColorBuffer);
 	if(props.clearColor === undefined) {
-		this.clearColorBuffer32uint[0] = (255 << 24) | (11 << 16) | (15 <<  8) | 30;
+		this.clearColorBuffer32uint[0] = (0 << 24) | (255 << 16) | (50 <<  8) | 30;
 	} else {
 		//set the color from props instead
 	}
@@ -8518,7 +8520,10 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 		var screenWidthMinusOne = screenWidth-1;
 		var screenHeightMinusOne = screenHeight-1;
 		var bufferView32uint = this.bufferView32uint;
-		if(object instanceof BlendMesh) object.updateGeometry();
+
+		if( object.updateGeometry )
+			object.updateGeometry();
+		
 		if(object instanceof Mesh) {
 			var verts = object.geometry.vertices;
 			object.material.init(this.context, this.clearColorBuffer32uint[0]);
