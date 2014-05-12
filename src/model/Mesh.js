@@ -15,4 +15,6 @@ function Mesh(geometry, material) {
  */
 Mesh.prototype = Object.create(Object3D.prototype);
 
+Mesh.prototype.updateGeometry = function() {};
+
 module.exports = Mesh;
