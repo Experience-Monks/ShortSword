@@ -15,7 +15,8 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/Luigi_obj.obj", function(geo
 var mouseMove = {x:0,y:0,speed:.1};
 ssView.renderManager.onEnterFrame.add(function() {
 	if(!_this.blendModel) return;
-	_this.blendModel.blend = Math.random();
+	_this.blendModel.blend = Math.sin((new Date()).getTime() * .001) * .5 + .5;
+	_this.blendModel.updateGeometry();
 	_this.blendModel.rotateY(mouseMove.x * mouseMove.speed);
 	_this.blendModel.rotateX(mouseMove.y * mouseMove.speed);
 })

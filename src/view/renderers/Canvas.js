@@ -24,6 +24,8 @@ function CanvasRenderer(canvas, props) {
 
 	this.setSize(window.innerWidth, window.innerHeight);
 
+	this.effects = [];
+
 	//console.log('CanvasRenderer initialized!');
 }
 
@@ -38,8 +40,6 @@ CanvasRenderer.prototype.setSize = function(w, h) {
 	this.screenHeight = h;
 	this.screenWidthHalf = w * .5;
 	this.screenHeightHalf = h * .5;
-	this.screenWidthQuarter = w * .25;
-	this.screenHeightQuarter = h * .25;
 	this.resetBuffer();
 	this.clear();
 };
@@ -75,6 +75,7 @@ CanvasRenderer.prototype.render = function(scene, camera) {
 	this.viewProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
 
 	this.renderObjectToBuffer(scene, camera);
+	this.applyEffectsToBuffer();
 	this.imageData.data.set(this.bufferView8uint);
 	this.context.putImageData(this.imageData, 0, 0);
 };
@@ -86,8 +87,6 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 		var screenHeight = this.screenHeight;
 		var screenWidthHalf = this.screenWidthHalf;
 		var screenHeightHalf = this.screenHeightHalf;
-		var screenWidthQuarter = this.screenWidthQuarter;
-		var screenHeightQuarter = this.screenHeightQuarter;
 		var screenWidthMinusOne = screenWidth-1;
 		var screenHeightMinusOne = screenHeight-1;
 		var bufferView32uint = this.bufferView32uint;
@@ -114,5 +113,11 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 		};
 	}
 }();
+
+CanvasRenderer.prototype.applyEffectsToBuffer = function() {
+	for (var i = 0; i < this.effects.length; i++) {
+		this.effects[i].apply(this.imageData);
+	};
+}
 
 module.exports = CanvasRenderer;
