@@ -3,7 +3,6 @@ var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
 var AnimatorVertexBlend = require( '../animation/AnimatorVertexBlend' );
-var AnimatorVertexRandom = require( '../animation/AnimatorVertexRandom' );
 
 function BlendMesh(geometry1, geometry2, material) {
 	
@@ -18,8 +17,6 @@ function BlendMesh(geometry1, geometry2, material) {
 
 	this.blendAni = this.addAnimator( AnimatorVertexBlend );
 	this.blendAni.push( geometry2 );
-
-	this.addAnimator( AnimatorVertexRandom );
 }
 
 /**
