@@ -1,5 +1,6 @@
 var BaseAnimator = require( './BaseAnimator' );
 var Mesh = require( '../model/Mesh' );
+var Geometry = require( '../model/Geometry' );
 
 var AnimatorBlendVertex = function( mesh ) {
 
@@ -15,19 +16,6 @@ var AnimatorBlendVertex = function( mesh ) {
 };
 
 var p = AnimatorBlendVertex.prototype = Object.create( BaseAnimator.prototype );
-
-p.setSteps = function() {
-
-	var steps = arguments;
-	var hadOriginalMesh = false;
-
-	for( var i = 0, len = steps.length; i < steps; i++ ) {
-
-		if( steps[ i ] instanceof Mesh ) {
-
-		}
-	}
-};
 
 p.push = function( step ) {
 
@@ -127,3 +115,5 @@ function getVertices( step, oVertices ) {
 		throw 'The vertices of the original mesh and the data being added do not match in length';
 	}
 }
+
+module.exports = AnimatorBlendVertex;

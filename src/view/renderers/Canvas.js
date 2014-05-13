@@ -96,9 +96,19 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 		
 		if(object instanceof Mesh) {
 			var verts = object.geometry.vertices;
-			object.material.init(this.context, this.clearColorBuffer32uint[0]);
+			var animators = object.animators;
+			var lenAnimators = animators.length;
 			var material = object.material;
+
+			material.init(this.context, this.clearColorBuffer32uint[0]);
+			
 			for (var i = verts.length - 1; i >= 0; i--) {
+
+				for(var j = 0; j < lenAnimators; j++) {
+
+					animators[ j ].update( i );
+				}
+
 				screenVector.copy(verts[i]).applyMatrix4(object.matrixWorld).applyProjection( this.viewProjectionMatrix );
 				if(screenVector.x <= -1 || screenVector.x >= 1) continue;
 				if(screenVector.y <= -1 || screenVector.y >= 1) continue;

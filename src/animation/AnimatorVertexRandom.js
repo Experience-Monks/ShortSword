@@ -15,7 +15,9 @@ p.update = function( vertexIDX ) {
 
 	var out = this.mesh.geometry.vertices[ vertexIDX ];
 	
-	out.x = ( Math.random() * 2 - 1 ) * this.velocityX;
-	out.y = ( Math.random() * 2 - 1 ) * this.velocityY;
-	out.z = ( Math.random() * 2 - 1 ) * this.velocityZ;
+	out.x += ( Math.random() * 2 - 1 ) * this.velocityX;
+	out.y += ( Math.random() * 2 - 1 ) * this.velocityY;
+	out.z += ( Math.random() * 2 - 1 ) * this.velocityZ;
 };
+
+module.exports = AnimatorBlendVertex;
