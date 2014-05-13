@@ -1,6 +1,7 @@
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
 var signals = require('../vendor/signals');
+var PerformanceTweaker = require('../utils/PerformanceTweaker');
 /**
  * View is the viewport canvas and the renderer
  * @param {Object} props an object of properties to override default dehaviours
@@ -32,6 +33,9 @@ function View(props) {
 	this.renderManager = new(require('./RenderManager'))(this);
 	this.setDOMMode(this.domMode);
 	if(this.autoStartRender) this.renderManager.start();
+
+	PerformanceTweaker.onChange.add(this.onPerformanceTweakerChangeResolution.bind(this));
+
 	this.setupResizing();
 }
 
@@ -44,7 +48,6 @@ View.prototype = {
 			this.onResize.dispatch(window.innerWidth, window.innerHeight);
 		}.bind(this));
 		this.onResize.add(this.setSize);
-		this.onResize.add(this.renderer.setSize);
 		this.setSize(window.innerWidth, window.innerHeight);
 
 	},
@@ -53,6 +56,7 @@ View.prototype = {
 	 * @return {[type]} [description]
 	 */
 	render: function () {
+		PerformanceTweaker.update();
 		this.renderer.render(this.scene, this.camera);
 	},
 
@@ -104,11 +108,27 @@ View.prototype = {
 	},
 
 	setSize: function(w, h) {
-		this.canvas.width = w;
-		this.canvas.height = h;
 		this.canvas.style.width = w;
 		this.canvas.style.height = h;
 		this.camera.setAspect(w/h);
+
+		this.setResolution(
+			~~(w / PerformanceTweaker.denominator), 
+			~~(h / PerformanceTweaker.denominator)
+		);
+	},
+
+	setResolution: function(w, h) {
+		this.canvas.width = w;
+		this.canvas.height = h;
+		this.renderer.setSize(w, h);
+	},
+
+	onPerformanceTweakerChangeResolution: function(dynamicScale) {
+		this.setResolution(
+			~~(window.innerWidth * dynamicScale),
+			~~(window.innerHeight * dynamicScale)
+		);
 	}
 };
 

@@ -21,6 +21,7 @@ SHORTSWORD = {
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
 	CanvasGraph : require('./utils/CanvasGraph'),
+	PerformanceTweaker : require('./utils/PerformanceTweaker'),
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')

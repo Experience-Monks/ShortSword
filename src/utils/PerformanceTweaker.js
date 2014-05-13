@@ -1,25 +1,24 @@
 var signals = require('../vendor/signals');
 var FPS = require('./FPS');
 
-function PerformanceTweaker(values) {
-	this.parent(values);
+function PerformanceTweaker(props) {
+	props = props || {};
+	this.degradeWhen = props.degradeWhen !== undefined ? props.degradeWhen : this.degradeWhen;
+	this.upgradeWhen = props.upgradeWhen !== undefined ? props.upgradeWhen : this.upgradeWhen;
 	this.lastLoop = new Date;
-
 	this.onChange = new signals.Signal();
 };
 
 PerformanceTweaker.prototype = {
 	denominator: 1,
-	degradeWhen: 15,
-	upgradeWhen: 26,
+	degradeWhen: 16,
+	upgradeWhen: 28,
 	denominatorMax: 8,
 	dirty: 0,
 	updateFrequency: 5,
 	changeFactor: 1.25,
 	onChange: undefined,
 	update: function(){
-		FPS.update();
-
 		if(this.dirty == 0) {
 			if(FPS.fps <= this.degradeWhen) {
 			  	this.denominator *= this.changeFactor;
@@ -48,6 +47,6 @@ PerformanceTweaker.prototype = {
 	  	this.onChange.dispatch(1/this.denominator);
 	  	this.dirty = this.updateFrequency;
 	}
-	});
-	return PerformanceTweaker;
-});
+}
+
+module.exports = new PerformanceTweaker();
