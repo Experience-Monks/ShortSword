@@ -3,8 +3,6 @@ var ColorUtils = require('../../utils/Color');
 function VoxelGradientMaterial(props) {
 	props = props || {};
 	this.size = props.size || 1;
-
-	this.vertices = props.vertices || [];
 	
 	console.log('VoxelGradientMaterial initialized!');
 }
@@ -12,27 +10,27 @@ function VoxelGradientMaterial(props) {
 VoxelGradientMaterial.prototype = {
 	init: function(context, clearColor) {
 
-		if(this.initd || this.clearColor == clearColor) return;
-		this.clearColor = clearColor;
+		if( this.clearColor != clearColor ) {
 
-		var a = 255;
-		var r = 255;
-		var g = 255;
-		var b = 255;
-		this.pixelColor = (a << 24) | (b << 16) | (g <<  8) | r;
+			this.clearColor = clearColor;
 
-		var gradientSteps = 10;
-		this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
-		this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
-		for (var i = 0; i < gradientSteps; i++) {
-			this.gradientBufferView32uint[i] = ColorUtils.lerp(this.clearColor, this.pixelColor, (i+1)/gradientSteps);
-			console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
-		};
+			var a = 255;
+			var r = 255;
+			var g = 255;
+			var b = 255;
+			this.pixelColor = (a << 24) | (b << 16) | (g <<  8) | r;
 
-		this.initd = true;
+			var gradientSteps = 10;
+			this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
+			this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
+			for (var i = 0; i < gradientSteps; i++) {
+
+				this.gradientBufferView32uint[i] = ColorUtils.lerp(this.clearColor, this.pixelColor, (i+1)/gradientSteps);
+			};
+		}
 	},
 
-	drawToBuffer: function(buffer, index, z) {
+	drawToBuffer: function(buffer, index, vertexIDX, z) {
 		gradient = this.gradientBufferView32uint;
 		switch(buffer[index]){
 			case this.clearColor: buffer[index] = gradient[0]; break;

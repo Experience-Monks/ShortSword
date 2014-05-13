@@ -20,6 +20,12 @@ SHORTSWORD = {
 	ColorUtils : require('./utils/Color'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
+	materials: {
+
+		Voxel: require( './model/materials/Voxel' ),
+		VoxelGradient: require( './model/materials/VoxelGradient' ),
+		VoxelLookUp: require( './model/materials/VoxelLookUp' )
+	},
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
