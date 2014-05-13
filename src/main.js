@@ -27,8 +27,7 @@ SHORTSWORD = {
 	},
 	animators: {
 		VertexBlend: require('./animation/AnimatorVertexBlend'),
-		VertexRandom: require('./animation/AnimatorVertexRandom'),
-		VertexSimpleFlow: require('./animation/AnimatorVertexSimpleFlow')
+		VertexRandom: require('./animation/AnimatorVertexRandom')
 	},
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
