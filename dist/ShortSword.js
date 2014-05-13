@@ -113,12 +113,13 @@ SHORTSWORD = {
 	ColorUtils : require('./utils/Color'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
+	CanvasGraph : require('./utils/CanvasGraph'),
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./loader/Loader":1,"./model/BlendMesh":4,"./model/Camera3D":5,"./model/Mesh":7,"./model/Object3D":8,"./model/Scene":9,"./utils/Color":11,"./utils/FPS":13,"./utils/TestFactory":15,"./view/View":20,"./view/effects/GlitchOffset":21,"./view/effects/GlitchOffsetSmearBlock":22}],4:[function(require,module,exports){
+},{"./loader/Loader":1,"./model/BlendMesh":4,"./model/Camera3D":5,"./model/Mesh":7,"./model/Object3D":8,"./model/Scene":9,"./utils/CanvasGraph":11,"./utils/Color":12,"./utils/FPS":14,"./utils/TestFactory":16,"./view/View":21,"./view/effects/GlitchOffset":22,"./view/effects/GlitchOffsetSmearBlock":23}],4:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -164,7 +165,7 @@ BlendMesh.prototype.updateGeometry = function() {
 
 module.exports = BlendMesh;
 
-},{"../utils/Geometry":14,"../vendor/three":17,"./Mesh":7,"./materials/VoxelGradient":10}],5:[function(require,module,exports){
+},{"../utils/Geometry":15,"../vendor/three":18,"./Mesh":7,"./materials/VoxelGradient":10}],5:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -215,7 +216,7 @@ Camera3D.prototype.setAspect = function(aspect) {
 
 module.exports = Camera3D;
 
-},{"../vendor/three":17,"./Object3D":8}],6:[function(require,module,exports){
+},{"../vendor/three":18,"./Object3D":8}],6:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -242,7 +243,7 @@ Geometry.prototype = {
 };
 module.exports = Geometry;
 
-},{"../vendor/three":17}],7:[function(require,module,exports){
+},{"../vendor/three":18}],7:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
@@ -264,7 +265,7 @@ Mesh.prototype.updateGeometry = function() {};
 
 module.exports = Mesh;
 
-},{"../vendor/three":17,"./Object3D":8,"./materials/VoxelGradient":10}],8:[function(require,module,exports){
+},{"../vendor/three":18,"./Object3D":8,"./materials/VoxelGradient":10}],8:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
@@ -678,7 +679,7 @@ Object3D.prototype = {
 
 module.exports = Object3D;
 
-},{"../vendor/three":17}],9:[function(require,module,exports){
+},{"../vendor/three":18}],9:[function(require,module,exports){
 var Object3D = require('./Object3D');
 /**
  * The basic root Object3D to build a scene
@@ -751,7 +752,128 @@ VoxelGradientMaterial.prototype = {
 
 module.exports = VoxelGradientMaterial;
 
-},{"../../utils/Color":11}],11:[function(require,module,exports){
+},{"../../utils/Color":12}],11:[function(require,module,exports){
+function CanvasGraph(props) {
+	this.addCanvasToDOMBody = this.addCanvasToDOMBody.bind(this);
+	this.animationFrame = this.animationFrame.bind(this);
+
+	props = props ? props : {};
+	this.width = props.width ? props.width : this.width;
+	this.height = props.height ? props.height : this.height;
+	this.colorBG = props.colorBG !== undefined ? props.colorBG : "#222222";
+	this.colorLine = props.colorLine !== undefined ? props.colorLine : "#FF2222";
+
+	this.lastTime = this.time = new Date;
+
+	this.canvas = this.createCanvas();
+	this.values = [];
+	this.setDOMRules();
+	this.animationFrame();
+
+	this.addValue(this, "fps", "red", "FPS");
+};
+CanvasGraph.prototype = {
+	canvasID: "graphCanvas",
+	width: 200,
+	height: 60,
+	range: {
+		top: 60,
+		bottom: 0
+	},
+	pixelsPerSecondScroll: 60,
+	scrollPosition: 0,
+	skipFrames: 0,
+	skipFramesCounter: 0,
+	createCanvas: function() {
+		var canvas = document.createElement("canvas");
+		canvas.id = this.canvasID;
+		canvas.width = this.width;
+		canvas.height = this.height;
+		this.context = canvas.getContext("2d");
+		this.context.fillStyle = this.colorBG;
+		this.context.fillRect(0, 0, this.width, this.height);
+		this.addCanvasToDOMBody(canvas);
+		return canvas;
+	},
+	clear: function() {
+
+	},
+	addCanvasToDOMBody: function(canvas) {
+		canvas = canvas || this.canvas;
+		if(document.body) {
+			console.log("adding canvas to DOM");
+			document.body.appendChild(canvas);
+		} else {
+			console.log("wait for DOM")
+			setTimeout(this.addCanvasToDOMBody, 50);
+		}
+	},
+	setDOMRules: function(mode) {
+		var style = this.canvas.style;
+		style.position = "fixed";
+		style.left = "0px";
+		style.top = "0px";
+		style.width = this.width;
+		style.height = this.height;
+	},
+	animationFrame : function() {
+		if(this.skipFramesCounter < this.skipFrames) {
+			this.skipFramesCounter++;
+		} else {
+			this.render();
+			this.skipFramesCounter = 0;
+		}
+		if(!this._requestStop) requestAnimationFrame(this.animationFrame);
+	},
+	addValue: function(object, valueKey, colorString, name) {
+		this.values.push({
+			name: name,
+			object:object,
+			valueKey:valueKey,
+			color: colorString
+		})
+	},
+	render: function() {
+		this.lastTime = this.time;
+		this.time = new Date;
+		var deltaTime = this.time - this.lastTime;
+		this.fps = ~~(1000 / deltaTime)
+		var scrollPositionDelta = deltaTime * .001 * this.pixelsPerSecondScroll;
+		var scrollPositionLastInt = ~~this.scrollPosition;
+		this.scrollPosition += scrollPositionDelta;
+		var scrollPositionInt = ~~this.scrollPosition;
+		var scrollPositionDeltaInt = scrollPositionInt - scrollPositionLastInt;
+		if(scrollPositionDeltaInt < this.width) {
+			this.context.putImageData(
+				this.context.getImageData(scrollPositionDeltaInt, 0, this.width-scrollPositionDeltaInt, this.height),
+				0, 0
+			);
+		}
+		this.context.fillStyle = this.colorBG;
+		this.context.fillRect(
+			this.width - scrollPositionDeltaInt,
+			0,
+			scrollPositionDeltaInt,
+			this.height
+		);
+		this.context.globalCompositeOperation = "lighter";
+		for (var i = 0; i < this.values.length; i++) {
+			var val = this.values[i];
+
+			this.context.fillStyle = val.color;
+			this.context.fillRect(
+				this.width - scrollPositionDeltaInt,
+				this.height - val.object[val.valueKey],
+				scrollPositionDeltaInt,
+				1
+			);
+		}
+		this.context.globalCompositeOperation = "source-over";
+	}
+};
+
+module.exports = CanvasGraph;
+},{}],12:[function(require,module,exports){
 var ColorUtils = {
 	lerp: function(color1, color2, ratio) {
 		var a1 = (color1 >> 24) & 0xff;
@@ -782,7 +904,7 @@ var ColorUtils = {
 	}
 }
 module.exports = ColorUtils;
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var Events = {
 	addEvent : function(elem, type, eventHandle) {
 	    if (elem == null || typeof(elem) == 'undefined') return;
@@ -797,9 +919,11 @@ var Events = {
 }
 
 module.exports = Events;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 function FPS() {
 	this.lastLoop = new Date;
+	this.animationFrame = this.animationFrame.bind(this);
+	requestAnimationFrame(this.animationFrame);
 };
 
 FPS.prototype = {
@@ -807,23 +931,23 @@ FPS.prototype = {
 	frameTime: 0,
 	lastLoop: 0,
 	thisLoop: 0,
-	dirty: 0,
 	fps: 0,
 	
+	animationFrame: function() {
+		this.update();
+		requestAnimationFrame(this.animationFrame);
+	},
 	update: function(){
 		var thisFrameTime = (this.thisLoop = new Date) - this.lastLoop;
 		this.frameTime += (thisFrameTime - this.frameTime) / this.filterStrength;
 		this.lastLoop = this.thisLoop;
+		this.lastStep = 
 		this.fps = 1000 / this.frameTime;
-		console.log(this.fps);
-	},
-	show: function() {
-		console.log("SHOW");
 	}
 };
 
 module.exports = new FPS();
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var GeometryUtils = {
 	octTreeSort: function() {
 		var tree = [];
@@ -870,7 +994,7 @@ var GeometryUtils = {
 	}
 }
 module.exports = GeometryUtils;
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
@@ -912,7 +1036,7 @@ TestFactory.prototype = {
 };
 
 module.exports = new TestFactory();
-},{"../model/Geometry":6,"../model/Mesh":7}],16:[function(require,module,exports){
+},{"../model/Geometry":6,"../model/Mesh":7}],17:[function(require,module,exports){
 /**
  * Signals for Node.js
  * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
@@ -1300,7 +1424,7 @@ exports.Signal.prototype = {
 	
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -8161,13 +8285,13 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 var signals = require('../vendor/signals');
 
 /**
@@ -8222,7 +8346,7 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{"../vendor/signals":16}],20:[function(require,module,exports){
+},{"../vendor/signals":17}],21:[function(require,module,exports){
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
 var signals = require('../vendor/signals');
@@ -8338,7 +8462,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":5,"../model/Scene":9,"../utils/Events":12,"../vendor/signals":16,"./DOMMode":18,"./RenderManager":19,"./renderers/Canvas":24}],21:[function(require,module,exports){
+},{"../model/Camera3D":5,"../model/Scene":9,"../utils/Events":13,"../vendor/signals":17,"./DOMMode":19,"./RenderManager":20,"./renderers/Canvas":25}],22:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');
@@ -8366,7 +8490,7 @@ GlitchOffset.prototype = {
 
 module.exports = GlitchOffset;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
 	console.log('GlitchOffsetSmearBlock initialized!');
@@ -8394,7 +8518,7 @@ GlitchOffsetSmearBlock.prototype = {
 
 module.exports = GlitchOffsetSmearBlock;
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -8427,7 +8551,7 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
@@ -8443,7 +8567,7 @@ function CanvasRenderer(canvas, props) {
 	this.clearColorBuffer = new ArrayBuffer(4);
 	this.clearColorBuffer32uint = new Uint32Array(this.clearColorBuffer);
 	if(props.clearColor === undefined) {
-		this.clearColorBuffer32uint[0] = (0 << 24) | (255 << 16) | (50 <<  8) | 30;
+		this.clearColorBuffer32uint[0] = (255 << 24) | (11 << 16) | (15 <<  8) | 30;
 	} else {
 		//set the color from props instead
 	}
@@ -8558,4 +8682,4 @@ CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 };
 
 module.exports = CanvasRenderer;
-},{"../../model/BlendMesh":4,"../../model/Mesh":7,"./Base":23}]},{},[3])
+},{"../../model/BlendMesh":4,"../../model/Mesh":7,"./Base":24}]},{},[3])
