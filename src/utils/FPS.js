@@ -14,12 +14,9 @@ FPS.prototype = {
 		var thisFrameTime = (this.thisLoop = new Date) - this.lastLoop;
 		this.frameTime += (thisFrameTime - this.frameTime) / this.filterStrength;
 		this.lastLoop = this.thisLoop;
+		this.lastStep = 
 		this.fps = 1000 / this.frameTime;
-		console.log(this.fps);
-	},
-	show: function() {
-		console.log("SHOW");
 	}
 };
 
-module.exports = new FPS();
+module.exports = FPS;

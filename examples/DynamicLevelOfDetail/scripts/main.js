@@ -12,14 +12,18 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/Luigi_obj.obj", function(geo
 	});
 });
 
-SHORTSWORD.FPS.show();
-
 ssView.renderer.addEffect(new SHORTSWORD.effects.GlitchOffset(4));
 ssView.renderer.addEffect(new SHORTSWORD.effects.GlitchOffsetSmearBlock(4));
 
 var mouseMove = {x:0,y:0,speed:.1};
+
+//var performanceTweaker = new SHORTSWORD.PerformanceTweaker();
+var performanceGraph = new SHORTSWORD.PerformanceGraph();
+var fps = new SHORTSWORD.FPS();
+performanceGraph.addValue(fps, "fps", "green", "FPS Smoothed");
 ssView.renderManager.onEnterFrame.add(function() {
-	SHORTSWORD.FPS.update();
+//	performanceTweaker.update();
+	fps.update();
 	if(!_this.blendModel) return;
 	_this.blendModel.blend = Math.sin((new Date()).getTime() * .001) * .5 + .5;
 	_this.blendModel.updateGeometry();
