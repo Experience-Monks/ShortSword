@@ -1,6 +1,6 @@
 var BaseAnimator = require( './BaseAnimator' );
 
-var AnimatorBlendVertex = function( mesh ) {
+var AnimatorVertexRandom = function( mesh ) {
 
 	BaseAnimator.call( this, mesh );
 
@@ -9,7 +9,7 @@ var AnimatorBlendVertex = function( mesh ) {
 	this.velocityZ = 1;
 };
 
-var p = AnimatorBlendVertex.prototype = Object.create( BaseAnimator.prototype );
+var p = AnimatorVertexRandom.prototype = Object.create( BaseAnimator.prototype );
 
 p.update = function( vertexIDX ) {
 
@@ -20,4 +20,4 @@ p.update = function( vertexIDX ) {
 	out.z += ( Math.random() * 2 - 1 ) * this.velocityZ;
 };
 
-module.exports = AnimatorBlendVertex;
+module.exports = AnimatorVertexRandom;

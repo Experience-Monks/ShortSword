@@ -99,14 +99,28 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			var animators = object.animators;
 			var lenAnimators = animators.length;
 			var material = object.material;
+			var dirtyAnimators = [];
+			var lenDirty = 0;
+
+			//push dirty animators to its own array
+			//this makes sure every animator isn't run on every particle
+			for( var i = 0; i < lenAnimators; i++ ) {
+
+				if( animators[ i ].dirty ) {
+
+					lenDirty++;
+
+					dirtyAnimators.push( animators[ i ] );	
+				}
+			}
 
 			material.init(this.context, this.clearColorBuffer32uint[0]);
 			
 			for (var i = verts.length - 1; i >= 0; i--) {
 
-				for(var j = 0; j < lenAnimators; j++) {
+				for(var j = 0; j < lenDirty; j++) {
 
-					animators[ j ].update( i );
+					dirtyAnimators[ j ].update( i );
 				}
 
 				screenVector.copy(verts[i]).applyMatrix4(object.matrixWorld).applyProjection( this.viewProjectionMatrix );

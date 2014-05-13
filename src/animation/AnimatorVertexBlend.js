@@ -65,7 +65,7 @@ p.addAfter = function( beforeStep, step ) {
 
 p.setPercentage = function( value ) {
 
-	if( this._percentage != value ) {
+	if( this.dirty = this._percentage != value ) {
 
 		this._percentage = value;
 
