@@ -18,12 +18,10 @@ ssView.renderer.addEffect(new SHORTSWORD.effects.GlitchOffsetSmearBlock(4));
 var mouseMove = {x:0,y:0,speed:.1};
 
 //var performanceTweaker = new SHORTSWORD.PerformanceTweaker();
-var performanceGraph = new SHORTSWORD.PerformanceGraph();
-var fps = new SHORTSWORD.FPS();
-performanceGraph.addValue(fps, "fps", "green", "FPS Smoothed");
+var canvasGraph = new SHORTSWORD.CanvasGraph();
+canvasGraph.addValue(SHORTSWORD.FPS, "fps", "green", "FPS Smoothed");
 ssView.renderManager.onEnterFrame.add(function() {
 //	performanceTweaker.update();
-	fps.update();
 	if(!_this.blendModel) return;
 	_this.blendModel.blend = Math.sin((new Date()).getTime() * .001) * .5 + .5;
 	_this.blendModel.updateGeometry();
@@ -34,3 +32,5 @@ window.onmousemove = function(event) {
 	mouseMove.x = event.x / window.innerWidth * 2 - 1;
 	mouseMove.y = event.y / window.innerHeight * 2 - 1;
 };
+
+//ssView.renderManager.stop();

@@ -88,10 +88,12 @@ CanvasGraph.prototype = {
 		this.scrollPosition += scrollPositionDelta;
 		var scrollPositionInt = ~~this.scrollPosition;
 		var scrollPositionDeltaInt = scrollPositionInt - scrollPositionLastInt;
-		this.context.putImageData(
-			this.context.getImageData(scrollPositionDeltaInt, 0, this.width-scrollPositionDeltaInt, this.height),
-			0, 0
-		);
+		if(scrollPositionDeltaInt < this.width) {
+			this.context.putImageData(
+				this.context.getImageData(scrollPositionDeltaInt, 0, this.width-scrollPositionDeltaInt, this.height),
+				0, 0
+			);
+		}
 		this.context.fillStyle = this.colorBG;
 		this.context.fillRect(
 			this.width - scrollPositionDeltaInt,

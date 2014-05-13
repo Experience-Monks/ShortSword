@@ -1,5 +1,7 @@
 function FPS() {
 	this.lastLoop = new Date;
+	this.animationFrame = this.animationFrame.bind(this);
+	requestAnimationFrame(this.animationFrame);
 };
 
 FPS.prototype = {
@@ -7,9 +9,12 @@ FPS.prototype = {
 	frameTime: 0,
 	lastLoop: 0,
 	thisLoop: 0,
-	dirty: 0,
 	fps: 0,
 	
+	animationFrame: function() {
+		this.update();
+		requestAnimationFrame(this.animationFrame);
+	},
 	update: function(){
 		var thisFrameTime = (this.thisLoop = new Date) - this.lastLoop;
 		this.frameTime += (thisFrameTime - this.frameTime) / this.filterStrength;
@@ -19,4 +24,4 @@ FPS.prototype = {
 	}
 };
 
-module.exports = FPS;
+module.exports = new FPS();
