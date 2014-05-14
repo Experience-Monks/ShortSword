@@ -26,7 +26,7 @@ VoxelGradientMaterial.prototype = {
 		this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
 		for (var i = 0; i < gradientSteps; i++) {
 			this.gradientBufferView32uint[i] = ColorUtils.lerp(this.clearColor, this.pixelColor, (i+1)/gradientSteps);
-			console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
+			//console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
 		};
 
 		this.initd = true;
