@@ -66,8 +66,6 @@ CanvasRenderer.prototype.clear = function() {
  * @param  {Camera3D} camera the camera to render from
  */
 CanvasRenderer.prototype.render = function(scene, camera) {
-	console.log("render");
-
 	scene.updateMatrixWorld();
 
 	if ( this.autoClear === true ) this.clear();
