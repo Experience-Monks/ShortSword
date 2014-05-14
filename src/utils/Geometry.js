@@ -100,6 +100,15 @@ var GeometryUtils = {
 			}
 		}
 		return true;
+	},
+	fillSurfaces : function(geometry, newTotalVertices) {
+		var length = geometry[attributeList[0]].length;
+		if(!geometry.faces || geometry.faces.length == 0) {
+			console.log("WARNING: Cannot fill geometry unless it has faces defined");
+		}
+		for (var i = length; i < newTotalVertices; i++) {
+			geometry.vertices.push(geometry.faces[~~(Math.random() * geometry.faces.length)].createRandomPoint())
+		}
 	}
 }
 module.exports = GeometryUtils;

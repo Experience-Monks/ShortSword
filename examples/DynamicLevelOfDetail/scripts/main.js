@@ -26,7 +26,6 @@ canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "upgradeWhen", "#2244aa", "F
 ssView.renderManager.onEnterFrame.add(function() {
 	if(!_this.blendModel) return;
 	_this.blendModel.blend = Math.sin((new Date()).getTime() * .001) * .5 + .5;
-	_this.blendModel.updateGeometry();
 	_this.blendModel.rotateY(mouseMove.x * mouseMove.speed);
 	_this.blendModel.rotateX(mouseMove.y * mouseMove.speed);
 })

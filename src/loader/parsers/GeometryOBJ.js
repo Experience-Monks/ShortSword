@@ -10,13 +10,17 @@ GeometryOBJParser.prototype = {
 		options = options || {faces:true};
 		var dataLines = data.split('\n');
 		var vertices = [];
-		for (var i = dataLines.length - 1; i >= 0; i--) {
+		var length = dataLines.length - 1;
+		for (var i = 0; i < length; i++) {
 			if(dataLines[i].indexOf("v ") == 0) {
 				var vertData = dataLines[i].split(" ");
+				for (var iVD = vertData.length - 1; iVD >= 0; iVD--) {
+					if(vertData[iVD] == "" || vertData[iVD] == " " || vertData[iVD] == "v") vertData.splice(iVD, 1);
+				};
 				vertices.push(new THREE.Vector3(
-						parseFloat(vertData[2]),
-						parseFloat(vertData[3]),
-						parseFloat(vertData[4])
+						parseFloat(vertData[0]),
+						parseFloat(vertData[1]),
+						parseFloat(vertData[2])
 					)
 				);
 			}
@@ -46,22 +50,30 @@ GeometryOBJParser.prototype = {
 			for (var i = dataLines.length - 1; i >= 0; i--) {
 				if(dataLines[i].indexOf("f ") == 0) {
 					var faceData = dataLines[i].split(" ");
-					faces.push(new Face(
-							vertices[parseInt(faceData[2].split("/")[0])],
-							vertices[parseInt(faceData[3].split("/")[0])],
-							vertices[parseInt(faceData[4].split("/")[0])]
-						)
-					);
-					if(faceDate.length == 5){
+					for (var iFD = faceData.length - 1; iFD >= 0; iFD--) {
+						if(faceData[iFD] == "" || faceData[iFD] == " " || faceData[iFD] == "f") faceData.splice(iFD, 1);
+					};
+					try{
 						faces.push(new Face(
-								vertices[parseInt(faceData[4].split("/")[0])],
-								vertices[parseInt(faceData[3].split("/")[0])],
-								vertices[parseInt(faceData[5].split("/")[0])]
+								vertices[parseInt(faceData[0].split("/")[0])-1],
+								vertices[parseInt(faceData[1].split("/")[0])-1],
+								vertices[parseInt(faceData[2].split("/")[0])-1]
 							)
 						);
+						if(faceData.length == 4){
+							faces.push(new Face(
+									vertices[parseInt(faceData[2].split("/")[0])-1],
+									vertices[parseInt(faceData[1].split("/")[0])-1],
+									vertices[parseInt(faceData[3].split("/")[0])-1]
+								)
+							);
+						}
+					} catch(e) {
+						console.log(e);
 					}
 				}
 			};
+			props.faces = faces;
 		}
 
 		return new Geometry(props);

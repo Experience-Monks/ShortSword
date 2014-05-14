@@ -18,6 +18,7 @@ SHORTSWORD = {
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
+	GeometryUtils : require('./utils/Geometry'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
 	CanvasGraph : require('./utils/CanvasGraph'),
