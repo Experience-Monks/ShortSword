@@ -102,23 +102,19 @@ GeometryOBJParser.prototype = {
 					for (var iFD = faceData.length - 1; iFD >= 0; iFD--) {
 						if(faceData[iFD] == "" || faceData[iFD] == " " || faceData[iFD] == "f") faceData.splice(iFD, 1);
 					};
-					try{
+					faces.push(new Face(
+							vertices[parseInt(faceData[0].split("/")[0])-1],
+							vertices[parseInt(faceData[1].split("/")[0])-1],
+							vertices[parseInt(faceData[2].split("/")[0])-1]
+						)
+					);
+					if(faceData.length == 4){
 						faces.push(new Face(
-								vertices[parseInt(faceData[0].split("/")[0])-1],
+								vertices[parseInt(faceData[2].split("/")[0])-1],
 								vertices[parseInt(faceData[1].split("/")[0])-1],
-								vertices[parseInt(faceData[2].split("/")[0])-1]
+								vertices[parseInt(faceData[3].split("/")[0])-1]
 							)
 						);
-						if(faceData.length == 4){
-							faces.push(new Face(
-									vertices[parseInt(faceData[2].split("/")[0])-1],
-									vertices[parseInt(faceData[1].split("/")[0])-1],
-									vertices[parseInt(faceData[3].split("/")[0])-1]
-								)
-							);
-						}
-					} catch(e) {
-						console.log(e);
 					}
 				}
 			};
@@ -301,12 +297,14 @@ function Face(v1, v2, v3) {
 	this.v1 = v1;
 	this.v2 = v2;
 	this.v3 = v3;
-	if(v1 === undefined || v2 === undefined || v3 === undefined) throw("WTF");
 }
 
 Face.prototype = {
 	createRandomPoint: function() {
 		return this.v1.clone().lerp(this.v2, Math.random()).lerp(this.v3, Math.pow(Math.random(), 2));
+	},
+	clone: function() {
+		return new Face(this.v1, this.v2, this.v3);
 	}
 };
 module.exports = Face;
