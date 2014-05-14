@@ -53,23 +53,19 @@ GeometryOBJParser.prototype = {
 					for (var iFD = faceData.length - 1; iFD >= 0; iFD--) {
 						if(faceData[iFD] == "" || faceData[iFD] == " " || faceData[iFD] == "f") faceData.splice(iFD, 1);
 					};
-					try{
+					faces.push(new Face(
+							vertices[parseInt(faceData[0].split("/")[0])-1],
+							vertices[parseInt(faceData[1].split("/")[0])-1],
+							vertices[parseInt(faceData[2].split("/")[0])-1]
+						)
+					);
+					if(faceData.length == 4){
 						faces.push(new Face(
-								vertices[parseInt(faceData[0].split("/")[0])-1],
+								vertices[parseInt(faceData[2].split("/")[0])-1],
 								vertices[parseInt(faceData[1].split("/")[0])-1],
-								vertices[parseInt(faceData[2].split("/")[0])-1]
+								vertices[parseInt(faceData[3].split("/")[0])-1]
 							)
 						);
-						if(faceData.length == 4){
-							faces.push(new Face(
-									vertices[parseInt(faceData[2].split("/")[0])-1],
-									vertices[parseInt(faceData[1].split("/")[0])-1],
-									vertices[parseInt(faceData[3].split("/")[0])-1]
-								)
-							);
-						}
-					} catch(e) {
-						console.log(e);
 					}
 				}
 			};

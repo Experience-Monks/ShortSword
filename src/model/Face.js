@@ -7,7 +7,6 @@ function Face(v1, v2, v3) {
 	this.v1 = v1;
 	this.v2 = v2;
 	this.v3 = v3;
-	if(v1 === undefined || v2 === undefined || v3 === undefined) throw("WTF");
 }
 
 Face.prototype = {
