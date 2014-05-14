@@ -24,7 +24,7 @@ VoxelLookUp.prototype.add = function( colour ) {
 	this.drawToBuffer = VoxelLookUp.prototype.drawToBuffer.bind( this );
 };
 
-VoxelLookUp.prototype.drawToBuffer = function( buffer, index, vertexIDX, z ) {
+VoxelLookUp.prototype.drawToBuffer = function( buffer, index, vertexIDX, screenWidth, z ) {
 
 	var idx = this.vertexLookUp[ vertexIDX ];
 

@@ -30,7 +30,7 @@ VoxelGradientMaterial.prototype = {
 		}
 	},
 
-	drawToBuffer: function(buffer, index, vertexIDX, z) {
+	drawToBuffer: function(buffer, index, vertexIDX, bufferWidth, z) {
 		gradient = this.gradientBufferView32uint;
 		switch(buffer[index]){
 			case this.clearColor: buffer[index] = gradient[0]; break;

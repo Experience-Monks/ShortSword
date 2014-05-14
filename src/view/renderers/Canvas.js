@@ -108,6 +108,7 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 					bufferView32uint, 
 					x + y * screenWidth,
 					i,
+					screenWidth,
 					screenVector.z
 				);
 			};

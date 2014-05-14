@@ -21,7 +21,7 @@ VoxelMaterial.prototype = {
 		this.initd = true;
 	},
 
-	drawToBuffer: function(buffer, index, z) {
+	drawToBuffer: function(buffer, index, vertexIDX, bufferWidth, z) {
 		buffer[index] = this.pixelColor;
 	}
 }

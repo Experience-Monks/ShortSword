@@ -24,7 +24,8 @@ SHORTSWORD = {
 
 		Voxel: require( './model/materials/Voxel' ),
 		VoxelGradient: require( './model/materials/VoxelGradient' ),
-		VoxelLookUp: require( './model/materials/VoxelLookUp' )
+		VoxelLookUp: require( './model/materials/VoxelLookUp' ),
+		VoxelImageLookUp: require( './model/materials/VoxelImageLookUp' )
 	},
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
