@@ -48,22 +48,28 @@ Loader.prototype = {
 module.exports = new Loader();
 },{"./parsers/GeometryOBJ":2}],2:[function(require,module,exports){
 var Geometry = require('../../model/Geometry');
+var Face = require('../../model/Face');
 
 function GeometryOBJParser() {
 	console.log('GeometryOBJParser initialized!');
 }
 
 GeometryOBJParser.prototype = {
-	parse: function(data) {
+	parse: function(data, options) {
+		options = options || {faces:true};
 		var dataLines = data.split('\n');
 		var vertices = [];
-		for (var i = dataLines.length - 1; i >= 0; i--) {
+		var length = dataLines.length - 1;
+		for (var i = 0; i < length; i++) {
 			if(dataLines[i].indexOf("v ") == 0) {
 				var vertData = dataLines[i].split(" ");
+				for (var iVD = vertData.length - 1; iVD >= 0; iVD--) {
+					if(vertData[iVD] == "" || vertData[iVD] == " " || vertData[iVD] == "v") vertData.splice(iVD, 1);
+				};
 				vertices.push(new THREE.Vector3(
-						parseFloat(vertData[2]),
-						parseFloat(vertData[3]),
-						parseFloat(vertData[4])
+						parseFloat(vertData[0]),
+						parseFloat(vertData[1]),
+						parseFloat(vertData[2])
 					)
 				);
 			}
@@ -83,14 +89,48 @@ GeometryOBJParser.prototype = {
 			vertices[i].y -= centroid.y;
 			vertices[i].z -= centroid.z;
 		};
-		return new Geometry({
+		
+		var props = {
 			vertices:vertices
-		});
+		};
+
+		if(options.faces) {
+			var faces = [];
+			for (var i = dataLines.length - 1; i >= 0; i--) {
+				if(dataLines[i].indexOf("f ") == 0) {
+					var faceData = dataLines[i].split(" ");
+					for (var iFD = faceData.length - 1; iFD >= 0; iFD--) {
+						if(faceData[iFD] == "" || faceData[iFD] == " " || faceData[iFD] == "f") faceData.splice(iFD, 1);
+					};
+					try{
+						faces.push(new Face(
+								vertices[parseInt(faceData[0].split("/")[0])-1],
+								vertices[parseInt(faceData[1].split("/")[0])-1],
+								vertices[parseInt(faceData[2].split("/")[0])-1]
+							)
+						);
+						if(faceData.length == 4){
+							faces.push(new Face(
+									vertices[parseInt(faceData[2].split("/")[0])-1],
+									vertices[parseInt(faceData[1].split("/")[0])-1],
+									vertices[parseInt(faceData[3].split("/")[0])-1]
+								)
+							);
+						}
+					} catch(e) {
+						console.log(e);
+					}
+				}
+			};
+			props.faces = faces;
+		}
+
+		return new Geometry(props);
 	}
 };
 
 module.exports = new GeometryOBJParser();
-},{"../../model/Geometry":6}],3:[function(require,module,exports){
+},{"../../model/Face":6,"../../model/Geometry":7}],3:[function(require,module,exports){
 /**
  * ShortSword is a library for rendering realtime animated voxels to a canvas.
  * Supports standard canvas element.
@@ -111,6 +151,7 @@ SHORTSWORD = {
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
+	GeometryUtils : require('./utils/Geometry'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
 	CanvasGraph : require('./utils/CanvasGraph'),
@@ -120,7 +161,7 @@ SHORTSWORD = {
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./loader/Loader":1,"./model/BlendMesh":4,"./model/Camera3D":5,"./model/Mesh":7,"./model/Object3D":8,"./model/Scene":9,"./utils/CanvasGraph":11,"./utils/Color":12,"./utils/FPS":14,"./utils/PerformanceTweaker":16,"./utils/TestFactory":17,"./view/View":22,"./view/effects/GlitchOffset":23,"./view/effects/GlitchOffsetSmearBlock":24}],4:[function(require,module,exports){
+},{"./loader/Loader":1,"./model/BlendMesh":4,"./model/Camera3D":5,"./model/Mesh":8,"./model/Object3D":9,"./model/Scene":10,"./utils/CanvasGraph":12,"./utils/Color":13,"./utils/FPS":15,"./utils/Geometry":16,"./utils/PerformanceTweaker":17,"./utils/TestFactory":18,"./view/View":23,"./view/effects/GlitchOffset":24,"./view/effects/GlitchOffsetSmearBlock":25}],4:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -162,7 +203,7 @@ BlendMesh.prototype._updateGeometry = function() {
 			var attribute = this.geometry[attributeName];
 			var attribute1 = this.geometry1[attributeName];
 			var attribute2 = this.geometry2[attributeName];
-			var t = ~~(attribute1.length / PerformanceTweaker.denominator);
+			var t = ~~(attribute1.length / PerformanceTweaker.denominatorSquared);
 			for (var i = 0; i < t; i++) {
 				attribute[i].copy(
 					attribute1[i]
@@ -199,7 +240,7 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 
 module.exports = BlendMesh;
 
-},{"../utils/Geometry":15,"../utils/PerformanceTweaker":16,"../vendor/three":19,"./Mesh":7,"./materials/VoxelGradient":10}],5:[function(require,module,exports){
+},{"../utils/Geometry":16,"../utils/PerformanceTweaker":17,"../vendor/three":20,"./Mesh":8,"./materials/VoxelGradient":11}],5:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -250,7 +291,27 @@ Camera3D.prototype.setAspect = function(aspect) {
 
 module.exports = Camera3D;
 
-},{"../vendor/three":19,"./Object3D":8}],6:[function(require,module,exports){
+},{"../vendor/three":20,"./Object3D":9}],6:[function(require,module,exports){
+require('../vendor/three');
+/**
+ * geometry is a collection of buffers
+ * vertices, edges, faces, indexes, etc
+ */
+function Face(v1, v2, v3) {
+	this.v1 = v1;
+	this.v2 = v2;
+	this.v3 = v3;
+	if(v1 === undefined || v2 === undefined || v3 === undefined) throw("WTF");
+}
+
+Face.prototype = {
+	createRandomPoint: function() {
+		return this.v1.clone().lerp(this.v2, Math.random()).lerp(this.v3, Math.pow(Math.random(), 2));
+	}
+};
+module.exports = Face;
+
+},{"../vendor/three":20}],7:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -260,6 +321,7 @@ function Geometry(props) {
 	props = props || {};
 
 	this.vertices = props.vertices || [];
+	this.faces = props.faces || [];
 	
 	console.log('Geometry initialized!');
 }
@@ -270,14 +332,19 @@ Geometry.prototype = {
 		for (var i = 0; i < this.vertices.length; i++) {
 			vertices[i] = this.vertices[i].clone();
 		};
+		faces = [];
+		for (var i = 0; i < this.faces.length; i++) {
+			faces[i] = this.faces[i].clone();
+		};
 		return new Geometry({
-			vertices: vertices
+			vertices: vertices,
+			faces: faces
 		});
 	}
 };
 module.exports = Geometry;
 
-},{"../vendor/three":19}],7:[function(require,module,exports){
+},{"../vendor/three":20}],8:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
@@ -299,7 +366,7 @@ Mesh.prototype.updateGeometry = function() {};
 
 module.exports = Mesh;
 
-},{"../vendor/three":19,"./Object3D":8,"./materials/VoxelGradient":10}],8:[function(require,module,exports){
+},{"../vendor/three":20,"./Object3D":9,"./materials/VoxelGradient":11}],9:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
@@ -713,7 +780,7 @@ Object3D.prototype = {
 
 module.exports = Object3D;
 
-},{"../vendor/three":19}],9:[function(require,module,exports){
+},{"../vendor/three":20}],10:[function(require,module,exports){
 var Object3D = require('./Object3D');
 /**
  * The basic root Object3D to build a scene
@@ -732,7 +799,7 @@ Scene.prototype = Object.create(Object3D.prototype);
 
 module.exports = Scene;
 
-},{"./Object3D":8}],10:[function(require,module,exports){
+},{"./Object3D":9}],11:[function(require,module,exports){
 var ColorUtils = require('../../utils/Color');
 
 function VoxelGradientMaterial(props) {
@@ -786,7 +853,7 @@ VoxelGradientMaterial.prototype = {
 
 module.exports = VoxelGradientMaterial;
 
-},{"../../utils/Color":12}],11:[function(require,module,exports){
+},{"../../utils/Color":13}],12:[function(require,module,exports){
 function CanvasGraph(props) {
 	this.addCanvasToDOMBody = this.addCanvasToDOMBody.bind(this);
 	this.animationFrame = this.animationFrame.bind(this);
@@ -907,7 +974,7 @@ CanvasGraph.prototype = {
 };
 
 module.exports = CanvasGraph;
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var ColorUtils = {
 	lerp: function(color1, color2, ratio) {
 		var a1 = (color1 >> 24) & 0xff;
@@ -938,7 +1005,7 @@ var ColorUtils = {
 	}
 }
 module.exports = ColorUtils;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var Events = {
 	addEvent : function(elem, type, eventHandle) {
 	    if (elem == null || typeof(elem) == 'undefined') return;
@@ -953,9 +1020,9 @@ var Events = {
 }
 
 module.exports = Events;
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 function FPS() {
-	this.lastLoop = new Date;
+	this.lastTime = new Date;
 	this.animationFrame = this.animationFrame.bind(this);
 	requestAnimationFrame(this.animationFrame);
 };
@@ -963,8 +1030,8 @@ function FPS() {
 FPS.prototype = {
 	filterStrength: 20,
 	frameTime: 0,
-	lastLoop: 0,
-	thisLoop: 0,
+	lastTime: 0,
+	thisTime: 0,
 	fps: 0,
 	
 	animationFrame: function() {
@@ -972,16 +1039,18 @@ FPS.prototype = {
 		requestAnimationFrame(this.animationFrame);
 	},
 	update: function(){
-		var thisFrameTime = (this.thisLoop = new Date) - this.lastLoop;
-		this.frameTime += (thisFrameTime - this.frameTime) / this.filterStrength;
-		this.lastLoop = this.thisLoop;
-		this.lastStep = 
+		this.thisTime = new Date;
+		var thisFrameDuration = this.thisTime - this.lastTime;
+		if(thisFrameDuration > 100) thisFrameDuration = 100;
+		var delta = this.frameTime - thisFrameDuration;
+		this.frameTime -= delta / this.filterStrength;
+		this.lastTime = this.thisTime;
 		this.fps = 1000 / this.frameTime;
 	}
 };
 
 module.exports = new FPS();
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 
 var attributeList = ["vertices"];
@@ -1084,10 +1153,19 @@ var GeometryUtils = {
 			}
 		}
 		return true;
+	},
+	fillSurfaces : function(geometry, newTotalVertices) {
+		var length = geometry[attributeList[0]].length;
+		if(!geometry.faces || geometry.faces.length == 0) {
+			console.log("WARNING: Cannot fill geometry unless it has faces defined");
+		}
+		for (var i = length; i < newTotalVertices; i++) {
+			geometry.vertices.push(geometry.faces[~~(Math.random() * geometry.faces.length)].createRandomPoint())
+		}
 	}
 }
 module.exports = GeometryUtils;
-},{"../model/Geometry":6}],16:[function(require,module,exports){
+},{"../model/Geometry":7}],17:[function(require,module,exports){
 var signals = require('../vendor/signals');
 var FPS = require('./FPS');
 
@@ -1128,6 +1206,7 @@ PerformanceTweaker.prototype = {
 				}
 			}
 		}
+		this.denominatorSquared = this.denominator * this.denominator;
 
 		if(this.dirty > 0) {
 			this.dirty--;
@@ -1140,7 +1219,7 @@ PerformanceTweaker.prototype = {
 }
 
 module.exports = new PerformanceTweaker();
-},{"../vendor/signals":18,"./FPS":14}],17:[function(require,module,exports){
+},{"../vendor/signals":19,"./FPS":15}],18:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
@@ -1182,7 +1261,7 @@ TestFactory.prototype = {
 };
 
 module.exports = new TestFactory();
-},{"../model/Geometry":6,"../model/Mesh":7}],18:[function(require,module,exports){
+},{"../model/Geometry":7,"../model/Mesh":8}],19:[function(require,module,exports){
 /**
  * Signals for Node.js
  * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
@@ -1570,7 +1649,7 @@ exports.Signal.prototype = {
 	
 };
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -8431,13 +8510,13 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 var signals = require('../vendor/signals');
 
 /**
@@ -8492,7 +8571,7 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{"../vendor/signals":18}],22:[function(require,module,exports){
+},{"../vendor/signals":19}],23:[function(require,module,exports){
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
 var signals = require('../vendor/signals');
@@ -8628,7 +8707,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":5,"../model/Scene":9,"../utils/Events":13,"../utils/PerformanceTweaker":16,"../vendor/signals":18,"./DOMMode":20,"./RenderManager":21,"./renderers/Canvas":26}],23:[function(require,module,exports){
+},{"../model/Camera3D":5,"../model/Scene":10,"../utils/Events":14,"../utils/PerformanceTweaker":17,"../vendor/signals":19,"./DOMMode":21,"./RenderManager":22,"./renderers/Canvas":27}],24:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');
@@ -8656,7 +8735,7 @@ GlitchOffset.prototype = {
 
 module.exports = GlitchOffset;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
 	console.log('GlitchOffsetSmearBlock initialized!');
@@ -8684,7 +8763,7 @@ GlitchOffsetSmearBlock.prototype = {
 
 module.exports = GlitchOffsetSmearBlock;
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -8717,7 +8796,7 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
@@ -8818,7 +8897,7 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			var verts = object.geometry.vertices;
 			object.material.init(this.context, this.clearColorBuffer32uint[0]);
 			var material = object.material;
-			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominator) - 1;
+			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominatorSquared) - 1;
 			for (var i = vertsToRender; i >= 0; i--) {
 				canvasVector.copy(verts[i]).applyMatrix4(object.matrixWorld).applyProjection( this.viewProjectionMatrix );
 				if(canvasVector.x <= -1 || canvasVector.x >= 1) continue;
@@ -8849,4 +8928,4 @@ CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 };
 
 module.exports = CanvasRenderer;
-},{"../../model/BlendMesh":4,"../../model/Mesh":7,"../../utils/PerformanceTweaker":16,"./Base":25}]},{},[3])
+},{"../../model/BlendMesh":4,"../../model/Mesh":8,"../../utils/PerformanceTweaker":17,"./Base":26}]},{},[3])
