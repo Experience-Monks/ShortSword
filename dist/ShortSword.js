@@ -297,6 +297,16 @@ function Face(v1, v2, v3) {
 	this.v1 = v1;
 	this.v2 = v2;
 	this.v3 = v3;
+
+	var temp = new THREE.Vector3();
+	//edge lengths;
+	var a = temp.copy(v1).sub(v2).length();
+	var b = temp.copy(v2).sub(v3).length();
+	var c = temp.copy(v3).sub(v1).length();
+	//semiperimeter
+	var s = (a + b + c) * .5;
+
+	this.area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
 }
 
 Face.prototype = {
@@ -1157,8 +1167,32 @@ var GeometryUtils = {
 		if(!geometry.faces || geometry.faces.length == 0) {
 			console.log("WARNING: Cannot fill geometry unless it has faces defined");
 		}
+
+		var facesByArea = geometry.faces.slice(0);
+		facesByArea.sort(function(a, b) { return a.area - b.area; });
+
+		var min = facesByArea[0].area;
+		var median = facesByArea[~~(facesByArea.length * .5)].area;
+		var max = facesByArea[facesByArea.length-1].area;
+
+		var medianRatio = ~~(median / min);
+		var maxRatio = ~~(max / min);
+
+		console.log(medianRatio);
+		console.log(maxRatio);
+
+		var proportionalFaces = [];
+		for (var iF = 0; iF < facesByArea.length; iF++) {
+			var face = facesByArea[iF];
+			for (var i = ~~(face.area / min); i >= 0; i--) {
+				proportionalFaces.push(face);
+			};
+		};
+		console.log(facesByArea.length, proportionalFaces.length);
+
+		var pfLength = proportionalFaces.length;
 		for (var i = length; i < newTotalVertices; i++) {
-			geometry.vertices.push(geometry.faces[~~(Math.random() * geometry.faces.length)].createRandomPoint())
+			geometry.vertices.push(proportionalFaces[i%pfLength].createRandomPoint())
 		}
 	}
 }
