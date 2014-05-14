@@ -14,9 +14,7 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario_obj.obj", function(geo
 	var img2 = new Image();
 	img2.src = '../assets/images/image2.png';
 
-	var mat = new SHORTSWORD.materials.VoxelImageLookUp();
-
-	geometry.vertices.length = 5000;
+	var countLoaded = 0;
 
 	img.onload = onImageLoaded;
 	img2.onload = onImageLoaded;
@@ -24,9 +22,11 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario_obj.obj", function(geo
 
 	function onImageLoaded() {
 
-		console.log( img.complete && img2.complete );
+		if( ++countLoaded == 2 ){
 
-		if( img.complete && img2.complete ){
+			var mat = new SHORTSWORD.materials.VoxelImageLookUp();
+
+			geometry.vertices.length = 5000;
 
 			for( var i = 0, len = geometry.vertices.length; i < len; i++ ) {
 
