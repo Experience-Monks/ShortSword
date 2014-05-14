@@ -38,6 +38,7 @@ PerformanceTweaker.prototype = {
 				}
 			}
 		}
+		this.denominatorSquared = this.denominator * this.denominator;
 
 		if(this.dirty > 0) {
 			this.dirty--;

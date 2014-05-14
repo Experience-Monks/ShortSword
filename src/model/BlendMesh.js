@@ -39,7 +39,7 @@ BlendMesh.prototype._updateGeometry = function() {
 			var attribute = this.geometry[attributeName];
 			var attribute1 = this.geometry1[attributeName];
 			var attribute2 = this.geometry2[attributeName];
-			var t = ~~(attribute1.length / PerformanceTweaker.denominator);
+			var t = ~~(attribute1.length / PerformanceTweaker.denominatorSquared);
 			for (var i = 0; i < t; i++) {
 				attribute[i].copy(
 					attribute1[i]

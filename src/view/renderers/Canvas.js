@@ -98,7 +98,7 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			var verts = object.geometry.vertices;
 			object.material.init(this.context, this.clearColorBuffer32uint[0]);
 			var material = object.material;
-			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominator) - 1;
+			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominatorSquared) - 1;
 			for (var i = vertsToRender; i >= 0; i--) {
 				canvasVector.copy(verts[i]).applyMatrix4(object.matrixWorld).applyProjection( this.viewProjectionMatrix );
 				if(canvasVector.x <= -1 || canvasVector.x >= 1) continue;
