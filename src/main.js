@@ -20,6 +20,8 @@ SHORTSWORD = {
 	ColorUtils : require('./utils/Color'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
+	CanvasGraph : require('./utils/CanvasGraph'),
+	PerformanceTweaker : require('./utils/PerformanceTweaker'),
 	materials: {
 
 		Voxel: require( './model/materials/Voxel' ),

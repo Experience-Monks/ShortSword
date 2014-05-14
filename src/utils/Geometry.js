@@ -1,3 +1,6 @@
+var Geometry = require('../model/Geometry');
+
+var attributeList = ["vertices"];
 var GeometryUtils = {
 	octTreeSort: function() {
 		var tree = [];
@@ -41,6 +44,62 @@ var GeometryUtils = {
 				attributeSmall[i] = new THREE.Vector3().copy(attributeSmall[i%tS]);
 			};
 		}
+	},
+	computeGeometryDelta: function(geometry1, geometry2) {
+		if(!this.checkIfGeometryAttributesLengthsMatch([geometry1, geometry2])) return;
+		var delta = new Geometry();
+		var length = geometry1[attributeList[0]].length;
+		for (var ia = 0; ia < attributeList.length; ia++) {
+			var attrName = attributeList[ia];
+			var workingAttribute = delta[attrName];
+			var attribute1 = geometry1[attrName];
+			var attribute2 = geometry2[attrName];
+			for (var i = 0; i < length; i++) {
+				workingAttribute[i] = attribute2[i].clone().sub(attribute1[i]);
+			}
+		}
+
+		return delta;
+	},
+	orderlyScramble: function(geometries) {
+		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;
+		var length = geometries[0][attributeList[0]].length;
+		var order = [];
+		for (var i = 0; i < length; i++) {
+			order[i] = i;
+		};
+
+		var newOrder = [];
+		for (var i = 0; i < length; i++) {
+			var randomIndex = ~~(Math.random() * order.length);
+			newOrder[i] = order[randomIndex];
+			order.splice(randomIndex, 1);
+		};
+
+		for (var ig = 0; ig < geometries.length; ig++) {
+			for (var ia = 0; ia < attributeList.length; ia++) {
+				var workingArray = geometries[ig][attributeList[ia]];
+				var originalArray = geometries[ig][attributeList[ia]].slice(0);
+				for (var i = 0; i < length; i++) {
+					workingArray[i] = originalArray[newOrder[i]];
+				};
+			}
+		}
+	},
+	checkIfGeometryAttributesLengthsMatch : function(geometries) {
+		var length = -1;
+		for (var ig = 0; ig < geometries.length; ig++) {
+			for (var ia = 0; ia < attributeList.length; ia++) {
+				var lengthTemp = geometries[ig][attributeList[ia]].length;
+				if(length == -1) {
+					length = lengthTemp;
+				} else if (length != lengthTemp) {
+					console.log("WARNING: Could not orderly scramble geometries that have inconsistent/varying buffer lengths. Please pairGeometry() them first.");
+					return;
+				}
+			}
+		}
+		return true;
 	}
 }
 module.exports = GeometryUtils;

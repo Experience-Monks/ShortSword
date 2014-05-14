@@ -1,6 +1,8 @@
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
+var PerformanceTweaker = require('../../utils/PerformanceTweaker');
+
 /**
  * CanvasRenderer extends BaseRenderer and provides rendering functionality using native canvas API
  */
@@ -36,16 +38,16 @@ function CanvasRenderer(canvas, props) {
 CanvasRenderer.prototype = Object.create(BaseRenderer.prototype);
 
 CanvasRenderer.prototype.setSize = function(w, h) {
-	this.screenWidth = w;
-	this.screenHeight = h;
-	this.screenWidthHalf = w * .5;
-	this.screenHeightHalf = h * .5;
+	this.canvasWidth = w;
+	this.canvasHeight = h;
+	this.canvasWidthHalf = w * .5;
+	this.canvasHeightHalf = h * .5;
 	this.resetBuffer();
 	this.clear();
 };
 
 CanvasRenderer.prototype.resetBuffer = function() {
-	this.imageData = this.context.getImageData(0, 0, this.screenWidth, this.screenHeight);
+	this.imageData = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight);
 	this.buffer = new ArrayBuffer(this.imageData.data.length);
 	this.bufferView8uint = new Uint8ClampedArray(this.buffer);
 	this.bufferView32uint = new Uint32Array(this.buffer);
@@ -64,8 +66,6 @@ CanvasRenderer.prototype.clear = function() {
  * @param  {Camera3D} camera the camera to render from
  */
 CanvasRenderer.prototype.render = function(scene, camera) {
-	console.log("render");
-
 	scene.updateMatrixWorld();
 
 	if ( this.autoClear === true ) this.clear();
@@ -81,14 +81,14 @@ CanvasRenderer.prototype.render = function(scene, camera) {
 };
 
 CanvasRenderer.prototype.renderObjectToBuffer = function() {
-	var screenVector = new THREE.Vector3();
+	var canvasVector = new THREE.Vector3();
 	return function(object, camera) {
-		var screenWidth = this.screenWidth;
-		var screenHeight = this.screenHeight;
-		var screenWidthHalf = this.screenWidthHalf;
-		var screenHeightHalf = this.screenHeightHalf;
-		var screenWidthMinusOne = screenWidth-1;
-		var screenHeightMinusOne = screenHeight-1;
+		var canvasWidth = this.canvasWidth;
+		var canvasHeight = this.canvasHeight;
+		var canvasWidthHalf = this.canvasWidthHalf;
+		var canvasHeightHalf = this.canvasHeightHalf;
+		var canvasWidthMinusOne = canvasWidth-1;
+		var canvasHeightMinusOne = canvasHeight-1;
 		var bufferView32uint = this.bufferView32uint;
 
 		if( object.updateGeometry )
@@ -98,18 +98,17 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			var verts = object.geometry.vertices;
 			object.material.init(this.context, this.clearColorBuffer32uint[0]);
 			var material = object.material;
-			for (var i = verts.length - 1; i >= 0; i--) {
-				screenVector.copy(verts[i]).applyMatrix4(object.matrixWorld).applyProjection( this.viewProjectionMatrix );
-				if(screenVector.x <= -1 || screenVector.x >= 1) continue;
-				if(screenVector.y <= -1 || screenVector.y >= 1) continue;
-				var x = ~~(screenVector.x * screenWidthHalf + screenWidthHalf);
-				var y = ~~(screenVector.y * screenHeightHalf + screenHeightHalf);
+			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominatorSquared) - 1;
+			for (var i = vertsToRender; i >= 0; i--) {
+				canvasVector.copy(verts[i]).applyMatrix4(object.matrixWorld).applyProjection( this.viewProjectionMatrix );
+				if(canvasVector.x <= -1 || canvasVector.x >= 1) continue;
+				if(canvasVector.y <= -1 || canvasVector.y >= 1) continue;
+				var x = ~~(canvasVector.x * canvasWidthHalf + canvasWidthHalf);
+				var y = ~~(canvasVector.y * canvasHeightHalf + canvasHeightHalf);
 				material.drawToBuffer(
 					bufferView32uint, 
-					x + y * screenWidth,
-					i,
-					screenWidth,
-					screenVector.z
+					 x + y * canvasWidth,
+					canvasVector.z
 				);
 			};
 		}
@@ -125,7 +124,7 @@ CanvasRenderer.prototype.addEffect = function(effect) {
 
 CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 	for (var i = 0; i < this.effects.length; i++) {
-		this.effects[i].apply(this.context, this.screenWidth, this.screenHeight);
+		this.effects[i].apply(this.context, this.canvasWidth, this.canvasHeight);
 	};
 };
 
