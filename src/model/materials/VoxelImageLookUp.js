@@ -80,9 +80,30 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, drawIDX, vertexIDX, buffe
 			continue;
 		} else {
 
-			buffer[ idx ] = img[ i ];
+			var alpha = buffer[ idx ] >>> 24;
+
+			buffer[ idx ] = alphaBlend( img[ i ], buffer[ idx ] ) | alpha << 24;
 		}
 	}
 };
+
+function alphaBlend( src, dest ) {
+
+	var alpha = ( src >>> 24 ) / 255;
+
+	var r1 = (src >> 16) & 0xFF;
+	var g1 = (src >> 8) & 0xFF;
+	var b1 = src & 0xFF;
+	var r2 = (dest >> 16) & 0xFF;
+	var g2 = (dest >> 8) & 0xFF;
+	var b2 = dest & 0xFF;
+	var ar, ag, ab;
+
+	ar = alpha * (r1 - r2) + r2;
+	ag = alpha * (g1 - g2) + g2;
+	ab = alpha * (b1 - b2) + b2;
+
+	return (ar << 16) | (ag << 8) | ab;
+}
 
 module.exports = VoxelLookUp;

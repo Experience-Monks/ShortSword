@@ -107,7 +107,9 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 				var y = ~~(canvasVector.y * canvasHeightHalf + canvasHeightHalf);
 				material.drawToBuffer(
 					bufferView32uint, 
-					 x + y * canvasWidth,
+					x + y * canvasWidth,
+					i,
+					canvasWidth,
 					canvasVector.z
 				);
 			};
