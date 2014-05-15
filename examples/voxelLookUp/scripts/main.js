@@ -22,6 +22,14 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario_obj.obj", function(geo
 });
 
 var mouseMove = {x:0,y:0,speed:.1};
+SHORTSWORD.PerformanceTweaker.upgradeWhen = 45;
+SHORTSWORD.PerformanceTweaker.degradeWhen = 30;
+
+var canvasGraph = new SHORTSWORD.CanvasGraph();
+canvasGraph.addValue(SHORTSWORD.FPS, "fps", "green", "FPS Smoothed");
+canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "degradeWhen", "#550000", "FPS Smoothed");
+canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "upgradeWhen", "#2244aa", "FPS Smoothed");
+
 ssView.renderManager.onEnterFrame.add(function() {
 	if(!_this.objModel) return;
 	_this.objModel.rotateY(mouseMove.x * mouseMove.speed);
