@@ -48,7 +48,7 @@ Face.prototype = {
 				Math.random()
 			).lerp(
 				v3, 
-				Math.pow(Math.random(), edgePower || 4)
+				Math.pow(Math.random(), edgePower || 2)
 			);
 	},
 	_createRandomPoint: function() {

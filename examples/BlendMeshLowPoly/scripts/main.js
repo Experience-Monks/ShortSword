@@ -3,7 +3,7 @@
  */
 var ssView = new SHORTSWORD.View();
 
-var totalVerts = 100000;
+var totalVerts = 200000;
 var _this = this;
 SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/cube.obj", function(geometry1) {
 	SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/yoshi.obj", function(geometry2) {
@@ -18,8 +18,14 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/cube.obj", function(geometry
 });
 
 var mouseMove = {x:0,y:0,speed:.1};
+
+SHORTSWORD.PerformanceTweaker.upgradeWhen = 45;
+SHORTSWORD.PerformanceTweaker.degradeWhen = 30;
+
 var canvasGraph = new SHORTSWORD.CanvasGraph();
 canvasGraph.addValue(SHORTSWORD.FPS, "fps", "green", "FPS Smoothed");
+canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "degradeWhen", "#550000", "FPS Smoothed");
+canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "upgradeWhen", "#2244aa", "FPS Smoothed");
 
 ssView.renderManager.onEnterFrame.add(function() {
 	SHORTSWORD.GeometryGarage.doSomeWork();

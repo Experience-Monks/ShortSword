@@ -41,8 +41,10 @@ var GeometryGarage = {
 		};
 	}(),
 	octTreeSort: function() {
-		
-	},
+		return function() {
+
+		}
+	}(),
 	doSomeWork: function() {
 		for (var i = work.length - 1; i >= 0; i--) {
 			work[i].run();
