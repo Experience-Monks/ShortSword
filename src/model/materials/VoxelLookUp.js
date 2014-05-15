@@ -28,7 +28,7 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, index, vertexIDX, screenW
 
 	var idx = this.vertexLookUp[ vertexIDX ];
 
-	buffer[ index ] = this.lookupColours[ idx ];
+	buffer.set32( index, this.lookupColours[ idx ] );
 };
 
 module.exports = VoxelLookUp;
