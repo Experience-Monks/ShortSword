@@ -18,17 +18,18 @@ function BlendMesh(geometry1, geometry2, material, cacheRelative) {
 
 	GeometryUtils.orderlyScramble([geometry1, geometry2]);
 
-	// if(cacheRelative) {
-	// 	this.updateGeometry = this._updateGeometryRelative;
-	// 	this.geometryDelta = GeometryUtils.computeGeometryDelta(this.geometry1, this.geometry2);
-	// } else {
-	// 	this.updateGeometry = this._updateGeometry;
-	// }
-	
-	Mesh.call( this, this.geometry1, material );
+	if(cacheRelative) {
+		this.updateGeometry = this._updateGeometryRelative;
+		this.geometryDelta = GeometryUtils.computeGeometryDelta(this.geometry1, this.geometry2);
 
-	this.blendAni = this.addAnimator( AnimatorVertexBlend );
-	this.blendAni.push( geometry2 );
+		Mesh.call( this, this.geometry1.clone(), material );
+	} else {
+
+		this.blendAni = this.addAnimator( AnimatorVertexBlend );
+		this.blendAni.push( geometry2 );
+
+		Mesh.call( this, this.geometry1, material );
+	}
 }
 
 /**
@@ -47,7 +48,8 @@ Object.defineProperty( BlendMesh.prototype, 'blend', {
 
 		this._blend = value;
 
-		this.blendAni.setPercentage( value );
+		if( this.blendAni )
+			this.blendAni.setPercentage( value );
 	}
 });
 
@@ -74,25 +76,25 @@ Object.defineProperty( BlendMesh.prototype, 'blend', {
 // 	}
 // }();
 
-// BlendMesh.prototype._updateGeometryRelative = function() {
-// 	var temp = new THREE.Vector3();
-// 	return function() {
-// 		var blend = this.blend;
-// 		for (var i = 0; i < this.attributeList.length; i++) {
-// 			var attributeName = this.attributeList[i];
-// 			var attribute = this.geometry[attributeName];
-// 			var attribute1 = this.geometry1[attributeName];
-// 			var attributeDelta = this.geometryDelta[attributeName];
-// 			var t = ~~(attribute1.length / PerformanceTweaker.denominator);
-// 			for (var i = 0; i < t; i++) {
-// 				attribute[i].copy(
-// 					attribute1[i]
-// 				).add(
-// 					temp.copy(attributeDelta[i]).multiplyScalar(blend)
-// 				)
-// 			};
-// 		}
-// 	}
-// }();
+BlendMesh.prototype._updateGeometryRelative = function() {
+	var temp = new THREE.Vector3();
+	return function() {
+		var blend = this.blend;
+		for (var i = 0; i < this.attributeList.length; i++) {
+			var attributeName = this.attributeList[i];
+			var attribute = this.geometry[attributeName];
+			var attribute1 = this.geometry1[attributeName];
+			var attributeDelta = this.geometryDelta[attributeName];
+			var t = ~~(attribute1.length / PerformanceTweaker.denominator);
+			for (var i = 0; i < t; i++) {
+				attribute[i].copy(
+					attribute1[i]
+				).add(
+					temp.copy(attributeDelta[i]).multiplyScalar(blend)
+				)
+			};
+		}
+	}
+}();
 
 module.exports = BlendMesh;
