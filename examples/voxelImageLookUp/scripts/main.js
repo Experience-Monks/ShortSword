@@ -6,8 +6,8 @@ var ssView = new SHORTSWORD.View();
 var _this = this;
 SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario_obj.obj", function(geometry) {
 
-	
-
+	SHORTSWORD.GeometryUtils.orderlyScramble([geometry]);
+	SHORTSWORD.GeometryUtils.reduce(geometry, 5000);
 	var img = new Image();
 	img.src = '../assets/images/image1.png';
 
@@ -26,7 +26,7 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario_obj.obj", function(geo
 
 			var mat = new SHORTSWORD.materials.VoxelImageLookUp();
 
-			geometry.vertices.length = 5000;
+//			geometry.vertices.length = 5000;
 
 			for( var i = 0, len = geometry.vertices.length; i < len; i++ ) {
 

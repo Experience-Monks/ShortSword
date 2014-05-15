@@ -86,6 +86,12 @@ var GeometryUtils = {
 			}
 		}
 	},
+	reduce: function(geometry, length) {
+		var spliceLength = geometry.vertices.length - length;
+		for (var ia = 0; ia < attributeList.length; ia++) {
+			geometry[attributeList[ia]].splice(length, spliceLength);
+		}
+	},
 	checkIfGeometryAttributesLengthsMatch : function(geometries) {
 		var length = -1;
 		for (var ig = 0; ig < geometries.length; ig++) {
