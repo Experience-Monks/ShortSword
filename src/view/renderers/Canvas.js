@@ -15,7 +15,7 @@ function CanvasRenderer(canvas, props) {
 	this.clearColorBuffer = new ArrayBuffer(4);
 	this.clearColorBuffer32uint = new Uint32Array(this.clearColorBuffer);
 	if(props.clearColor === undefined) {
-		this.clearColorBuffer32uint[0] = (255 << 24) | (11 << 16) | (15 <<  8) | 30;
+		this.clearColorBuffer32uint[0] = (255 << 24) | (0 << 16) | (0 <<  8) | 30;
 	} else {
 		//set the color from props instead
 	}
@@ -107,7 +107,9 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 				var y = ~~(canvasVector.y * canvasHeightHalf + canvasHeightHalf);
 				material.drawToBuffer(
 					bufferView32uint, 
-					 x + y * canvasWidth,
+					x + y * canvasWidth,
+					i,
+					canvasWidth,
 					canvasVector.z
 				);
 			};
