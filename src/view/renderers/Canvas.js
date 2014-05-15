@@ -93,6 +93,7 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			var verts = object.geometry.vertices;
 			var material = object.material;
 			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominatorSquared) - 1;
+			var drawBuffer = this.drawBuffer;
 
 			material.init( this.context, this.drawBuffer.getClearColour32() );
 			
@@ -108,7 +109,7 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 
 				material.drawToBuffer(
 
-					this.drawBuffer, 
+					drawBuffer, 
 					x + y * canvasWidth,
 					i,
 					canvasWidth,
