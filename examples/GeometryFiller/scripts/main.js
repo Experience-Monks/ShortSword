@@ -5,7 +5,8 @@ var ssView = new SHORTSWORD.View();
 
 var _this = this;
 SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/cube.obj", function(geometry) {
-	SHORTSWORD.GeometryUtils.fillSurfaces(geometry, 200000);
+	SHORTSWORD.GeometryGarage.fillSurfaces(geometry, 1000000, function(){console.log("DONE!")});
+//	SHORTSWORD.GeometryUtils.fillSurfaces(geometry, 1000000);
 	var mesh = new SHORTSWORD.Mesh(geometry);
 	ssView.scene.add(mesh);
 	_this.model = mesh;
@@ -14,12 +15,19 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/cube.obj", function(geometry
 
 var mouseMove = {x:0,y:0,speed:.1};
 
+SHORTSWORD.PerformanceTweaker.upgradeWhen = 45;
+SHORTSWORD.PerformanceTweaker.degradeWhen = 30;
+
 var canvasGraph = new SHORTSWORD.CanvasGraph();
+canvasGraph.addValue(SHORTSWORD.FPS, "fps", "green", "FPS Smoothed");
+canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "degradeWhen", "#550000", "FPS Smoothed");
+canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "upgradeWhen", "#2244aa", "FPS Smoothed");
 
 ssView.renderManager.onEnterFrame.add(function() {
+	SHORTSWORD.GeometryGarage.doSomeWork();
 	if(!_this.model) return;
-	_this.model.rotateY(mouseMove.x * mouseMove.speed);
-	_this.model.rotateX(mouseMove.y * mouseMove.speed);
+	_this.model.rotateY(mouseMove.x * mouseMove.speed * SHORTSWORD.FPS.animSpeedCompensation);
+	_this.model.rotateX(mouseMove.y * mouseMove.speed * SHORTSWORD.FPS.animSpeedCompensation);
 })
 window.onmousemove = function(event) {
 	mouseMove.x = event.x / window.innerWidth * 2 - 1;

@@ -117,8 +117,8 @@ var GeometryUtils = {
 		var medianRatio = ~~(median / min);
 		var maxRatio = ~~(max / min);
 
-		console.log(medianRatio);
-		console.log(maxRatio);
+		//console.log(medianRatio);
+		//console.log(maxRatio);
 
 		var proportionalFaces = [];
 		for (var iF = 0; iF < facesByArea.length; iF++) {
@@ -127,7 +127,7 @@ var GeometryUtils = {
 				proportionalFaces.push(face);
 			};
 		};
-		console.log(facesByArea.length, proportionalFaces.length);
+		//console.log(facesByArea.length, proportionalFaces.length);
 
 		var pfLength = proportionalFaces.length;
 		for (var i = length; i < newTotalVertices; i++) {
