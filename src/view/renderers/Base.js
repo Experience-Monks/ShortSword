@@ -4,6 +4,7 @@
  * @param {Object} props an object of properties to override default dehaviours
  */
 function BaseRenderer(canvas, props) {
+	
 	this.canvas = canvas;
 	
 	props = props || {};

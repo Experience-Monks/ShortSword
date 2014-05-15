@@ -18,12 +18,18 @@ SHORTSWORD = {
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
+	GeometryUtils : require('./utils/Geometry'),
+	GeometryGarage : require('./utils/GeometryGarage'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
+	CanvasGraph : require('./utils/CanvasGraph'),
+	PerformanceTweaker : require('./utils/PerformanceTweaker'),
 	materials: {
 
 		Voxel: require( './model/materials/Voxel' ),
 		VoxelGradient: require( './model/materials/VoxelGradient' ),
+		VoxelLookUp: require( './model/materials/VoxelLookUp' ),
+		VoxelImageLookUp: require( './model/materials/VoxelImageLookUp' )
 	},
 	animators: {
 		VertexBlend: require('./animation/AnimatorVertexBlend'),

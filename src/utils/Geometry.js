@@ -1,3 +1,6 @@
+var Geometry = require('../model/Geometry');
+
+var attributeList = ["vertices"];
 var GeometryUtils = {
 	octTreeSort: function() {
 		var tree = [];
@@ -40,6 +43,95 @@ var GeometryUtils = {
 			for (var i = tS; i < tL; i++) {
 				attributeSmall[i] = new THREE.Vector3().copy(attributeSmall[i%tS]);
 			};
+		}
+	},
+	computeGeometryDelta: function(geometry1, geometry2) {
+		if(!this.checkIfGeometryAttributesLengthsMatch([geometry1, geometry2])) return;
+		var delta = new Geometry();
+		var length = geometry1[attributeList[0]].length;
+		for (var ia = 0; ia < attributeList.length; ia++) {
+			var attrName = attributeList[ia];
+			var workingAttribute = delta[attrName];
+			var attribute1 = geometry1[attrName];
+			var attribute2 = geometry2[attrName];
+			for (var i = 0; i < length; i++) {
+				workingAttribute[i] = attribute2[i].clone().sub(attribute1[i]);
+			}
+		}
+
+		return delta;
+	},
+	orderlyScramble: function(geometries) {
+		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;
+		var length = geometries[0][attributeList[0]].length;
+		var order = [];
+		for (var i = 0; i < length; i++) {
+			order[i] = i;
+		};
+
+		var newOrder = [];
+		for (var i = 0; i < length; i++) {
+			var randomIndex = ~~(Math.random() * order.length);
+			newOrder[i] = order[randomIndex];
+			order.splice(randomIndex, 1);
+		};
+
+		for (var ig = 0; ig < geometries.length; ig++) {
+			for (var ia = 0; ia < attributeList.length; ia++) {
+				var workingArray = geometries[ig][attributeList[ia]];
+				var originalArray = geometries[ig][attributeList[ia]].slice(0);
+				for (var i = 0; i < length; i++) {
+					workingArray[i] = originalArray[newOrder[i]];
+				};
+			}
+		}
+	},
+	checkIfGeometryAttributesLengthsMatch : function(geometries) {
+		var length = -1;
+		for (var ig = 0; ig < geometries.length; ig++) {
+			for (var ia = 0; ia < attributeList.length; ia++) {
+				var lengthTemp = geometries[ig][attributeList[ia]].length;
+				if(length == -1) {
+					length = lengthTemp;
+				} else if (length != lengthTemp) {
+					console.log("WARNING: Could not orderly scramble geometries that have inconsistent/varying buffer lengths. Please pairGeometry() them first.");
+					return;
+				}
+			}
+		}
+		return true;
+	},
+	fillSurfaces : function(geometry, newTotalVertices) {
+		var length = geometry[attributeList[0]].length;
+		if(!geometry.faces || geometry.faces.length == 0) {
+			console.log("WARNING: Cannot fill geometry unless it has faces defined");
+		}
+
+		var facesByArea = geometry.faces.slice(0);
+		facesByArea.sort(function(a, b) { return a.area - b.area; });
+
+		var min = facesByArea[0].area;
+		var median = facesByArea[~~(facesByArea.length * .5)].area;
+		var max = facesByArea[facesByArea.length-1].area;
+
+		var medianRatio = ~~(median / min);
+		var maxRatio = ~~(max / min);
+
+		//console.log(medianRatio);
+		//console.log(maxRatio);
+
+		var proportionalFaces = [];
+		for (var iF = 0; iF < facesByArea.length; iF++) {
+			var face = facesByArea[iF];
+			for (var i = ~~(face.area / min); i >= 0; i--) {
+				proportionalFaces.push(face);
+			};
+		};
+		//console.log(facesByArea.length, proportionalFaces.length);
+
+		var pfLength = proportionalFaces.length;
+		for (var i = length; i < newTotalVertices; i++) {
+			geometry.vertices.push(proportionalFaces[i%pfLength].createRandomPoint())
 		}
 	}
 }
