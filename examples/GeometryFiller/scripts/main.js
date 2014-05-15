@@ -4,7 +4,7 @@
 var ssView = new SHORTSWORD.View();
 
 var _this = this;
-SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/yoshi.obj", function(geometry) {
+SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/cube.obj", function(geometry) {
 	SHORTSWORD.GeometryUtils.fillSurfaces(geometry, 200000);
 	var mesh = new SHORTSWORD.Mesh(geometry);
 	ssView.scene.add(mesh);
