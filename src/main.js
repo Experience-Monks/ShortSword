@@ -23,6 +23,13 @@ SHORTSWORD = {
 	FPS : require('./utils/FPS'),
 	CanvasGraph : require('./utils/CanvasGraph'),
 	PerformanceTweaker : require('./utils/PerformanceTweaker'),
+	materials: {
+
+		Voxel: require( './model/materials/Voxel' ),
+		VoxelGradient: require( './model/materials/VoxelGradient' ),
+		VoxelLookUp: require( './model/materials/VoxelLookUp' ),
+		VoxelImageLookUp: require( './model/materials/VoxelImageLookUp' )
+	},
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
