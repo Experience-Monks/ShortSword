@@ -5,7 +5,7 @@ var ssView = new SHORTSWORD.View();
 
 var totalVerts = 100000;
 var _this = this;
-SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario.obj", function(geometry1) {
+SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/cube.obj", function(geometry1) {
 	SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/yoshi.obj", function(geometry2) {
 		SHORTSWORD.GeometryUtils.fillSurfaces(geometry1, totalVerts);
 		SHORTSWORD.GeometryUtils.fillSurfaces(geometry2, totalVerts);

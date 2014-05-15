@@ -26,7 +26,8 @@ GeometryOBJParser.prototype = {
 			}
 		};
 
-		var jump = 100;
+		var jump = ~~(vertices.length / 1000);
+		if(jump == 0) jump = 1;
 		var totalSamples = 0;
 		var centroid = new THREE.Vector3();
 		for (var i = 0; i < vertices.length; i+=jump) {
@@ -61,8 +62,8 @@ GeometryOBJParser.prototype = {
 					);
 					if(faceData.length == 4){
 						faces.push(new Face(
+								vertices[parseInt(faceData[0].split("/")[0])-1],
 								vertices[parseInt(faceData[2].split("/")[0])-1],
-								vertices[parseInt(faceData[1].split("/")[0])-1],
 								vertices[parseInt(faceData[3].split("/")[0])-1]
 							)
 						);
