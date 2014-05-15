@@ -31,6 +31,10 @@ SHORTSWORD = {
 		VoxelLookUp: require( './model/materials/VoxelLookUp' ),
 		VoxelImageLookUp: require( './model/materials/VoxelImageLookUp' )
 	},
+	animators: {
+		VertexBlend: require('./animation/AnimatorVertexBlend'),
+		VertexRandom: require('./animation/AnimatorVertexRandom')
+	},
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
