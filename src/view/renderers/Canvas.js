@@ -94,10 +94,31 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			var material = object.material;
 			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominatorSquared) - 1;
 			var drawBuffer = this.drawBuffer;
+			var animators = object.animators;
+			var lenAnimators = animators.length;
+			var lenDirty = 0;
+			var dirtyAnimators = [];
+
+			//push dirty animators to its own array
+			//this makes sure every animator isn't run on every particle
+			for( var i = 0; i < lenAnimators; i++ ) {
+
+				if( animators[ i ].dirty ) {
+
+					lenDirty++;
+
+					dirtyAnimators.push( animators[ i ] );	
+				}
+			}
 
 			material.init( this.context, this.drawBuffer.getClearColour32() );
 			
 			for (var i = vertsToRender; i >= 0; i--) {
+
+				for(var j = 0; j < lenDirty; j++) {
+
+					dirtyAnimators[ j ].update( i );
+				}
 
 				canvasVector.copy( verts[i] ).applyMatrix4( object.matrixWorld ).applyProjection( this.viewProjectionMatrix );
 
