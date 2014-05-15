@@ -16,13 +16,14 @@ ssView.renderer.addEffect(new SHORTSWORD.effects.GlitchOffset(4));
 ssView.renderer.addEffect(new SHORTSWORD.effects.GlitchOffsetSmearBlock(4));
 
 var mouseMove = {x:0,y:0,speed:.1};
+SHORTSWORD.PerformanceTweaker.upgradeWhen = 45;
+SHORTSWORD.PerformanceTweaker.degradeWhen = 30;
 
 var canvasGraph = new SHORTSWORD.CanvasGraph();
 canvasGraph.addValue(SHORTSWORD.FPS, "fps", "green", "FPS Smoothed");
-SHORTSWORD.PerformanceTweaker.upgradeWhen = 45;
-SHORTSWORD.PerformanceTweaker.degradeWhen = 30;
 canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "degradeWhen", "#550000", "FPS Smoothed");
 canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "upgradeWhen", "#2244aa", "FPS Smoothed");
+
 ssView.renderManager.onEnterFrame.add(function() {
 	if(!_this.blendModel) return;
 	_this.blendModel.blend = Math.sin((new Date()).getTime() * .001) * .5 + .5;

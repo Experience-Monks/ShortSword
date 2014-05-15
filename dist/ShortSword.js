@@ -75,7 +75,8 @@ GeometryOBJParser.prototype = {
 			}
 		};
 
-		var jump = 100;
+		var jump = ~~(vertices.length / 1000);
+		if(jump == 0) jump = 1;
 		var totalSamples = 0;
 		var centroid = new THREE.Vector3();
 		for (var i = 0; i < vertices.length; i+=jump) {
@@ -102,23 +103,19 @@ GeometryOBJParser.prototype = {
 					for (var iFD = faceData.length - 1; iFD >= 0; iFD--) {
 						if(faceData[iFD] == "" || faceData[iFD] == " " || faceData[iFD] == "f") faceData.splice(iFD, 1);
 					};
-					try{
+					faces.push(new Face(
+							vertices[parseInt(faceData[0].split("/")[0])-1],
+							vertices[parseInt(faceData[1].split("/")[0])-1],
+							vertices[parseInt(faceData[2].split("/")[0])-1]
+						)
+					);
+					if(faceData.length == 4){
 						faces.push(new Face(
 								vertices[parseInt(faceData[0].split("/")[0])-1],
-								vertices[parseInt(faceData[1].split("/")[0])-1],
-								vertices[parseInt(faceData[2].split("/")[0])-1]
+								vertices[parseInt(faceData[2].split("/")[0])-1],
+								vertices[parseInt(faceData[3].split("/")[0])-1]
 							)
 						);
-						if(faceData.length == 4){
-							faces.push(new Face(
-									vertices[parseInt(faceData[2].split("/")[0])-1],
-									vertices[parseInt(faceData[1].split("/")[0])-1],
-									vertices[parseInt(faceData[3].split("/")[0])-1]
-								)
-							);
-						}
-					} catch(e) {
-						console.log(e);
 					}
 				}
 			};
@@ -301,12 +298,51 @@ function Face(v1, v2, v3) {
 	this.v1 = v1;
 	this.v2 = v2;
 	this.v3 = v3;
-	if(v1 === undefined || v2 === undefined || v3 === undefined) throw("WTF");
+
+	var temp = new THREE.Vector3();
+	//edge lengths;
+	var a = temp.copy(v1).sub(v2).length();
+	var b = temp.copy(v2).sub(v3).length();
+	var c = temp.copy(v3).sub(v1).length();
+	//semiperimeter
+	var s = (a + b + c) * .5;
+
+	this.area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
 }
 
+Face.edgeIndex = 0;
+
 Face.prototype = {
-	createRandomPoint: function() {
-		return this.v1.clone().lerp(this.v2, Math.random()).lerp(this.v3, Math.pow(Math.random(), 2));
+	createRandomPoint: function(edgePower) {
+		switch(Face.edgeIndex%3) {
+			case 0:
+				v1 = this.v1;
+				v2 = this.v2;
+				v3 = this.v3;
+				break;
+			case 1:
+				v1 = this.v2;
+				v2 = this.v3;
+				v3 = this.v1;
+				break;
+			case 2:
+				v1 = this.v3;
+				v2 = this.v1;
+				v3 = this.v2;
+				break;
+		}
+		Face.edgeIndex++;
+
+		return v1.clone().lerp(
+				v2, 
+				Math.random()
+			).lerp(
+				v3, 
+				Math.pow(Math.random(), edgePower || 4)
+			);
+	},
+	clone: function() {
+		return new Face(this.v1, this.v2, this.v3);
 	}
 };
 module.exports = Face;
@@ -1159,8 +1195,32 @@ var GeometryUtils = {
 		if(!geometry.faces || geometry.faces.length == 0) {
 			console.log("WARNING: Cannot fill geometry unless it has faces defined");
 		}
+
+		var facesByArea = geometry.faces.slice(0);
+		facesByArea.sort(function(a, b) { return a.area - b.area; });
+
+		var min = facesByArea[0].area;
+		var median = facesByArea[~~(facesByArea.length * .5)].area;
+		var max = facesByArea[facesByArea.length-1].area;
+
+		var medianRatio = ~~(median / min);
+		var maxRatio = ~~(max / min);
+
+		console.log(medianRatio);
+		console.log(maxRatio);
+
+		var proportionalFaces = [];
+		for (var iF = 0; iF < facesByArea.length; iF++) {
+			var face = facesByArea[iF];
+			for (var i = ~~(face.area / min); i >= 0; i--) {
+				proportionalFaces.push(face);
+			};
+		};
+		console.log(facesByArea.length, proportionalFaces.length);
+
+		var pfLength = proportionalFaces.length;
 		for (var i = length; i < newTotalVertices; i++) {
-			geometry.vertices.push(geometry.faces[~~(Math.random() * geometry.faces.length)].createRandomPoint())
+			geometry.vertices.push(proportionalFaces[i%pfLength].createRandomPoint())
 		}
 	}
 }
