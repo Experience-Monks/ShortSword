@@ -6,17 +6,22 @@ var GeometryGarage = {
 		var verticesPerWorkRun = 10000;
 		var targetWorkRunDuration = 6;
 		var targetTweakRatio = 1.2;
-		return function(geometry, newTotalVertices, callback) {
+		return function(geometries, newTotalVertices, callback) {
+			if(!GeometryUtils.checkIfGeometryAttributesLengthsMatch(geometries)) {
+				return;
+			}
 			var workLoad = {
 				timeToProcess: 0,
 				done: false,
-				currentTotalVertices: geometry.vertices.length,
+				currentTotalVertices: geometries[0].vertices.length,
 				targetTotalVertices: newTotalVertices,
 				callback: callback,
 				run: function() {
 					var timeBefore = new Date;
 					var nextTotal = Math.min(this.targetTotalVertices, this.currentTotalVertices + verticesPerWorkRun);
-					GeometryUtils.fillSurfaces(geometry, nextTotal);
+					for (var i = 0; i < geometries.length; i++) {
+						GeometryUtils.fillSurfaces(geometries[i], nextTotal);
+					};
 					this.currentTotalVertices = nextTotal;
 					var timeAfter = new Date;
 					var duration = timeAfter - timeBefore;
@@ -35,6 +40,9 @@ var GeometryGarage = {
 			work.push(workLoad);
 		};
 	}(),
+	octTreeSort: function() {
+		
+	},
 	doSomeWork: function() {
 		for (var i = work.length - 1; i >= 0; i--) {
 			work[i].run();
