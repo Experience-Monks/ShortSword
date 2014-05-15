@@ -75,7 +75,8 @@ GeometryOBJParser.prototype = {
 			}
 		};
 
-		var jump = 100;
+		var jump = ~~(vertices.length / 1000);
+		if(jump == 0) jump = 1;
 		var totalSamples = 0;
 		var centroid = new THREE.Vector3();
 		for (var i = 0; i < vertices.length; i+=jump) {
@@ -110,8 +111,8 @@ GeometryOBJParser.prototype = {
 					);
 					if(faceData.length == 4){
 						faces.push(new Face(
+								vertices[parseInt(faceData[0].split("/")[0])-1],
 								vertices[parseInt(faceData[2].split("/")[0])-1],
-								vertices[parseInt(faceData[1].split("/")[0])-1],
 								vertices[parseInt(faceData[3].split("/")[0])-1]
 							)
 						);
@@ -309,9 +310,36 @@ function Face(v1, v2, v3) {
 	this.area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
 }
 
+Face.edgeIndex = 0;
+
 Face.prototype = {
-	createRandomPoint: function() {
-		return this.v1.clone().lerp(this.v2, Math.random()).lerp(this.v3, Math.pow(Math.random(), 2));
+	createRandomPoint: function(edgePower) {
+		switch(Face.edgeIndex%3) {
+			case 0:
+				v1 = this.v1;
+				v2 = this.v2;
+				v3 = this.v3;
+				break;
+			case 1:
+				v1 = this.v2;
+				v2 = this.v3;
+				v3 = this.v1;
+				break;
+			case 2:
+				v1 = this.v3;
+				v2 = this.v1;
+				v3 = this.v2;
+				break;
+		}
+		Face.edgeIndex++;
+
+		return v1.clone().lerp(
+				v2, 
+				Math.random()
+			).lerp(
+				v3, 
+				Math.pow(Math.random(), edgePower || 4)
+			);
 	},
 	clone: function() {
 		return new Face(this.v1, this.v2, this.v3);
