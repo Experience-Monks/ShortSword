@@ -25,15 +25,12 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario_obj.obj", function(geo
 		if( ++countLoaded == 2 ){
 
 			var mat = new SHORTSWORD.materials.VoxelImageLookUp();
-
-//			geometry.vertices.length = 5000;
+			mat.addFromImage( img );
+			mat.addFromImage( img2 );
 
 			for( var i = 0, len = geometry.vertices.length; i < len; i++ ) {
-
-				if( i % 2 )
-					mat.addFromImage( img );
-				else
-					mat.addFromImage( img2 );
+				//this is a hack, but very high performance when zsorted
+				geometry.materialIndex[i] = i % 2;
 			}
 			
 			var mesh = new SHORTSWORD.Mesh( geometry, mat );

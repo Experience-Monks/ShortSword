@@ -1,6 +1,7 @@
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
+var PerformanceTweaker = require('../utils/PerformanceTweaker');
 
 function Mesh(geometry, material) {
 	Object3D.call( this );

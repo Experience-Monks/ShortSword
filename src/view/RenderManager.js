@@ -14,7 +14,7 @@ function RenderManager(view) {
 	console.log('RenderManager initialized!');
 };
 
-RenderManager.prototype = {
+RenderManager.prototype = {	
 	/**
 	 * a flag to request that the render loop stops next at the next frame
 	 * @type {Boolean}

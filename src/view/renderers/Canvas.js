@@ -74,9 +74,15 @@ CanvasRenderer.prototype.render = function(scene, camera) {
 	this.applyEffectsToBuffer();
 };
 
+var drawOrderRaw = [];
+for (var i = 100000; i >= 0; i--) {
+	drawOrderRaw[i] = i;
+};
+
 CanvasRenderer.prototype.renderObjectToBuffer = function() {
 
-	var canvasVector = new THREE.Vector3();
+	var canvasVector;
+	var canvasVectors = [];
 
 	return function(object, camera) {
 
@@ -84,44 +90,56 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 		var canvasHeight = this.canvasHeight;
 		var canvasWidthHalf = this.canvasWidthHalf;
 		var canvasHeightHalf = this.canvasHeightHalf;
-
-		if( object.updateGeometry )
-			object.updateGeometry();
 		
 		if( object instanceof Mesh ) {
 
+			object.updateGeometry();
+
 			var verts = object.geometry.vertices;
+			var drawOrder = object.geometry.drawOrder;
 			var material = object.material;
+			var materialIndex = object.geometry.materialIndex;
 			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominatorSquared) - 1;
-			//var vertsToRender = verts.length - 1;
+			object.geometry.updateDrawOrderLength(vertsToRender);
 			var drawBuffer = this.drawBuffer;
-			var animators = object.animators;
-			var lenAnimators = animators.length;
-			var lenDirty = 0;
-			var dirtyAnimators = [];
 
-			//push dirty animators to its own array
-			//this makes sure every animator isn't run on every particle
-			for( var i = 0; i < lenAnimators; i++ ) {
-
-				if( animators[ i ].dirty ) {
-
-					lenDirty++;
-
-					dirtyAnimators.push( animators[ i ] );	
+			var animator;
+			for (var ia = object.animators.length - 1; ia >= 0; ia--) {
+				animator = object.animators[ia];
+				if(animator.dirty) {
+					animator.update();
+					for (var iv = vertsToRender; iv >= 0; iv--) {
+						animator.updateVertex(iv);
+					}
 				}
 			}
 
 			material.init( this.context, this.drawBuffer.getClearColour32() );
-			
-			for (var i = vertsToRender; i >= 0; i--) {
+			var matrixWorld = object.matrixWorld;
+			var viewProjectionMatrix = this.viewProjectionMatrix;
 
-				for(var j = 0; j < lenDirty; j++) {
-
-					dirtyAnimators[ j ].update( i );
-				}
-
-				canvasVector.copy( verts[i] ).applyMatrix4( object.matrixWorld ).applyProjection( this.viewProjectionMatrix );
+			//increase pool if need be
+			if(canvasVectors.length < vertsToRender) {
+				for (var i = canvasVectors.length; i < vertsToRender; i++) {
+					canvasVectors[i] = new THREE.Vector3();
+				};
+			}
+			//create screenspace vectors into pool
+			for (var i = vertsToRender - 1; i >= 0; i--) {
+				canvasVector = canvasVectors[i];
+				canvasVector.copy( verts[i] ).applyMatrix4( matrixWorld ).applyProjection( viewProjectionMatrix );
+			}
+			//zsort the drawOrder
+			if(material.zsort) {
+				drawOrder.sort(function(a, b){
+					return canvasVectors[b].z - canvasVectors[a].z;
+				});
+			}
+			//render the pool by the drawOrder
+			var drawIndex;
+			for (var i = vertsToRender - 1; i >= 0; i--) {
+				drawIndex = drawOrder[i];
+				canvasVector = canvasVectors[drawIndex];
 
 				if(canvasVector.x <= -1 || canvasVector.x >= 1) continue;
 				if(canvasVector.y <= -1 || canvasVector.y >= 1) continue;
@@ -130,10 +148,9 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 				var y = ~~(canvasVector.y * canvasHeightHalf + canvasHeightHalf);
 
 				material.drawToBuffer(
-
 					drawBuffer, 
 					x + y * canvasWidth,
-					i,
+					materialIndex[drawIndex],
 					canvasWidth,
 					canvasVector.z
 				);

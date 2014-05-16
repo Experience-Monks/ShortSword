@@ -82,16 +82,23 @@ p.getPercentage = function() {
 	return this._percentage;
 };
 
-p.update = function( vertexIDX ) {
-
-	var out = this.oVertices[ vertexIDX ];
-	var start = this.steps[ this.startIdx ][ vertexIDX ];
-	var end = this.steps[ this.endIdx ][ vertexIDX ];
-
-	out.x = ( end.x - start.x ) * this.inBetween + start.x;
-	out.y = ( end.y - start.y ) * this.inBetween + start.y;
-	out.z = ( end.z - start.z ) * this.inBetween + start.z;
+p.update = function() {
+	this.startVertices = this.steps[this.startIdx];
+	this.endVertices = this.steps[this.endIdx];
 };
+
+p.updateVertex = function() {
+	var out, start, end;
+	return function( vertexIDX ) {
+		out = this.oVertices[ vertexIDX ];
+		start = this.startVertices[ vertexIDX ];
+		end = this.endVertices[ vertexIDX ];
+
+		out.x = ( end.x - start.x ) * this.inBetween + start.x;
+		out.y = ( end.y - start.y ) * this.inBetween + start.y;
+		out.z = ( end.z - start.z ) * this.inBetween + start.z;
+	}
+}();
 
 function getVertices( step, oVertices ) {
 

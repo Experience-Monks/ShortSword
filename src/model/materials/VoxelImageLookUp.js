@@ -12,6 +12,7 @@ var VoxelLookUp = function( props ) {
 	this.lookupImagesHeights = props.lookupImagesHeights || [];
 	this.offX = [];
 	this.offY = [];
+	this.zsort = true;
 
 	if( !this.hasVertexLookUp || this.lookupImages.length == 0 ) {
 
@@ -32,7 +33,7 @@ VoxelLookUp.prototype.addFromImage = function( image ) {
 
 	if( image.$$lookUpIdx === undefined ) {
 
-		image.$$lookUpIdx = this.add( utilImage.getData32( image ) );
+		image.$$lookUpIdx = this.add( utilImage.getData32( image ), image.width, image.height);
 	} else {
 
 		this.add( this.lookupImages[ image.$$lookUpIdx ], image.width, image.height )
@@ -56,9 +57,8 @@ VoxelLookUp.prototype.add = function( imageData, width, height ) {
 	return idx;
 };
 
-VoxelLookUp.prototype.drawToBuffer = function( buffer, drawIDX, vertexIDX, bufferWidth, z ) {
+VoxelLookUp.prototype.drawToBuffer = function( buffer, drawIDX, imgIDX, bufferWidth, z ) {
 
-	var imgIDX = this.vertexLookUp[ vertexIDX ];
 	var img = this.lookupImages[ imgIDX ];
 	var imgWidth = this.lookupImagesWidths[ imgIDX ];
 	var offX = this.offX[ imgIDX ];
@@ -80,23 +80,18 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, drawIDX, vertexIDX, buffe
 			continue;
 		} else {
 
-			var srcAlpha = ( img[ i ] >>> 24 ) / 255;
+			var buffCol = buffer.get32( idx );
+			var alpha = buffCol >>> 24;
+			var colour = alphaBlend( img[ i ], buffCol ) | alpha << 24;
 
-			if( srcAlpha ) {
-
-				var buffCol = buffer.get32( idx );
-				var alpha = buffCol >>> 24;
-				var colour = alphaBlend( img[ i ], buffCol, srcAlpha ) | alpha << 24;
-
-				buffer.set32( idx, colour );	
-			}
+			buffer.set32( idx, colour );
 		}
 	}
 };
 
-function alphaBlend( src, dest, alpha ) {
+function alphaBlend( src, dest ) {
 
-	
+	var alpha = ( src >>> 24 ) / 255;
 
 	var r1 = (src >> 16) & 0xFF;
 	var g1 = (src >> 8) & 0xFF;
