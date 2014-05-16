@@ -4,14 +4,28 @@ var attributeList = ["vertices"];
 var GeometryUtils = {
 	octTreeSort: function() {
 		var tree = [];
-		var axises = ["x", "y", "z"];
-		var recurseTreeSort = function(vertices, axis) {
-			vertices.sort(function(a, b) {return b[axis] - a[axis]});
-			axis = axises[(axises.indexOf(axis) + 1) % axises.length];
+		var recurseTreeSortX = function(vertices) {
+			vertices.sort(function(a, b) {return b.x - a.x});
 			var tempLow = vertices.slice(0, ~~(vertices.length * .5));
-			if (tempLow.length >= 2) tempLow = recurseTreeSort(tempLow, axis);
+			if (tempLow.length >= 2) tempLow = recurseTreeSortY(tempLow);
 			var tempHigh = vertices.slice(~~(vertices.length * .5), vertices.length);
-			if (tempHigh.length >= 2) tempHigh = recurseTreeSort(tempHigh, axis);
+			if (tempHigh.length >= 2) tempHigh = recurseTreeSortY(tempHigh);
+			return [tempLow, tempHigh];
+		}
+		var recurseTreeSortY = function(vertices) {
+			vertices.sort(function(a, b) {return b.y - a.y});
+			var tempLow = vertices.slice(0, ~~(vertices.length * .5));
+			if (tempLow.length >= 2) tempLow = recurseTreeSortZ(tempLow);
+			var tempHigh = vertices.slice(~~(vertices.length * .5), vertices.length);
+			if (tempHigh.length >= 2) tempHigh = recurseTreeSortZ(tempHigh);
+			return [tempLow, tempHigh];
+		}
+		var recurseTreeSortZ = function(vertices) {
+			vertices.sort(function(a, b) {return b.z - a.z});
+			var tempLow = vertices.slice(0, ~~(vertices.length * .5));
+			if (tempLow.length >= 2) tempLow = recurseTreeSortX(tempLow);
+			var tempHigh = vertices.slice(~~(vertices.length * .5), vertices.length);
+			if (tempHigh.length >= 2) tempHigh = recurseTreeSortX(tempHigh);
 			return [tempLow, tempHigh];
 		}
 
@@ -23,10 +37,16 @@ var GeometryUtils = {
 		}
 
 		return function(geometry) {
-			geometry.vertices = recurseTreeSort(geometry.vertices, "x");
+			var timeBefore = new Date;
+			console.log("octtree start!!!");
+			geometry.vertices = recurseTreeSortX(geometry.vertices);
 			var arrFlat = [];
+			var timeMiddle = new Date;
+			console.log("octree sorted " + geometry.vertices.length + " vertices in " + (timeMiddle-timeBefore) + "ms");
 			recurseUnroll(geometry.vertices, arrFlat);
 			geometry.vertices = arrFlat;
+			var timeAfter = new Date;
+			console.log("octreed " + geometry.vertices.length + " vertices in " + (timeAfter-timeBefore) + "ms");
 			return geometry;
 		}
 	}(),
@@ -100,7 +120,7 @@ var GeometryUtils = {
 				if(length == -1) {
 					length = lengthTemp;
 				} else if (length != lengthTemp) {
-					console.log("WARNING: Could not orderly scramble geometries that have inconsistent/varying buffer lengths. Please pairGeometry() them first.");
+					console.log("WARNING: Geometries do not have the same length!!");
 					return;
 				}
 			}

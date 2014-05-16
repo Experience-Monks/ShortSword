@@ -4,9 +4,9 @@ var AnimatorVertexRandom = function( mesh ) {
 
 	BaseAnimator.call( this, mesh );
 
-	this.velocityX = 1;
-	this.velocityY = 1;
-	this.velocityZ = 1;
+	this.velocityX = .1;
+	this.velocityY = .1;
+	this.velocityZ = .1;
 };
 
 var p = AnimatorVertexRandom.prototype = Object.create( BaseAnimator.prototype );
