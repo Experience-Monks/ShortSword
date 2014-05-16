@@ -80,18 +80,23 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, drawIDX, vertexIDX, buffe
 			continue;
 		} else {
 
-			var buffCol = buffer.get32( idx );
-			var alpha = buffCol >>> 24;
-			var colour = alphaBlend( img[ i ], buffCol ) | alpha << 24;
+			var srcAlpha = ( img[ i ] >>> 24 ) / 255;
 
-			buffer.set32( idx, colour );
+			if( srcAlpha ) {
+
+				var buffCol = buffer.get32( idx );
+				var alpha = buffCol >>> 24;
+				var colour = alphaBlend( img[ i ], buffCol, srcAlpha ) | alpha << 24;
+
+				buffer.set32( idx, colour );	
+			}
 		}
 	}
 };
 
-function alphaBlend( src, dest ) {
+function alphaBlend( src, dest, alpha ) {
 
-	var alpha = ( src >>> 24 ) / 255;
+	
 
 	var r1 = (src >> 16) & 0xFF;
 	var g1 = (src >> 8) & 0xFF;
