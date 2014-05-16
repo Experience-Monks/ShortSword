@@ -74,14 +74,9 @@ CanvasRenderer.prototype.render = function(scene, camera) {
 	this.applyEffectsToBuffer();
 };
 
-var drawOrderRaw = [];
-for (var i = 100000; i >= 0; i--) {
-	drawOrderRaw[i] = i;
-};
-
 CanvasRenderer.prototype.renderObjectToBuffer = function() {
 
-	var canvasVector;
+	var canvasVector = new THREE.Vector3();
 	var canvasVectors = [];
 
 	return function(object, camera) {
@@ -96,11 +91,9 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			object.updateGeometry();
 
 			var verts = object.geometry.vertices;
-			var drawOrder = object.geometry.drawOrder;
 			var material = object.material;
-			var materialIndex = object.geometry.materialIndex;
 			var vertsToRender = ~~(verts.length / PerformanceTweaker.denominatorSquared) - 1;
-			object.geometry.updateDrawOrderLength(vertsToRender);
+			if(material.zsort) object.geometry.updateDrawOrderLength(vertsToRender);
 			var drawBuffer = this.drawBuffer;
 
 			var animator;
@@ -118,43 +111,66 @@ CanvasRenderer.prototype.renderObjectToBuffer = function() {
 			var matrixWorld = object.matrixWorld;
 			var viewProjectionMatrix = this.viewProjectionMatrix;
 
-			//increase pool if need be
-			if(canvasVectors.length < vertsToRender) {
-				for (var i = canvasVectors.length; i < vertsToRender; i++) {
-					canvasVectors[i] = new THREE.Vector3();
-				};
-			}
-			//create screenspace vectors into pool
-			for (var i = vertsToRender - 1; i >= 0; i--) {
-				canvasVector = canvasVectors[i];
-				canvasVector.copy( verts[i] ).applyMatrix4( matrixWorld ).applyProjection( viewProjectionMatrix );
-			}
-			//zsort the drawOrder
+			//use pool if you need to zsort
 			if(material.zsort) {
+				var drawOrder = object.geometry.drawOrder;
+				var materialIndex = object.geometry.materialIndex;
+
+				//increase pool if need be
+				if(canvasVectors.length < vertsToRender) {
+					for (var i = canvasVectors.length; i < vertsToRender; i++) {
+						canvasVectors[i] = new THREE.Vector3();
+					};
+				}
+				//create screenspace vectors into pool
+				for (var i = vertsToRender - 1; i >= 0; i--) {
+					canvasVector = canvasVectors[i];
+					canvasVector.copy( verts[i] ).applyMatrix4( matrixWorld ).applyProjection( viewProjectionMatrix );
+				}
+				//zsort the drawOrder
 				drawOrder.sort(function(a, b){
 					return canvasVectors[b].z - canvasVectors[a].z;
 				});
+				//render the pool by the drawOrder
+				var drawIndex;
+				for (var i = vertsToRender - 1; i >= 0; i--) {
+					drawIndex = drawOrder[i];
+					canvasVector = canvasVectors[drawIndex];
+
+					if(canvasVector.x <= -1 || canvasVector.x >= 1) continue;
+					if(canvasVector.y <= -1 || canvasVector.y >= 1) continue;
+
+					var x = ~~(canvasVector.x * canvasWidthHalf + canvasWidthHalf);
+					var y = ~~(canvasVector.y * canvasHeightHalf + canvasHeightHalf);
+
+					material.drawToBuffer(
+						drawBuffer, 
+						x + y * canvasWidth,
+						materialIndex[drawIndex],
+						canvasWidth,
+						canvasVector.z
+					);
+				};
+				//quicker render for things that dont need zsort
+			} else {
+				for (var i = vertsToRender - 1; i >= 0; i--) {
+					canvasVector.copy( verts[i] ).applyMatrix4( matrixWorld ).applyProjection( viewProjectionMatrix );
+
+					if(canvasVector.x <= -1 || canvasVector.x >= 1) continue;
+					if(canvasVector.y <= -1 || canvasVector.y >= 1) continue;
+
+					var x = ~~(canvasVector.x * canvasWidthHalf + canvasWidthHalf);
+					var y = ~~(canvasVector.y * canvasHeightHalf + canvasHeightHalf);
+
+					material.drawToBuffer(
+						drawBuffer, 
+						x + y * canvasWidth,
+						i,
+						canvasWidth,
+						canvasVector.z
+					);
+				};
 			}
-			//render the pool by the drawOrder
-			var drawIndex;
-			for (var i = vertsToRender - 1; i >= 0; i--) {
-				drawIndex = drawOrder[i];
-				canvasVector = canvasVectors[drawIndex];
-
-				if(canvasVector.x <= -1 || canvasVector.x >= 1) continue;
-				if(canvasVector.y <= -1 || canvasVector.y >= 1) continue;
-
-				var x = ~~(canvasVector.x * canvasWidthHalf + canvasWidthHalf);
-				var y = ~~(canvasVector.y * canvasHeightHalf + canvasHeightHalf);
-
-				material.drawToBuffer(
-					drawBuffer, 
-					x + y * canvasWidth,
-					materialIndex[drawIndex],
-					canvasWidth,
-					canvasVector.z
-				);
-			};
 		}
 
 		for (var i = object.children.length - 1; i >= 0; i--) {
