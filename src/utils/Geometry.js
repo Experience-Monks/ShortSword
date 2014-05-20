@@ -142,6 +142,11 @@ var GeometryUtils = {
 
 		var medianRatio = ~~(median / min);
 		var maxRatio = ~~(max / min);
+		while(maxRatio > 2000) {
+			min *= 5;
+			medianRatio = ~~(median / min);
+			maxRatio = ~~(max / min);
+		}
 
 		//console.log(medianRatio);
 		//console.log(maxRatio);

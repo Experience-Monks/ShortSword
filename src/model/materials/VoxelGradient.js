@@ -31,7 +31,7 @@ VoxelGradientMaterial.prototype = {
 		}
 	},
 
-	drawToBuffer: function( buffer, index, vertexIDX, bufferWidth, z ) {
+	drawToBuffer: function( buffer, index, materialIndex, bufferWidth, z ) {
 
 		gradient = this.gradientBufferView32uint;
 

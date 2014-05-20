@@ -19,13 +19,17 @@ SHORTSWORD = {
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
 	GeometryUtils : require('./utils/Geometry'),
+	StringUtils : require('./utils/String'),
+	CodeUtils : require('./utils/Code'),
 	GeometryGarage : require('./utils/GeometryGarage'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
 	CanvasGraph : require('./utils/CanvasGraph'),
 	PerformanceTweaker : require('./utils/PerformanceTweaker'),
+	parsers: {
+		GeometryOBJ: require('./loader/parsers/GeometryOBJ')
+	},
 	materials: {
-
 		Voxel: require( './model/materials/Voxel' ),
 		VoxelGradient: require( './model/materials/VoxelGradient' ),
 		VoxelLookUp: require( './model/materials/VoxelLookUp' ),

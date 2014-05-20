@@ -35,7 +35,7 @@ GeometryOBJParser.prototype = {
 			centroid.add(vertices[i]);
 		};
 		centroid.multiplyScalar(1/totalSamples);
-		console.log("recentered", centroid);
+		//console.log("recentered", centroid);
 		for (var i = vertices.length - 1; i >= 0; i--) {
 			vertices[i].x -= centroid.x;
 			vertices[i].y -= centroid.y;
@@ -52,7 +52,8 @@ GeometryOBJParser.prototype = {
 				if(dataLines[i].indexOf("f ") == 0) {
 					var faceData = dataLines[i].split(" ");
 					for (var iFD = faceData.length - 1; iFD >= 0; iFD--) {
-						if(faceData[iFD] == "" || faceData[iFD] == " " || faceData[iFD] == "f") faceData.splice(iFD, 1);
+						var dataChunk = faceData[iFD];
+						if(dataChunk == "" || dataChunk == " " || dataChunk == "f") faceData.splice(iFD, 1);
 					};
 					faces.push(new Face(
 							vertices[parseInt(faceData[0].split("/")[0])-1],
