@@ -319,15 +319,15 @@ SHORTSWORD = {
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
 	GeometryUtils : require('./utils/Geometry'),
-	StringUtils : require('./utils/String'),
-	CodeUtils : require('./utils/Code'),
 	GeometryGarage : require('./utils/GeometryGarage'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
 	CanvasGraph : require('./utils/CanvasGraph'),
 	PerformanceTweaker : require('./utils/PerformanceTweaker'),
+	parsers: {
+		GeometryOBJ: require('./loader/parsers/GeometryOBJ')
+	},
 	materials: {
-
 		Voxel: require( './model/materials/Voxel' ),
 		VoxelGradient: require( './model/materials/VoxelGradient' ),
 		VoxelLookUp: require( './model/materials/VoxelLookUp' ),
@@ -342,7 +342,7 @@ SHORTSWORD = {
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":14,"./model/materials/Voxel":16,"./model/materials/VoxelGradient":17,"./model/materials/VoxelImageLookUp":18,"./model/materials/VoxelLookUp":19,"./utils/CanvasGraph":20,"./utils/Code":21,"./utils/Color":22,"./utils/FPS":24,"./utils/Geometry":25,"./utils/GeometryGarage":26,"./utils/PerformanceTweaker":28,"./utils/String":29,"./utils/TestFactory":30,"./view/View":35,"./view/effects/GlitchOffset":36,"./view/effects/GlitchOffsetSmearBlock":37}],7:[function(require,module,exports){
+},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":14,"./model/materials/Voxel":16,"./model/materials/VoxelGradient":17,"./model/materials/VoxelImageLookUp":18,"./model/materials/VoxelLookUp":19,"./utils/CanvasGraph":20,"./utils/Color":21,"./utils/FPS":23,"./utils/Geometry":24,"./utils/GeometryGarage":25,"./utils/PerformanceTweaker":27,"./utils/TestFactory":28,"./view/View":33,"./view/effects/GlitchOffset":34,"./view/effects/GlitchOffsetSmearBlock":35}],7:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -445,7 +445,7 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 
 module.exports = BlendMesh;
 
-},{"../animation/AnimatorVertexBlend":1,"../utils/Geometry":25,"../utils/PerformanceTweaker":28,"../vendor/three":32,"./Mesh":12,"./materials/VoxelGradient":17}],8:[function(require,module,exports){
+},{"../animation/AnimatorVertexBlend":1,"../utils/Geometry":24,"../utils/PerformanceTweaker":27,"../vendor/three":30,"./Mesh":12,"./materials/VoxelGradient":17}],8:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -496,7 +496,7 @@ Camera3D.prototype.setAspect = function(aspect) {
 
 module.exports = Camera3D;
 
-},{"../vendor/three":32,"./Object3D":13}],9:[function(require,module,exports){
+},{"../vendor/three":30,"./Object3D":13}],9:[function(require,module,exports){
 var DrawBuffer = function( context, clearColour ) {
 
 	this.context = context;
@@ -642,7 +642,7 @@ Face.prototype = {
 };
 module.exports = Face;
 
-},{"../vendor/three":32}],11:[function(require,module,exports){
+},{"../vendor/three":30}],11:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -693,7 +693,7 @@ Geometry.prototype = {
 };
 module.exports = Geometry;
 
-},{"../vendor/three":32}],12:[function(require,module,exports){
+},{"../vendor/three":30}],12:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
@@ -731,7 +731,7 @@ Mesh.prototype.updateGeometry = function() {};
 
 module.exports = Mesh;
 
-},{"../utils/PerformanceTweaker":28,"../vendor/three":32,"./Object3D":13,"./materials/VoxelGradient":17}],13:[function(require,module,exports){
+},{"../utils/PerformanceTweaker":27,"../vendor/three":30,"./Object3D":13,"./materials/VoxelGradient":17}],13:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
@@ -1145,7 +1145,7 @@ Object3D.prototype = {
 
 module.exports = Object3D;
 
-},{"../vendor/three":32}],14:[function(require,module,exports){
+},{"../vendor/three":30}],14:[function(require,module,exports){
 var Object3D = require('./Object3D');
 /**
  * The basic root Object3D to build a scene
@@ -1284,7 +1284,7 @@ VoxelGradientMaterial.prototype = {
 
 module.exports = VoxelGradientMaterial;
 
-},{"../../utils/Color":22}],18:[function(require,module,exports){
+},{"../../utils/Color":21}],18:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 var utilImage = require( '../../utils/Image' );
 
@@ -1396,7 +1396,7 @@ function alphaBlend( src, dest ) {
 }
 
 module.exports = VoxelLookUp;
-},{"../../utils/Image":27,"./LookupBase":15}],19:[function(require,module,exports){
+},{"../../utils/Image":26,"./LookupBase":15}],19:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 
 var VoxelLookUp = function( props ) {
@@ -1553,133 +1553,6 @@ CanvasGraph.prototype = {
 
 module.exports = CanvasGraph;
 },{}],21:[function(require,module,exports){
-var CodeUtils = {
-	flattenFlags: function() {
-		var OP_REMOVE_WHOLE = 0;
-		var OP_UNROLL_CONDITION = 1;
-		var BOUND_SEPERATE = 2;
-		var BOUND_CONTAINS = 3;
-		var BOUND_CONTAINED = 4;
-		var BOUND_OVERLAP_ERROR = 5;
-
-		function determineBoundRelationship(a, b){
-			if(a[1] < b[0]) return BOUND_SEPERATE;
-			if(a[0] < b[0] && b[1] < a[1]) return BOUND_CONTAINS;
-			if(b[0] < a[0] && a[1] < b[1]) return BOUND_CONTAINED;
-			return BOUND_OVERLAP_ERROR;
-		};
-
-		function recursiveBoundHeirachy(instructions) {
-			//recursion not implemented yet
-			return;	
-			for (var i1 = instructions.length - 1; i1 >= 0; i1--) {
-				for (var i2 = instructions.length - 1; i2 >= 0; i2--) {
-					switch(determineBoundRelationship(
-							instructions[i1].bounds, 
-							instructions[i2].bounds)
-						) {
-						case BOUND_CONTAINS:
-							break;
-						case BOUND_CONTAINED:
-							break;
-					}
-				}
-			};
-		};
-		return function(code, flags) {
-			var instructions = [];
-			//console.log(flags);
-			for(var key in flags) {
-				//console.log(key);
-				var bounds = this.findBoundsOfIfBlock(code, key);
-				for (var i = 0; i < bounds.length; i++) {
-					var operation = flags[key] ? OP_UNROLL_CONDITION : OP_REMOVE_WHOLE;
-					instructions.push({
-						flag:key,
-						operation:operation,
-						bounds:bounds[i]
-					});
-				}
-				/*
-				for (var i = 0; i < bounds.length; i++) {
-					console.log(code.substring(bounds[i][0], bounds[i][1]+1));
-				};
-				*/
-			};
-			//heirarchy
-			instructions.sort(function(a, b) { return a.bounds[1] - b.bounds[1]});
-			//console.log(instructions);
-
-			for (var i = instructions.length - 1; i >= 0; i--) {
-				var instruction = instructions[i];
-				var bounds = instruction.bounds;
-				var ifDefString = "if("+instruction.flag+") {";
-				switch(instruction.operation) {
-					case OP_UNROLL_CONDITION:
-						code = code.substring(0, bounds[0])
-							+ code.substring(bounds[0] + ifDefString.length, bounds[1])
-							+ code.substring(bounds[1] + 1, code.length);
-						break;
-					case OP_REMOVE_WHOLE:
-						code = code.substring(0, bounds[0])
-							+ code.substring(bounds[1] + 1, code.length);
-						break;
-				}
-			};
-			return code;
-		}
-	}(),
-	findBoundsOfIfBlock: function(code, defString) {
-		buffer = code;
-		var ifDefString = "if("+defString+") {";
-		var bounds = [];
-//		console.log(ifDefString);
-		var offset = 0;
-		while(buffer.indexOf(ifDefString) != -1) {
-			var indexOfStart = buffer.indexOf(ifDefString);
-			buffer = buffer.substring(indexOfStart, buffer.length);
-			var indexOfEnd = this.findEndOfBlock(buffer);
-//			console.log("found one", ifDefString);
-			bounds.push([indexOfStart + offset, indexOfStart + indexOfEnd + offset + 1]);
-			offset += indexOfStart;
-			buffer = buffer.substring(indexOfEnd, buffer.length);
-			offset += indexOfEnd;
-		}
-		return bounds;
-	},
-	findEndOfBlock: function(code) {
-		var depthCount = 0;
-		var indexCut = 0;
-		var indexOfEnd = 0;
-		var step = function() {
-			var indexUp = code.indexOf("{");
-			var indexDown = code.indexOf("}");
-			if(indexUp == -1) indexUp = 10000000;
-			if(indexDown == -1) indexDown = 10000000;
-
-			if(indexUp < indexDown) {
-				//console.log("UP");
-				indexCut = indexUp;
-				depthCount++;
-			} else if(indexUp > indexDown) {
-				//console.log("DOWN");
-				indexCut = indexDown;
-				depthCount--;
-			} else {
-				depthCount = -1;
-			}
-			indexOfEnd += indexCut;
-			code = code.substring(indexCut+1, code.length);
-		}
-
-		step();
-		while(depthCount > 0) step();
-		if(depthCount == -1) throw("ERROR: code is malformed. Could not find closing }.");
-		return indexOfEnd;
-	}
-}
-module.exports = CodeUtils;
-},{}],22:[function(require,module,exports){
 var ColorUtils = {
 	lerp: function(color1, color2, ratio) {
 		var a1 = (color1 >> 24) & 0xff;
@@ -1710,7 +1583,7 @@ var ColorUtils = {
 	}
 }
 module.exports = ColorUtils;
-},{}],23:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 var Events = {
 	addEvent : function(elem, type, eventHandle) {
 	    if (elem == null || typeof(elem) == 'undefined') return;
@@ -1725,7 +1598,7 @@ var Events = {
 }
 
 module.exports = Events;
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 function FPS() {
 	this.lastTime = new Date;
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1760,7 +1633,7 @@ FPS.prototype = {
 };
 
 module.exports = new FPS();
-},{}],25:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 
 var attributeList = ["vertices"];
@@ -1930,7 +1803,7 @@ var GeometryUtils = {
 	}
 }
 module.exports = GeometryUtils;
-},{"../model/Geometry":11}],26:[function(require,module,exports){
+},{"../model/Geometry":11}],25:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var GeometryUtils = require('./Geometry');
 var work = [];
@@ -1987,7 +1860,7 @@ var GeometryGarage = {
 };
 
 module.exports = GeometryGarage;
-},{"../model/Geometry":11,"./Geometry":25}],27:[function(require,module,exports){
+},{"../model/Geometry":11,"./Geometry":24}],26:[function(require,module,exports){
 var canvas = null;
 var ctx = null;
 
@@ -2027,7 +1900,7 @@ module.exports = {
 };
 
 
-},{}],28:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 var signals = require('../vendor/signals');
 var FPS = require('./FPS');
 
@@ -2081,17 +1954,7 @@ PerformanceTweaker.prototype = {
 }
 
 module.exports = new PerformanceTweaker();
-},{"../vendor/signals":31,"./FPS":24}],29:[function(require,module,exports){
-var StringUtils = {
-	replaceAll: function(source, find, replace) {
-		while(source.indexOf("_a.b.c") != -1) {
-			source = source.replace("_a.b.c", _a.b.c);
-		};
-		return source;
-	}
-}
-module.exports = StringUtils;
-},{}],30:[function(require,module,exports){
+},{"../vendor/signals":29,"./FPS":23}],28:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
@@ -2133,7 +1996,7 @@ TestFactory.prototype = {
 };
 
 module.exports = new TestFactory();
-},{"../model/Geometry":11,"../model/Mesh":12}],31:[function(require,module,exports){
+},{"../model/Geometry":11,"../model/Mesh":12}],29:[function(require,module,exports){
 /**
  * Signals for Node.js
  * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
@@ -2521,7 +2384,7 @@ exports.Signal.prototype = {
 	
 };
 
-},{}],32:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -9382,13 +9245,13 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],33:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],34:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 var signals = require('../vendor/signals');
 
 /**
@@ -9443,7 +9306,7 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{"../vendor/signals":31}],35:[function(require,module,exports){
+},{"../vendor/signals":29}],33:[function(require,module,exports){
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
 var signals = require('../vendor/signals');
@@ -9579,7 +9442,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":8,"../model/Scene":14,"../utils/Events":23,"../utils/PerformanceTweaker":28,"../vendor/signals":31,"./DOMMode":33,"./RenderManager":34,"./renderers/Canvas":39}],36:[function(require,module,exports){
+},{"../model/Camera3D":8,"../model/Scene":14,"../utils/Events":22,"../utils/PerformanceTweaker":27,"../vendor/signals":29,"./DOMMode":31,"./RenderManager":32,"./renderers/Canvas":37}],34:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');
@@ -9607,7 +9470,7 @@ GlitchOffset.prototype = {
 
 module.exports = GlitchOffset;
 
-},{}],37:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
 	console.log('GlitchOffsetSmearBlock initialized!');
@@ -9635,7 +9498,7 @@ GlitchOffsetSmearBlock.prototype = {
 
 module.exports = GlitchOffsetSmearBlock;
 
-},{}],38:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -9669,7 +9532,7 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],39:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
@@ -9866,4 +9729,4 @@ CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 };
 
 module.exports = CanvasRenderer;
-},{"../../model/BlendMesh":7,"../../model/DrawBuffer":9,"../../model/Mesh":12,"../../utils/PerformanceTweaker":28,"./Base":38}]},{},[6])
+},{"../../model/BlendMesh":7,"../../model/DrawBuffer":9,"../../model/Mesh":12,"../../utils/PerformanceTweaker":27,"./Base":36}]},{},[6])

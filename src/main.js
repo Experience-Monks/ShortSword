@@ -19,8 +19,6 @@ SHORTSWORD = {
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
 	GeometryUtils : require('./utils/Geometry'),
-	StringUtils : require('./utils/String'),
-	CodeUtils : require('./utils/Code'),
 	GeometryGarage : require('./utils/GeometryGarage'),
 	TestFactory : require('./utils/TestFactory'),
 	FPS : require('./utils/FPS'),
