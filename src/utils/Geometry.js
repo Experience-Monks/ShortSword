@@ -164,6 +164,11 @@ var GeometryUtils = {
 		for (var i = length; i < newTotalVertices; i++) {
 			geometry.vertices.push(proportionalFaces[i%pfLength].createRandomPoint())
 		}
+	},
+	quickBufferClone : function(dstBuffer, srcBuffer, newTotal) {
+		for (var i = dstBuffer.length; i < newTotal; i++) {
+			dstBuffer[i] = srcBuffer[i].clone();
+		}
 	}
 }
 module.exports = GeometryUtils;
