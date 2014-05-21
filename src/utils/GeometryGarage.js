@@ -33,7 +33,7 @@ var GeometryGarage = {
 					console.log("added " + verticesPerWorkRun + " vertices in " + (timeAfter-timeBefore) + "ms");
 					if(this.targetTotalVertices == this.currentTotalVertices) {
 						this.done = true;
-						this.callback();
+						if(this.callback) this.callback();
 					}
 				}
 			};
