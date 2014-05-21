@@ -89,7 +89,7 @@ var GeometryUtils = {
 			var workingAttribute = delta[attrName];
 			var attribute1 = geometry1[attrName];
 			var attribute2 = geometry2[attrName];
-			for (var i = attribute1.length; i < end; i++) {
+			for (var i = workingAttribute.length; i < end; i++) {
 				workingAttribute[i] = attribute1[i].clone();
 			}
 			for (var i = start; i < end; i++) {
