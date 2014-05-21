@@ -4,8 +4,8 @@ var work = [];
 var GeometryGarage = {
 	fillSurfaces : function() {
 		var verticesPerWorkRun = 10000;
-		var targetWorkRunDuration = 6;
-		var targetTweakRatio = 1.2;
+		var targetWorkRunDuration = 2;
+		var targetTweakRatio = 1.02;
 		return function(geometries, newTotalVertices, callback) {
 			if(!GeometryUtils.checkIfGeometryAttributesLengthsMatch(geometries)) {
 				return;
