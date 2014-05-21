@@ -9335,6 +9335,7 @@ RenderManager.prototype = {
 
 module.exports = RenderManager;
 },{"../vendor/signals":29}],33:[function(require,module,exports){
+var BaseRenderer = require('./renderers/Base');
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
 var signals = require('../vendor/signals');
@@ -9363,7 +9364,11 @@ function View(props) {
 	
 	//use provided canvas or make your own
 	this.canvas = document.getElementById(this.canvasID) || this.createCanvas();
-	this.renderer = props.renderer || new (require('./renderers/Canvas'))(this.canvas, props.renderer);
+
+	if( this.renderer !== undefined && this.renderer instanceof BaseRenderer)
+		this.renderer = props.renderer;
+	else 
+		this.renderer = new (require('./renderers/Canvas'))(this.canvas, props.renderer);
 
 	console.log('View initialized!');
 
@@ -9470,7 +9475,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":8,"../model/Scene":14,"../utils/Events":22,"../utils/PerformanceTweaker":27,"../vendor/signals":29,"./DOMMode":31,"./RenderManager":32,"./renderers/Canvas":37}],34:[function(require,module,exports){
+},{"../model/Camera3D":8,"../model/Scene":14,"../utils/Events":22,"../utils/PerformanceTweaker":27,"../vendor/signals":29,"./DOMMode":31,"./RenderManager":32,"./renderers/Base":36,"./renderers/Canvas":37}],34:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');

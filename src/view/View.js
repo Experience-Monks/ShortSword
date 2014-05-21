@@ -1,3 +1,4 @@
+var BaseRenderer = require('./renderers/Base');
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
 var signals = require('../vendor/signals');
@@ -26,7 +27,11 @@ function View(props) {
 	
 	//use provided canvas or make your own
 	this.canvas = document.getElementById(this.canvasID) || this.createCanvas();
-	this.renderer = props.renderer || new (require('./renderers/Canvas'))(this.canvas, props.renderer);
+
+	if( this.renderer !== undefined && this.renderer instanceof BaseRenderer)
+		this.renderer = props.renderer;
+	else 
+		this.renderer = new (require('./renderers/Canvas'))(this.canvas, props.renderer);
 
 	console.log('View initialized!');
 
