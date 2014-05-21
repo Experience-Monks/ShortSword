@@ -25,6 +25,25 @@ var ColorUtils = {
 		var g = (color >> 8) & 0xff;
 		var b = color & 0xff;
 		return "A:"+a+" R:"+r+" G:"+g+" B:"+b;
+	},
+	applyGamma: function(color, gamma) {
+		var invGamma = 1 / gamma;
+
+		var a = ((color >> 24) & 0xff) / 255;
+		var r = ((color >> 16) & 0xff) / 255;
+		var g = ((color >> 8) & 0xff) / 255;
+		var b = (color & 0xff) / 255;
+
+		a = Math.pow(a, invGamma);
+		r = Math.pow(r, invGamma);
+		g = Math.pow(g, invGamma);
+		b = Math.pow(b, invGamma);
+
+		return (~~(a * 255) << 24) |
+			(~~(r * 255) << 16) |
+			(~~(g * 255) << 8) |
+			~~(b * 255);
+
 	}
 }
 module.exports = ColorUtils;

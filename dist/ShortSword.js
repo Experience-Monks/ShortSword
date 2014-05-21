@@ -1244,6 +1244,9 @@ var ColorUtils = require('../../utils/Color');
 function VoxelGradientMaterial(props) {
 	props = props || {};
 	this.size = props.size || 1;
+	this.color = props.color || 0xFFFFFFFF;
+	this.gammaRamp = props.gammaRamp || 1;
+	this.gammaColor = props.gammaColor || 1;
 	
 	console.log('VoxelGradientMaterial initialized!');
 }
@@ -1255,20 +1258,25 @@ VoxelGradientMaterial.prototype = {
 
 			this.clearColor = clearColor;
 
-			var a = 255;
-			var r = 255;
-			var g = 255;
-			var b = 255;
-
-			this.pixelColor = (a << 24) | (b << 16) | (g <<  8) | r;
-
 			var gradientSteps = 10;
 			this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
 			this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
-			for (var i = 0; i < gradientSteps; i++) {
 
-				this.gradientBufferView32uint[i] = ColorUtils.lerp( this.clearColor, this.pixelColor, ( i + 1 ) / gradientSteps );
+			for (var i = 0; i < gradientSteps; i++) {
+				var ratio = ( i + 1 ) / gradientSteps;
+				ratio = Math.pow(ratio, 1 / this.gammaRamp);
+				this.gradientBufferView32uint[i] = ColorUtils.lerp(
+					this.clearColor,
+					this.color,
+					ratio
+				);
 			};
+
+			if(this.gammaColor != 1) {
+				for (var i = 0; i < gradientSteps; i++) {
+					this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
+				}
+			}
 		}
 	},
 
@@ -1590,6 +1598,25 @@ var ColorUtils = {
 		var g = (color >> 8) & 0xff;
 		var b = color & 0xff;
 		return "A:"+a+" R:"+r+" G:"+g+" B:"+b;
+	},
+	applyGamma: function(color, gamma) {
+		var invGamma = 1 / gamma;
+
+		var a = ((color >> 24) & 0xff) / 255;
+		var r = ((color >> 16) & 0xff) / 255;
+		var g = ((color >> 8) & 0xff) / 255;
+		var b = (color & 0xff) / 255;
+
+		a = Math.pow(a, invGamma);
+		r = Math.pow(r, invGamma);
+		g = Math.pow(g, invGamma);
+		b = Math.pow(b, invGamma);
+
+		return (~~(a * 255) << 24) |
+			(~~(r * 255) << 16) |
+			(~~(g * 255) << 8) |
+			~~(b * 255);
+
 	}
 }
 module.exports = ColorUtils;
@@ -9582,7 +9609,7 @@ function CanvasRenderer( canvas, props ) {
 	BaseRenderer.call( this, canvas, props );
 
 	this.context = canvas.getContext("2d");
-	this.drawBuffer = new DrawBuffer( this.context, props.bgColor === undefined ? 0xFF00001E : props.bgColor );
+	this.drawBuffer = new DrawBuffer( this.context, props.bgColor === undefined ? 0xFF000000 : props.bgColor );
 
 	this.autoClear = props.autoClear === undefined ? true : props.autoClear;
 

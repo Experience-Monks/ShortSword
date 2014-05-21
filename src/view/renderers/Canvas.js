@@ -14,7 +14,7 @@ function CanvasRenderer( canvas, props ) {
 	BaseRenderer.call( this, canvas, props );
 
 	this.context = canvas.getContext("2d");
-	this.drawBuffer = new DrawBuffer( this.context, props.bgColor === undefined ? 0xFF00001E : props.bgColor );
+	this.drawBuffer = new DrawBuffer( this.context, props.bgColor === undefined ? 0xFF000000 : props.bgColor );
 
 	this.autoClear = props.autoClear === undefined ? true : props.autoClear;
 

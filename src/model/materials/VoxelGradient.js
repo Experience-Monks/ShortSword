@@ -3,6 +3,9 @@ var ColorUtils = require('../../utils/Color');
 function VoxelGradientMaterial(props) {
 	props = props || {};
 	this.size = props.size || 1;
+	this.color = props.color || 0xFFFFFFFF;
+	this.gammaRamp = props.gammaRamp || 1;
+	this.gammaColor = props.gammaColor || 1;
 	
 	console.log('VoxelGradientMaterial initialized!');
 }
@@ -14,20 +17,25 @@ VoxelGradientMaterial.prototype = {
 
 			this.clearColor = clearColor;
 
-			var a = 255;
-			var r = 255;
-			var g = 255;
-			var b = 255;
-
-			this.pixelColor = (a << 24) | (b << 16) | (g <<  8) | r;
-
 			var gradientSteps = 10;
 			this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
 			this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
-			for (var i = 0; i < gradientSteps; i++) {
 
-				this.gradientBufferView32uint[i] = ColorUtils.lerp( this.clearColor, this.pixelColor, ( i + 1 ) / gradientSteps );
+			for (var i = 0; i < gradientSteps; i++) {
+				var ratio = ( i + 1 ) / gradientSteps;
+				ratio = Math.pow(ratio, 1 / this.gammaRamp);
+				this.gradientBufferView32uint[i] = ColorUtils.lerp(
+					this.clearColor,
+					this.color,
+					ratio
+				);
 			};
+
+			if(this.gammaColor != 1) {
+				for (var i = 0; i < gradientSteps; i++) {
+					this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
+				}
+			}
 		}
 	},
 
