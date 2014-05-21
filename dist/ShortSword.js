@@ -436,7 +436,11 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 			var attribute1 = this.geometry1[attributeName];
 			var attributeDelta = this.geometryDelta[attributeName];
 			var t = ~~(attribute1.length / PerformanceTweaker.denominatorSquared);
-			if(t > attribute.length) GeometryUtils.quickBufferClone(attribute, attribute1, t);
+			if(t > attribute.length) {
+				var oldLength = attribute.length;
+				GeometryUtils.quickBufferClone(attribute, attribute1, t);
+				GeometryUtils.updateGeometryDelta(this.geometryDelta, this.geometry1, this.geometry2, oldLength, t);
+			}
 			//var t = attribute1.length;
 			for (var i = 0; i < t; i++) {
 				attribute[i].copy(
@@ -1722,6 +1726,19 @@ var GeometryUtils = {
 		}
 
 		return delta;
+	},
+	updateGeometryDelta: function(delta, geometry1, geometry2, start, end) {
+		if(!this.checkIfGeometryAttributesLengthsMatch([geometry1, geometry2])) return;
+		var length = geometry1[attributeList[0]].length;
+		for (var ia = 0; ia < attributeList.length; ia++) {
+			var attrName = attributeList[ia];
+			var workingAttribute = delta[attrName];
+			var attribute1 = geometry1[attrName];
+			var attribute2 = geometry2[attrName];
+			for (var i = start; i < end; i++) {
+				workingAttribute[i] = attribute2[i].clone().sub(attribute1[i]);
+			}
+		}
 	},
 	orderlyScramble: function(geometries) {
 		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;

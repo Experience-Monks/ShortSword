@@ -81,6 +81,19 @@ var GeometryUtils = {
 
 		return delta;
 	},
+	updateGeometryDelta: function(delta, geometry1, geometry2, start, end) {
+		if(!this.checkIfGeometryAttributesLengthsMatch([geometry1, geometry2])) return;
+		var length = geometry1[attributeList[0]].length;
+		for (var ia = 0; ia < attributeList.length; ia++) {
+			var attrName = attributeList[ia];
+			var workingAttribute = delta[attrName];
+			var attribute1 = geometry1[attrName];
+			var attribute2 = geometry2[attrName];
+			for (var i = start; i < end; i++) {
+				workingAttribute[i] = attribute2[i].clone().sub(attribute1[i]);
+			}
+		}
+	},
 	orderlyScramble: function(geometries) {
 		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;
 		var length = geometries[0][attributeList[0]].length;
