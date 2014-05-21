@@ -589,7 +589,7 @@ require('../vendor/three');
  * vertices, edges, faces, indexes, etc
  */
 function Face(v1, v2, v3) {
-	this.createRandomPoint = this._createRandomPointEdgy;
+	this.createRandomPoint = this._createRandomPointRandomDelta;
 	this.v1 = v1;
 	this.v2 = v2;
 	this.v3 = v3;
@@ -644,6 +644,15 @@ Face.prototype = {
 			).lerp(
 				this.v3, 
 				1 - (r2 * (1 - r2) * 4)
+			);
+	},
+	_createRandomPointRandomDelta: function() {
+		return this.v1.clone().lerp(
+				this.v2, 
+				Math.random()
+			).lerp(
+				this.v3, 
+				Math.abs(Math.random() - Math.random())
 			);
 	},
 	clone: function() {
