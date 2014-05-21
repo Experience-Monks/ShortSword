@@ -435,7 +435,6 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 				this.geometry = this.geometry2;
 				break;
 			default:
-				console.log("inbetween");
 				this.geometry = this.geometryBlendBuffer;
 				var blend = this.blend;
 				for (var i = 0; i < this.attributeList.length; i++) {
@@ -461,6 +460,10 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 		}
 	}
 }();
+
+BlendMesh.prototype.updateGeometryDeltas = function() {
+	GeometryUtils.updateGeometryDeltas(this.geometryDelta, this.geometry1, this.geometry2, 0, this.geometry1.vertices.length);
+};
 
 module.exports = BlendMesh;
 
@@ -1780,8 +1783,11 @@ var GeometryUtils = {
 			var workingAttribute = delta[attrName];
 			var attribute1 = geometry1[attrName];
 			var attribute2 = geometry2[attrName];
+			for (var i = attribute1.length; i < end; i++) {
+				workingAttribute[i] = attribute1[i].clone();
+			}
 			for (var i = start; i < end; i++) {
-				workingAttribute[i] = attribute2[i].clone().sub(attribute1[i]);
+				workingAttribute[i].copy(attribute2[i]).sub(attribute1[i]);
 			}
 		}
 	},
