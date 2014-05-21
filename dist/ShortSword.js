@@ -461,8 +461,8 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 	}
 }();
 
-BlendMesh.prototype.updateGeometryDeltas = function() {
-	GeometryUtils.updateGeometryDeltas(this.geometryDelta, this.geometry1, this.geometry2, 0, this.geometry1.vertices.length);
+BlendMesh.prototype.updateGeometryDelta = function() {
+	GeometryUtils.updateGeometryDelta(this.geometryDelta, this.geometry1, this.geometry2, 0, this.geometry1.vertices.length);
 };
 
 module.exports = BlendMesh;
