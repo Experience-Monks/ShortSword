@@ -356,14 +356,14 @@ function BlendMesh(geometry1, geometry2, material, cacheRelative) {
 	this.attributeList = ["vertices"];
 	this._blend = 0;
 	
-	GeometryUtils.pairGeometry(geometry1, geometry2, this.attributeList);
+	if(geometry1 !== geometry2) GeometryUtils.pairGeometry(geometry1, geometry2, this.attributeList);
 
 	this.geometry1 = GeometryUtils.octTreeSort(geometry1);
-	this.geometry2 = GeometryUtils.octTreeSort(geometry2);
+	if(geometry1 !== geometry2) this.geometry2 = GeometryUtils.octTreeSort(geometry2);
 
 	this.geometryBlendBuffer = this.geometry1.clone();
 
-	GeometryUtils.orderlyScramble([geometry1, geometry2]);
+	this.scrambleOrder = GeometryUtils.orderlyScramble([geometry1, geometry2]);
 
 	if(cacheRelative) {
 		this.updateGeometry = this._updateGeometryRelative;
@@ -1790,7 +1790,7 @@ var GeometryUtils = {
 			}
 		}
 	},
-	orderlyScramble: function(geometries) {
+	orderlyScramble: function(geometries, newOrder) {
 		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;
 		var length = geometries[0][attributeList[0]].length;
 		var order = [];
@@ -1798,12 +1798,14 @@ var GeometryUtils = {
 			order[i] = i;
 		};
 
-		var newOrder = [];
-		for (var i = 0; i < length; i++) {
-			var randomIndex = ~~(Math.random() * order.length);
-			newOrder[i] = order[randomIndex];
-			order.splice(randomIndex, 1);
-		};
+		if(!newOrder) {
+			newOrder = [];
+			for (var i = 0; i < length; i++) {
+				var randomIndex = ~~(Math.random() * order.length);
+				newOrder[i] = order[randomIndex];
+				order.splice(randomIndex, 1);
+			};
+		}
 
 		for (var ig = 0; ig < geometries.length; ig++) {
 			for (var ia = 0; ia < attributeList.length; ia++) {
@@ -1814,6 +1816,7 @@ var GeometryUtils = {
 				};
 			}
 		}
+		return newOrder;
 	},
 	reduce: function(geometry, length) {
 		var spliceLength = geometry.vertices.length - length;
