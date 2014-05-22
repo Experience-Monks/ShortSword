@@ -1735,15 +1735,16 @@ var GeometryUtils = {
 
 		return function(geometry) {
 			var timeBefore = new Date;
-			console.log("octtree start!!!");
+			var total = geometry.vertices.length;
+			console.log("octTree start!!!");
 			geometry.vertices = recurseTreeSortX(geometry.vertices);
 			var arrFlat = [];
 			var timeMiddle = new Date;
-			console.log("octree sorted " + geometry.vertices.length + " vertices in " + (timeMiddle-timeBefore) + "ms");
+			console.log("octTree sorted " + total + " vertices in " + (timeMiddle-timeBefore) + "ms");
 			recurseUnroll(geometry.vertices, arrFlat);
 			geometry.vertices = arrFlat;
 			var timeAfter = new Date;
-			console.log("octreed " + geometry.vertices.length + " vertices in " + (timeAfter-timeBefore) + "ms");
+			console.log("octTree unrolled " + geometry.vertices.length + " vertices in " + (timeAfter-timeMiddle) + "ms");
 			return geometry;
 		}
 	}(),
@@ -1795,6 +1796,8 @@ var GeometryUtils = {
 		}
 	},
 	orderlyScramble: function(geometries, newOrder) {
+		var timeBefore = new Date;
+		console.log("orderlyScramble start!!!");
 		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;
 		var length = geometries[0][attributeList[0]].length;
 		var order = [];
@@ -1820,6 +1823,9 @@ var GeometryUtils = {
 				};
 			}
 		}
+		var timeAfter = new Date;
+		console.log("orderlyScramble scrambled " + geometry.vertices.length + " vertices in " + (timeAfter-timeBefore) + "ms");
+
 		return newOrder;
 	},
 	reduce: function(geometry, length) {
