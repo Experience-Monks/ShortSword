@@ -342,7 +342,7 @@ SHORTSWORD = {
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":14,"./model/materials/Voxel":16,"./model/materials/VoxelGradient":17,"./model/materials/VoxelImageLookUp":18,"./model/materials/VoxelLookUp":19,"./utils/CanvasGraph":20,"./utils/Color":21,"./utils/FPS":23,"./utils/Geometry":24,"./utils/GeometryGarage":25,"./utils/PerformanceTweaker":27,"./utils/TestFactory":28,"./view/View":33,"./view/effects/GlitchOffset":34,"./view/effects/GlitchOffsetSmearBlock":35}],7:[function(require,module,exports){
+},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":15,"./model/materials/Voxel":17,"./model/materials/VoxelGradient":18,"./model/materials/VoxelImageLookUp":19,"./model/materials/VoxelLookUp":20,"./utils/CanvasGraph":21,"./utils/Color":22,"./utils/FPS":24,"./utils/Geometry":25,"./utils/GeometryGarage":26,"./utils/PerformanceTweaker":28,"./utils/TestFactory":29,"./view/View":34,"./view/effects/GlitchOffset":35,"./view/effects/GlitchOffsetSmearBlock":36}],7:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -429,6 +429,9 @@ Object.defineProperty( BlendMesh.prototype, 'blend', {
 // 	}
 // }();
 
+var RemapFunctions = require('./RemapFunctions');
+
+
 BlendMesh.prototype._updateGeometryRelative = function() {
 	var temp = new THREE.Vector3();
 	return function() {
@@ -441,11 +444,21 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 				break;
 			default:
 				this.geometry = this.geometryBlendBuffer;
+				var geometry = this.geometry;
 				var blend = this.blend;
+				var blendRemap = RemapFunctions.remapRippleSine;
 
 				if(this.geometry.vertices.length < this.geometry1.vertices.length) {
 					GeometryUtils.quickBufferClone(this.geometry.vertices, this.geometry1.vertices, this.geometry1.vertices.length);
 				}
+
+				if(!this.remapExtra) this.remapExtra = [];
+				var remapExtra = this.remapExtra;
+				var vertices = geometry.vertices;
+				for (var i = remapExtra.length; i < this.geometry.vertices.length; i++) {
+					remapExtra[i] = vertices[i].x;
+				};
+
 				for (var i = 0; i < this.attributeList.length; i++) {
 					var attributeName = this.attributeList[i];
 					var attribute = this.geometry[attributeName];
@@ -457,7 +470,7 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 						attribute[i].copy(
 							attribute1[i]
 						).add(
-							temp.copy(attributeDelta[i]).multiplyScalar(blend)
+							temp.copy(attributeDelta[i]).multiplyScalar(blendRemap(blend, remapExtra[i]))
 						)
 					};
 				}
@@ -471,7 +484,7 @@ BlendMesh.prototype.updateGeometryDelta = function() {
 
 module.exports = BlendMesh;
 
-},{"../animation/AnimatorVertexBlend":1,"../utils/Geometry":24,"../utils/PerformanceTweaker":27,"../vendor/three":30,"./Mesh":12,"./materials/VoxelGradient":17}],8:[function(require,module,exports){
+},{"../animation/AnimatorVertexBlend":1,"../utils/Geometry":25,"../utils/PerformanceTweaker":28,"../vendor/three":31,"./Mesh":12,"./RemapFunctions":14,"./materials/VoxelGradient":18}],8:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -522,7 +535,7 @@ Camera3D.prototype.setAspect = function(aspect) {
 
 module.exports = Camera3D;
 
-},{"../vendor/three":30,"./Object3D":13}],9:[function(require,module,exports){
+},{"../vendor/three":31,"./Object3D":13}],9:[function(require,module,exports){
 var DrawBuffer = function( context, clearColour ) {
 
 	this.context = context;
@@ -677,7 +690,7 @@ Face.prototype = {
 };
 module.exports = Face;
 
-},{"../vendor/three":30}],11:[function(require,module,exports){
+},{"../vendor/three":31}],11:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -728,7 +741,7 @@ Geometry.prototype = {
 };
 module.exports = Geometry;
 
-},{"../vendor/three":30}],12:[function(require,module,exports){
+},{"../vendor/three":31}],12:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
@@ -766,7 +779,7 @@ Mesh.prototype.updateGeometry = function() {};
 
 module.exports = Mesh;
 
-},{"../utils/PerformanceTweaker":27,"../vendor/three":30,"./Object3D":13,"./materials/VoxelGradient":17}],13:[function(require,module,exports){
+},{"../utils/PerformanceTweaker":28,"../vendor/three":31,"./Object3D":13,"./materials/VoxelGradient":18}],13:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
@@ -1180,7 +1193,32 @@ Object3D.prototype = {
 
 module.exports = Object3D;
 
-},{"../vendor/three":30}],14:[function(require,module,exports){
+},{"../vendor/three":31}],14:[function(require,module,exports){
+var RemapFunctions = {
+	remapLinear : function (valIn, extra) {
+		return valIn;
+	},
+	remapRippleSine: function() {
+		var range = 4;
+		var rangeHalf = range * .5 - .5;
+		var quickSinCurveLookupSteps = 1000;
+		var quickSinCurveLookupTable = [];
+		for (var i = 0; i < quickSinCurveLookupSteps; i++) {
+			quickSinCurveLookupTable[i] = 1 - (Math.cos(i/quickSinCurveLookupSteps * Math.PI) * .5 + .5);
+			console.log(i, quickSinCurveLookupTable[i]);
+		};
+		quickSinCurveLookupTable[quickSinCurveLookupSteps] = 1;
+		function quickSinCurveLookup(valIn) {
+			return quickSinCurveLookupTable[~~(valIn * quickSinCurveLookupSteps)];
+		};
+		return function (valIn, extra) {
+			return quickSinCurveLookup(Math.min(1, Math.max(0, (range * valIn) - rangeHalf + extra)));
+		};
+	}()
+}
+
+module.exports = RemapFunctions;
+},{}],15:[function(require,module,exports){
 var Object3D = require('./Object3D');
 /**
  * The basic root Object3D to build a scene
@@ -1199,7 +1237,7 @@ Scene.prototype = Object.create(Object3D.prototype);
 
 module.exports = Scene;
 
-},{"./Object3D":13}],15:[function(require,module,exports){
+},{"./Object3D":13}],16:[function(require,module,exports){
 var Voxel = require( './Voxel' );
 
 var LookUpMaterial = function( props ) {
@@ -1230,7 +1268,7 @@ LookUpMaterial.prototype.addToLookUp = function( value, toArr ) {
 };
 
 module.exports = LookUpMaterial;
-},{"./Voxel":16}],16:[function(require,module,exports){
+},{"./Voxel":17}],17:[function(require,module,exports){
 function VoxelMaterial(props) {
 	props = props || {};
 
@@ -1263,7 +1301,7 @@ VoxelMaterial.prototype = {
 
 module.exports = VoxelMaterial;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var ColorUtils = require('../../utils/Color');
 
 function VoxelGradientMaterial(props) {
@@ -1327,7 +1365,7 @@ VoxelGradientMaterial.prototype = {
 
 module.exports = VoxelGradientMaterial;
 
-},{"../../utils/Color":21}],18:[function(require,module,exports){
+},{"../../utils/Color":22}],19:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 var utilImage = require( '../../utils/Image' );
 
@@ -1439,7 +1477,7 @@ function alphaBlend( src, dest ) {
 }
 
 module.exports = VoxelLookUp;
-},{"../../utils/Image":26,"./LookupBase":15}],19:[function(require,module,exports){
+},{"../../utils/Image":27,"./LookupBase":16}],20:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 
 var VoxelLookUp = function( props ) {
@@ -1474,7 +1512,7 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, index, vertexIDX, screenW
 };
 
 module.exports = VoxelLookUp;
-},{"./LookupBase":15}],20:[function(require,module,exports){
+},{"./LookupBase":16}],21:[function(require,module,exports){
 function CanvasGraph(props) {
 	this.addCanvasToDOMBody = this.addCanvasToDOMBody.bind(this);
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1595,7 +1633,7 @@ CanvasGraph.prototype = {
 };
 
 module.exports = CanvasGraph;
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 var ColorUtils = {
 	lerp: function(color1, color2, ratio) {
 		var a1 = (color1 >> 24) & 0xff;
@@ -1645,7 +1683,7 @@ var ColorUtils = {
 	}
 }
 module.exports = ColorUtils;
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 var Events = {
 	addEvent : function(elem, type, eventHandle) {
 	    if (elem == null || typeof(elem) == 'undefined') return;
@@ -1660,7 +1698,7 @@ var Events = {
 }
 
 module.exports = Events;
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 function FPS() {
 	this.lastTime = new Date;
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1695,7 +1733,7 @@ FPS.prototype = {
 };
 
 module.exports = new FPS();
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 
 var attributeList = ["vertices"];
@@ -1895,13 +1933,14 @@ var GeometryUtils = {
 	}
 }
 module.exports = GeometryUtils;
-},{"../model/Geometry":11}],25:[function(require,module,exports){
+},{"../model/Geometry":11}],26:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var GeometryUtils = require('./Geometry');
 var work = [];
 var GeometryGarage = {
 	fillSurfaces : function() {
 		var verticesPerWorkRun = 10000;
+		var verticesPerWorkRunMin = 1000;
 		var targetWorkRunDuration = 6;
 		var targetTweakRatio = 1.2;
 		return function(geometries, newTotalVertices, callback) {
@@ -1928,6 +1967,7 @@ var GeometryGarage = {
 					} else if(duration > targetWorkRunDuration) { 
 						verticesPerWorkRun = ~~(verticesPerWorkRun / targetTweakRatio);
 					}
+					verticesPerWorkRun = Math.max(verticesPerWorkRun, verticesPerWorkRunMin);
 					console.log("added " + verticesPerWorkRun + " vertices in " + (timeAfter-timeBefore) + "ms");
 					if(this.targetTotalVertices == this.currentTotalVertices) {
 						this.done = true;
@@ -1952,7 +1992,7 @@ var GeometryGarage = {
 };
 
 module.exports = GeometryGarage;
-},{"../model/Geometry":11,"./Geometry":24}],26:[function(require,module,exports){
+},{"../model/Geometry":11,"./Geometry":25}],27:[function(require,module,exports){
 var canvas = null;
 var ctx = null;
 
@@ -1992,7 +2032,7 @@ module.exports = {
 };
 
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 var signals = require('../vendor/signals');
 var FPS = require('./FPS');
 
@@ -2046,7 +2086,7 @@ PerformanceTweaker.prototype = {
 }
 
 module.exports = new PerformanceTweaker();
-},{"../vendor/signals":29,"./FPS":23}],28:[function(require,module,exports){
+},{"../vendor/signals":30,"./FPS":24}],29:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
@@ -2088,7 +2128,7 @@ TestFactory.prototype = {
 };
 
 module.exports = new TestFactory();
-},{"../model/Geometry":11,"../model/Mesh":12}],29:[function(require,module,exports){
+},{"../model/Geometry":11,"../model/Mesh":12}],30:[function(require,module,exports){
 /**
  * Signals for Node.js
  * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
@@ -2476,7 +2516,7 @@ exports.Signal.prototype = {
 	
 };
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -9337,13 +9377,13 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 var signals = require('../vendor/signals');
 
 /**
@@ -9398,7 +9438,7 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{"../vendor/signals":29}],33:[function(require,module,exports){
+},{"../vendor/signals":30}],34:[function(require,module,exports){
 var BaseRenderer = require('./renderers/Base');
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
@@ -9539,7 +9579,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":8,"../model/Scene":14,"../utils/Events":22,"../utils/PerformanceTweaker":27,"../vendor/signals":29,"./DOMMode":31,"./RenderManager":32,"./renderers/Base":36,"./renderers/Canvas":37}],34:[function(require,module,exports){
+},{"../model/Camera3D":8,"../model/Scene":15,"../utils/Events":23,"../utils/PerformanceTweaker":28,"../vendor/signals":30,"./DOMMode":32,"./RenderManager":33,"./renderers/Base":37,"./renderers/Canvas":38}],35:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');
@@ -9567,7 +9607,7 @@ GlitchOffset.prototype = {
 
 module.exports = GlitchOffset;
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
 	console.log('GlitchOffsetSmearBlock initialized!');
@@ -9595,7 +9635,7 @@ GlitchOffsetSmearBlock.prototype = {
 
 module.exports = GlitchOffsetSmearBlock;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -9629,7 +9669,7 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
@@ -9826,4 +9866,4 @@ CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 };
 
 module.exports = CanvasRenderer;
-},{"../../model/BlendMesh":7,"../../model/DrawBuffer":9,"../../model/Mesh":12,"../../utils/PerformanceTweaker":27,"./Base":36}]},{},[6])
+},{"../../model/BlendMesh":7,"../../model/DrawBuffer":9,"../../model/Mesh":12,"../../utils/PerformanceTweaker":28,"./Base":37}]},{},[6])
