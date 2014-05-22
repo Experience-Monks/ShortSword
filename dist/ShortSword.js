@@ -356,10 +356,14 @@ function BlendMesh(geometry1, geometry2, material, cacheRelative) {
 	this.attributeList = ["vertices"];
 	this._blend = 0;
 	
-	if(geometry1 !== geometry2) GeometryUtils.pairGeometry(geometry1, geometry2, this.attributeList);
-
-	this.geometry1 = GeometryUtils.octTreeSort(geometry1);
-	if(geometry1 !== geometry2) this.geometry2 = GeometryUtils.octTreeSort(geometry2);
+	if(geometry1 !== geometry2) {
+		GeometryUtils.pairGeometry(geometry1, geometry2, this.attributeList);
+		this.geometry1 = GeometryUtils.octTreeSort(geometry1);
+		this.geometry2 = GeometryUtils.octTreeSort(geometry2);
+	} else {
+		this.geometry1 = geometry1;
+		this.geometry2 = geometry2;
+	}
 
 	this.geometryBlendBuffer = this.geometry1.clone();
 
