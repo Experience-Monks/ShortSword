@@ -92,16 +92,15 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 			default:
 				this.geometry = this.geometryBlendBuffer;
 				var blend = this.blend;
+
+				if(this.geometry.vertices.length < this.geometry1.vertices.length) {
+					GeometryUtils.quickBufferClone(this.geometry.vertices, this.geometry1.vertices, this.geometry1.vertices.length);
+				}
 				for (var i = 0; i < this.attributeList.length; i++) {
 					var attributeName = this.attributeList[i];
 					var attribute = this.geometry[attributeName];
 					var attribute1 = this.geometry1[attributeName];
 					var attributeDelta = this.geometryDelta[attributeName];
-					if(attribute1.length > attribute.length) {
-						var oldLength = attribute.length;
-						GeometryUtils.quickBufferClone(attribute, attribute1, t);
-						GeometryUtils.updateGeometryDelta(this.geometryDelta, this.geometry1, this.geometry2, oldLength, attribute1.length);
-					}
 					//var t = attribute1.length;
 					var t = ~~(attribute.length / PerformanceTweaker.denominatorSquared);
 					for (var i = 0; i < t; i++) {
