@@ -103,12 +103,12 @@ var GeometryUtils = {
 		console.log("orderlyScramble start!!!");
 		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;
 		var length = geometries[0][attributeList[0]].length;
-		var order = [];
-		for (var i = 0; i < length; i++) {
-			order[i] = i;
-		};
-
 		if(!newOrder) {
+			var order = [];
+			for (var i = 0; i < length; i++) {
+				order[i] = i;
+			};
+
 			newOrder = [];
 			for (var i = 0; i < length; i++) {
 				var randomIndex = ~~(Math.random() * order.length);
@@ -127,7 +127,7 @@ var GeometryUtils = {
 			}
 		}
 		var timeAfter = new Date;
-		console.log("orderlyScramble scrambled " + geometry.vertices.length + " vertices in " + (timeAfter-timeBefore) + "ms");
+		console.log("orderlyScramble scrambled " + length * geometries.length + " vertices in " + (timeAfter-timeBefore) + "ms");
 
 		return newOrder;
 	},
