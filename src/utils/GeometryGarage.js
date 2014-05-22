@@ -4,6 +4,7 @@ var work = [];
 var GeometryGarage = {
 	fillSurfaces : function() {
 		var verticesPerWorkRun = 10000;
+		var verticesPerWorkRunMin = 1000;
 		var targetWorkRunDuration = 6;
 		var targetTweakRatio = 1.2;
 		return function(geometries, newTotalVertices, callback) {
@@ -30,6 +31,7 @@ var GeometryGarage = {
 					} else if(duration > targetWorkRunDuration) { 
 						verticesPerWorkRun = ~~(verticesPerWorkRun / targetTweakRatio);
 					}
+					verticesPerWorkRun = Math.max(verticesPerWorkRun, verticesPerWorkRunMin);
 					console.log("added " + verticesPerWorkRun + " vertices in " + (timeAfter-timeBefore) + "ms");
 					if(this.targetTotalVertices == this.currentTotalVertices) {
 						this.done = true;

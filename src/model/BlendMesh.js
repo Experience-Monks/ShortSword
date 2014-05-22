@@ -84,6 +84,9 @@ Object.defineProperty( BlendMesh.prototype, 'blend', {
 // 	}
 // }();
 
+var RemapFunctions = require('./RemapFunctions');
+
+
 BlendMesh.prototype._updateGeometryRelative = function() {
 	var temp = new THREE.Vector3();
 	return function() {
@@ -96,11 +99,21 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 				break;
 			default:
 				this.geometry = this.geometryBlendBuffer;
+				var geometry = this.geometry;
 				var blend = this.blend;
+				var blendRemap = RemapFunctions.remapRippleSine;
 
 				if(this.geometry.vertices.length < this.geometry1.vertices.length) {
 					GeometryUtils.quickBufferClone(this.geometry.vertices, this.geometry1.vertices, this.geometry1.vertices.length);
 				}
+
+				if(!this.remapExtra) this.remapExtra = [];
+				var remapExtra = this.remapExtra;
+				var vertices = geometry.vertices;
+				for (var i = remapExtra.length; i < this.geometry.vertices.length; i++) {
+					remapExtra[i] = vertices[i].x;
+				};
+
 				for (var i = 0; i < this.attributeList.length; i++) {
 					var attributeName = this.attributeList[i];
 					var attribute = this.geometry[attributeName];
@@ -112,7 +125,7 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 						attribute[i].copy(
 							attribute1[i]
 						).add(
-							temp.copy(attributeDelta[i]).multiplyScalar(blend)
+							temp.copy(attributeDelta[i]).multiplyScalar(blendRemap(blend, remapExtra[i]))
 						)
 					};
 				}

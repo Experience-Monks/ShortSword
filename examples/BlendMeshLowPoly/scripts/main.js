@@ -5,7 +5,7 @@ var ssView = new SHORTSWORD.View();
 
 var totalVerts = 200000;
 var _this = this;
-SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/cube.obj", function(geometry1) {
+SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario.obj", function(geometry1) {
 	SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/yoshi.obj", function(geometry2) {
 		SHORTSWORD.GeometryUtils.fillSurfaces(geometry1, geometry2.vertices.length);
 		SHORTSWORD.GeometryGarage.fillSurfaces([geometry1, geometry2], totalVerts, function(){
@@ -30,7 +30,7 @@ canvasGraph.addValue(SHORTSWORD.PerformanceTweaker, "upgradeWhen", "#2244aa", "F
 ssView.renderManager.onEnterFrame.add(function() {
 	SHORTSWORD.GeometryGarage.doSomeWork();
 	if(!_this.blendModel) return;
-	_this.blendModel.blend = Math.min( 1, Math.max( 0, Math.sin((new Date()).getTime() * .001) * 1.5 + .5));
+	_this.blendModel.blend = Math.min( 1, Math.max( 0, Math.sin((new Date()).getTime() * .0005) * .5 + .5));
 	_this.blendModel.rotateY(mouseMove.x * mouseMove.speed);
 	_this.blendModel.rotateX(mouseMove.y * mouseMove.speed);
 })
