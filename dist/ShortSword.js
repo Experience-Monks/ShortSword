@@ -360,14 +360,15 @@ function BlendMesh(geometry1, geometry2, material, cacheRelative) {
 		GeometryUtils.pairGeometry(geometry1, geometry2, this.attributeList);
 		this.geometry1 = GeometryUtils.octTreeSort(geometry1);
 		this.geometry2 = GeometryUtils.octTreeSort(geometry2);
+		this.scrambleOrder = GeometryUtils.orderlyScramble([geometry1, geometry2]);
 	} else {
-		this.geometry1 = geometry1;
-		this.geometry2 = geometry2;
+		this.geometry1 = GeometryUtils.octTreeSort(geometry1);
+		this.geometry2 = this.geometry1;
+		this.scrambleOrder = GeometryUtils.orderlyScramble([geometry1]);
 	}
 
 	this.geometryBlendBuffer = this.geometry1.clone();
 
-	this.scrambleOrder = GeometryUtils.orderlyScramble([geometry1, geometry2]);
 
 	if(cacheRelative) {
 		this.updateGeometry = this._updateGeometryRelative;
