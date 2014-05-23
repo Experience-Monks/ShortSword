@@ -515,7 +515,15 @@ function Camera3D(props) {
  */
 Camera3D.prototype = Object.create(Object3D.prototype);
 
-Camera3D.prototype.setLens = function ( frameWidth, frameHeight ) {
+Camera3D.prototype.setLens = function ( focalLength, frameHeight ) {
+
+	if ( frameHeight === undefined ) frameHeight = 24;
+
+	this.fov = 2 * THREE.Math.radToDeg( Math.atan( frameHeight / ( focalLength * 2 ) ) );
+	this.updateProjectionMatrix();
+}
+
+Camera3D.prototype.setLensHorizontalFit = function ( frameWidth, frameHeight ) {
 
 	if ( frameHeight === undefined ) frameHeight = 24;
 
