@@ -503,6 +503,7 @@ function Camera3D(props) {
 
 	this.projectionMatrix = new THREE.Matrix4();
 	this.projectionMatrixInverse = new THREE.Matrix4();
+	this.translationMatrix = new THREE.Matrix4();
 
 	this.updateProjectionMatrix();
 
@@ -514,18 +515,19 @@ function Camera3D(props) {
  */
 Camera3D.prototype = Object.create(Object3D.prototype);
 
-Camera3D.prototype.setLens = function ( focalLength, frameHeight ) {
+Camera3D.prototype.setLens = function ( frameWidth, frameHeight ) {
 
 	if ( frameHeight === undefined ) frameHeight = 24;
 
-	this.fov = 2 * THREE.Math.radToDeg( Math.atan( frameHeight / ( focalLength * 2 ) ) );
+	this.fov = 2 * THREE.Math.radToDeg( Math.atan( frameHeight / ( frameWidth * 2 ) ) );
+	this.translationMatrix.makeTranslation(0, 20 * frameHeight / frameWidth, 0);
 	this.updateProjectionMatrix();
 }
 
 Camera3D.prototype.updateProjectionMatrix = function () {
 
 	this.projectionMatrix.makePerspective( this.fov, this.aspect, this.near, this.far );
-
+	this.projectionMatrix.multiply(this.translationMatrix);
 };
 
 Camera3D.prototype.setAspect = function(aspect) {
@@ -9557,6 +9559,7 @@ View.prototype = {
 		this.canvas.style.width = w;
 		this.canvas.style.height = h;
 		this.camera.setAspect(w/h);
+		this.camera.setLens(w, h);
 
 		this.setResolution(
 			~~(w / PerformanceTweaker.denominator), 

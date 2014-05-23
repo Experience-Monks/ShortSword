@@ -116,6 +116,7 @@ View.prototype = {
 		this.canvas.style.width = w;
 		this.canvas.style.height = h;
 		this.camera.setAspect(w/h);
+		this.camera.setLens(w, h);
 
 		this.setResolution(
 			~~(w / PerformanceTweaker.denominator), 
