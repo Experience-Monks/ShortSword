@@ -9,7 +9,7 @@ var RemapFunctions = {
 		var quickSinCurveLookupTable = [];
 		for (var i = 0; i < quickSinCurveLookupSteps; i++) {
 			quickSinCurveLookupTable[i] = 1 - (Math.cos(i/quickSinCurveLookupSteps * Math.PI) * .5 + .5);
-			console.log(i, quickSinCurveLookupTable[i]);
+			//console.log(i, quickSinCurveLookupTable[i]);
 		};
 		quickSinCurveLookupTable[quickSinCurveLookupSteps] = 1;
 		function quickSinCurveLookup(valIn) {

@@ -1,5 +1,12 @@
-var ColorUtils = {
-	lerp: function(color1, color2, ratio) {
+var RemapCurves = require('./RemapCurves');
+
+bumpRotation = 0;
+
+var defaultRemapR = RemapCurves.makeGamma(2);
+var defaultRemapG = RemapCurves.makeGamma(1);
+var defaultRemapB = RemapCurves.makeGamma(.5);
+module.exports = {
+	lerp: function(color1, color2, ratio, remapR, remapG, remapB) {
 		var a1 = (color1 >> 24) & 0xff;
 		var r1 = (color1 >> 16) & 0xff;
 		var g1 = (color1 >> 8) & 0xff;
@@ -10,14 +17,18 @@ var ColorUtils = {
 		var b2 = color2 & 0xff;
 		
 		//fun deviations from lerp
-		var ratio2 = 1 - Math.pow(1 - ratio, 2);
-		var ratio3 = 1 - Math.pow(1 - (Math.sin(ratio * Math.PI - Math.PI * .5) * .5 + .5), 2);
-		var ratio4 = Math.pow(ratio, 2);
+		remapR = remapR || defaultRemapR;
+		remapG = remapG || defaultRemapG;
+		remapB = remapB || defaultRemapB;
+
+		var ratioR = remapR(ratio);
+		var ratioG = remapG(ratio);
+		var ratioB = remapB(ratio);
 
 		return (~~(a1 + (a2 - a1) * ratio) << 24) |
-			(~~(r1 + (r2 - r1) * ratio2) << 16) |
-			(~~(g1 + (g2 - g1) * ratio3) << 8) |
-			~~(b1 + (b2 - b1) * ratio4);
+			(~~(r1 + (r2 - r1) * ratioB) << 16) |
+			(~~(g1 + (g2 - g1) * ratioG) << 8) |
+			~~(b1 + (b2 - b1) * ratioR);
 	},
 	pretty: function (color) {
 		var a = (color >> 24) & 0xff;
@@ -44,6 +55,24 @@ var ColorUtils = {
 			(~~(g * 255) << 8) |
 			~~(b * 255);
 
+	},
+	bump: function(color, rInt, gInt, bInt) {
+		var a = (color >> 24) & 0xff;
+		var r = (color >> 16) & 0xff;
+		var g = (color >> 8) & 0xff;
+		var b = color & 0xff;
+
+		bumpRotation = (bumpRotation+1) % 3;
+		switch(bumpRotation) {
+			case 0: r = Math.min(255, r+1); break;
+			case 1: g = Math.min(255, g+1); break;
+			case 2: b = Math.min(255, b+1); break;
+		};
+
+		return (~~a << 24) |
+			(~~r << 16) |
+			(~~g << 8) |
+			~~b;
+
 	}
 }
-module.exports = ColorUtils;

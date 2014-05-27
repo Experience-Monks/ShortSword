@@ -4,7 +4,8 @@
 var ssView = new SHORTSWORD.View();
 
 var _this = this;
-SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/mario_obj.obj", function(geometry) {
+var fileName = SHORTSWORD.URLParamUtils.getParam("obj") || "mario_obj.obj";
+SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/" + fileName, function(geometry) {
 	var mesh = new SHORTSWORD.Mesh(geometry);
 	ssView.scene.add(mesh);
 	_this.objModel = mesh;
