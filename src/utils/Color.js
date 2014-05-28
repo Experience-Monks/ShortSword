@@ -69,8 +69,6 @@ module.exports = {
 
 		ratio = ( percentage - startPerc ) / ( endPerc - startPerc );
 
-		console.log( ratio, percentage, startPerc, endPerc, startColour.toString( 16 ), endColour.toString( 16 ), this.lerp( startColour, endColour, ratio ).toString( 16 ) );
-
 		return this.lerp( startColour, endColour, ratio );
 	},
 	pretty: function (color) {
