@@ -7,6 +7,9 @@ function VoxelGradientMaterial(props) {
 	this.weights = props.weights;
 	this.steps = props.steps || 10;
 
+	if( this.steps > 10 )
+		this.steps = 10;
+
 	//if there were no times then we'll just go in and linearly set every colour
 	if( this.weights === undefined ) {
 
@@ -18,9 +21,6 @@ function VoxelGradientMaterial(props) {
 		}
 	}
 
-	console.log( this.colours );
-	console.log( this.weights );
-
 	// this.size = props.size || 1;
 	// this.color = props.color || 0xFFFFFFFF;
 	// this.gammaRamp = props.gammaRamp || 1;
@@ -28,8 +28,6 @@ function VoxelGradientMaterial(props) {
 	// this.remapR = props.remapR;
 	// this.remapG = props.remapG;
 	// this.remapB = props.remapB;
-	
-	console.log('VoxelGradientMaterial initialized!');
 }
 
 VoxelGradientMaterial.prototype = {

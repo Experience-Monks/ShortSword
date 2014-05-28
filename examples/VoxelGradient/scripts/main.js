@@ -10,7 +10,8 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/Luigi_obj.obj", function(geo
 			geometry1,
 			geometry2,
 			new SHORTSWORD.materials.VoxelGradient({
-				
+				colours: [ 0xFFFF0000, 0xFFFFFFFF ],
+				steps: 3
 			})
 		);
 		ssView.scene.add(mesh);
