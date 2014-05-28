@@ -314,6 +314,7 @@ SHORTSWORD = {
 	Scene : require('./model/Scene'),
 	BlendMesh : require('./model/BlendMesh'),
 	Mesh : require('./model/Mesh'),
+	Face : require('./model/Face'),
 	Object3D : require('./model/Object3D'),
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
@@ -344,7 +345,7 @@ SHORTSWORD = {
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":15,"./model/materials/Voxel":17,"./model/materials/VoxelGradient":18,"./model/materials/VoxelImageLookUp":19,"./model/materials/VoxelLookUp":20,"./utils/CanvasGraph":22,"./utils/Color":23,"./utils/FPS":25,"./utils/Geometry":26,"./utils/GeometryGarage":27,"./utils/PerformanceTweaker":29,"./utils/RemapCurves":30,"./utils/TestFactory":31,"./utils/URLParams":32,"./view/View":37,"./view/effects/GlitchOffset":38,"./view/effects/GlitchOffsetSmearBlock":39}],7:[function(require,module,exports){
+},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Face":10,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":15,"./model/materials/Voxel":17,"./model/materials/VoxelGradient":18,"./model/materials/VoxelImageLookUp":19,"./model/materials/VoxelLookUp":20,"./utils/CanvasGraph":22,"./utils/Color":23,"./utils/FPS":25,"./utils/Geometry":26,"./utils/GeometryGarage":27,"./utils/PerformanceTweaker":29,"./utils/RemapCurves":30,"./utils/TestFactory":31,"./utils/URLParams":32,"./view/View":37,"./view/effects/GlitchOffset":38,"./view/effects/GlitchOffsetSmearBlock":39}],7:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -630,7 +631,7 @@ require('../vendor/three');
  * vertices, edges, faces, indexes, etc
  */
 function Face(v1, v2, v3) {
-	this.createRandomPoint = this._createRandomPointRandomDelta;
+	this.createRandomPoint = this._defaultCreateRandomPoint;
 	this.v1 = v1;
 	this.v2 = v2;
 	this.v3 = v3;
@@ -644,13 +645,15 @@ function Face(v1, v2, v3) {
 	var s = (a + b + c) * .5;
 
 	this.area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+	this.edgeIndex = 0;
 }
 
 Face.edgeIndex = 0;
+Face.defaultEdgePower = 4;
 
 Face.prototype = {
 	_createRandomPointEdgy: function(edgePower) {
-		switch(Face.edgeIndex%3) {
+		switch(this.edgeIndex%3) {
 			case 0:
 				v1 = this.v1;
 				v2 = this.v2;
@@ -667,14 +670,14 @@ Face.prototype = {
 				v3 = this.v2;
 				break;
 		}
-		Face.edgeIndex++;
+		this.edgeIndex++;
 
 		return v1.clone().lerp(
 				v2, 
 				Math.random()
 			).lerp(
 				v3, 
-				Math.pow(Math.random(), edgePower || 2)
+				Math.pow(Math.random(), edgePower || Face.defaultEdgePower)
 			);
 	},
 	_createRandomPoint: function() {
@@ -700,6 +703,7 @@ Face.prototype = {
 		return new Face(this.v1, this.v2, this.v3);
 	}
 };
+Face.prototype._defaultCreateRandomPoint = Face.prototype._createRandomPointRandomDelta;
 module.exports = Face;
 
 },{"../vendor/three":34}],11:[function(require,module,exports){
