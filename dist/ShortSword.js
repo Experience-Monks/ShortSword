@@ -318,9 +318,11 @@ SHORTSWORD = {
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
 	ColorUtils : require('./utils/Color'),
+	URLParamUtils : require('./utils/URLParams'),
 	GeometryUtils : require('./utils/Geometry'),
 	GeometryGarage : require('./utils/GeometryGarage'),
 	TestFactory : require('./utils/TestFactory'),
+	RemapCurves : require('./utils/RemapCurves'),
 	FPS : require('./utils/FPS'),
 	CanvasGraph : require('./utils/CanvasGraph'),
 	PerformanceTweaker : require('./utils/PerformanceTweaker'),
@@ -342,7 +344,7 @@ SHORTSWORD = {
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":15,"./model/materials/Voxel":17,"./model/materials/VoxelGradient":18,"./model/materials/VoxelImageLookUp":19,"./model/materials/VoxelLookUp":20,"./utils/CanvasGraph":21,"./utils/Color":22,"./utils/FPS":24,"./utils/Geometry":25,"./utils/GeometryGarage":26,"./utils/PerformanceTweaker":28,"./utils/TestFactory":29,"./view/View":34,"./view/effects/GlitchOffset":35,"./view/effects/GlitchOffsetSmearBlock":36}],7:[function(require,module,exports){
+},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":15,"./model/materials/Voxel":17,"./model/materials/VoxelGradient":18,"./model/materials/VoxelImageLookUp":19,"./model/materials/VoxelLookUp":20,"./utils/CanvasGraph":22,"./utils/Color":23,"./utils/FPS":25,"./utils/Geometry":26,"./utils/GeometryGarage":27,"./utils/PerformanceTweaker":29,"./utils/RemapCurves":30,"./utils/TestFactory":31,"./utils/URLParams":32,"./view/View":37,"./view/effects/GlitchOffset":38,"./view/effects/GlitchOffsetSmearBlock":39}],7:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -484,7 +486,7 @@ BlendMesh.prototype.updateGeometryDelta = function() {
 
 module.exports = BlendMesh;
 
-},{"../animation/AnimatorVertexBlend":1,"../utils/Geometry":25,"../utils/PerformanceTweaker":28,"../vendor/three":31,"./Mesh":12,"./RemapFunctions":14,"./materials/VoxelGradient":18}],8:[function(require,module,exports){
+},{"../animation/AnimatorVertexBlend":1,"../utils/Geometry":26,"../utils/PerformanceTweaker":29,"../vendor/three":34,"./Mesh":12,"./RemapFunctions":14,"./materials/VoxelGradient":18}],8:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -545,7 +547,7 @@ Camera3D.prototype.setAspect = function(aspect) {
 
 module.exports = Camera3D;
 
-},{"../vendor/three":31,"./Object3D":13}],9:[function(require,module,exports){
+},{"../vendor/three":34,"./Object3D":13}],9:[function(require,module,exports){
 var DrawBuffer = function( context, clearColour ) {
 
 	this.context = context;
@@ -700,7 +702,7 @@ Face.prototype = {
 };
 module.exports = Face;
 
-},{"../vendor/three":31}],11:[function(require,module,exports){
+},{"../vendor/three":34}],11:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -751,7 +753,7 @@ Geometry.prototype = {
 };
 module.exports = Geometry;
 
-},{"../vendor/three":31}],12:[function(require,module,exports){
+},{"../vendor/three":34}],12:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
@@ -789,7 +791,7 @@ Mesh.prototype.updateGeometry = function() {};
 
 module.exports = Mesh;
 
-},{"../utils/PerformanceTweaker":28,"../vendor/three":31,"./Object3D":13,"./materials/VoxelGradient":18}],13:[function(require,module,exports){
+},{"../utils/PerformanceTweaker":29,"../vendor/three":34,"./Object3D":13,"./materials/VoxelGradient":18}],13:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
@@ -1203,7 +1205,7 @@ Object3D.prototype = {
 
 module.exports = Object3D;
 
-},{"../vendor/three":31}],14:[function(require,module,exports){
+},{"../vendor/three":34}],14:[function(require,module,exports){
 var RemapFunctions = {
 	remapLinear : function (valIn, extra) {
 		return valIn;
@@ -1215,7 +1217,7 @@ var RemapFunctions = {
 		var quickSinCurveLookupTable = [];
 		for (var i = 0; i < quickSinCurveLookupSteps; i++) {
 			quickSinCurveLookupTable[i] = 1 - (Math.cos(i/quickSinCurveLookupSteps * Math.PI) * .5 + .5);
-			console.log(i, quickSinCurveLookupTable[i]);
+			//console.log(i, quickSinCurveLookupTable[i]);
 		};
 		quickSinCurveLookupTable[quickSinCurveLookupSteps] = 1;
 		function quickSinCurveLookup(valIn) {
@@ -1320,6 +1322,9 @@ function VoxelGradientMaterial(props) {
 	this.color = props.color || 0xFFFFFFFF;
 	this.gammaRamp = props.gammaRamp || 1;
 	this.gammaColor = props.gammaColor || 1;
+	this.remapR = props.remapR;
+	this.remapG = props.remapG;
+	this.remapB = props.remapB;
 	
 	console.log('VoxelGradientMaterial initialized!');
 }
@@ -1335,21 +1340,61 @@ VoxelGradientMaterial.prototype = {
 			this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
 			this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
 
+			//generate gradient
 			for (var i = 0; i < gradientSteps; i++) {
 				var ratio = ( i + 1 ) / gradientSteps;
 				ratio = Math.pow(ratio, 1 / this.gammaRamp);
 				this.gradientBufferView32uint[i] = ColorUtils.lerp(
 					this.clearColor,
 					this.color,
-					ratio
+					ratio,
+					this.remapR,
+					this.remapG,
+					this.remapB
 				);
 			};
 
+			//apply gamma
 			if(this.gammaColor != 1) {
 				for (var i = 0; i < gradientSteps; i++) {
 					this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
 				}
 			}
+
+			//make sure no 2 colors are the same by bumping color a bit
+			//this also makes all colors unique so you don't get color loops (though fun, not cool here)
+			//
+			//first we need to make sure the gradient doesn't include the clearColor
+			if(this.gradientBufferView32uint[0] == clearColor) {
+				var clearColorBumpJustInCase = ColorUtils.bump(clearColor);
+				console.log("!", clearColor);
+				console.log("!", clearColorBumpJustInCase);
+				
+				
+				for (var i = 0; i < gradientSteps; i++) {
+					if(clearColor == this.gradientBufferView32uint[i]) {
+						this.gradientBufferView32uint[i] = clearColorBumpJustInCase;
+					}
+				}
+				
+			}
+			//then we step through the gradient and bump as we go to avoid repeated colors
+			for (var i = 1; i < gradientSteps; i++) {
+				if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[i]) {
+					var bumped = ColorUtils.bump(this.gradientBufferView32uint[i]);
+					for (var j = i; j < gradientSteps; j++) {
+						if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[j]) {
+							this.gradientBufferView32uint[j] = bumped;
+						}
+					}
+				}
+			}
+			
+			for (var i = 0; i < this.gradientBufferView32uint.length; i++) {
+				console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
+			};
+			
+
 		}
 	},
 
@@ -1375,7 +1420,7 @@ VoxelGradientMaterial.prototype = {
 
 module.exports = VoxelGradientMaterial;
 
-},{"../../utils/Color":22}],19:[function(require,module,exports){
+},{"../../utils/Color":23}],19:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 var utilImage = require( '../../utils/Image' );
 
@@ -1487,7 +1532,7 @@ function alphaBlend( src, dest ) {
 }
 
 module.exports = VoxelLookUp;
-},{"../../utils/Image":27,"./LookupBase":16}],20:[function(require,module,exports){
+},{"../../utils/Image":28,"./LookupBase":16}],20:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 
 var VoxelLookUp = function( props ) {
@@ -1523,6 +1568,31 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, index, vertexIDX, screenW
 
 module.exports = VoxelLookUp;
 },{"./LookupBase":16}],21:[function(require,module,exports){
+module.exports = {
+	orderlyScramble: function(array, newOrder) {
+		var length = array.length;
+		if(!newOrder) {
+			var order = [];
+			for (var i = 0; i < length; i++) {
+				order[i] = i;
+			};
+
+			newOrder = [];
+			for (var i = 0; i < length; i++) {
+				var randomIndex = ~~(Math.random() * order.length);
+				newOrder[i] = order[randomIndex];
+				order.splice(randomIndex, 1);
+			};
+		}
+
+		originalArray = array.slice(0);
+		for (var i = 0; i < length; i++) {
+			array[i] = originalArray[newOrder[i]];
+		}
+		return newOrder;
+	}
+}
+},{}],22:[function(require,module,exports){
 function CanvasGraph(props) {
 	this.addCanvasToDOMBody = this.addCanvasToDOMBody.bind(this);
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1643,9 +1713,16 @@ CanvasGraph.prototype = {
 };
 
 module.exports = CanvasGraph;
-},{}],22:[function(require,module,exports){
-var ColorUtils = {
-	lerp: function(color1, color2, ratio) {
+},{}],23:[function(require,module,exports){
+var RemapCurves = require('./RemapCurves');
+
+bumpRotation = 0;
+
+var defaultRemapR = RemapCurves.makeGamma(2);
+var defaultRemapG = RemapCurves.makeGamma(1);
+var defaultRemapB = RemapCurves.makeGamma(.5);
+module.exports = {
+	lerp: function(color1, color2, ratio, remapR, remapG, remapB) {
 		var a1 = (color1 >> 24) & 0xff;
 		var r1 = (color1 >> 16) & 0xff;
 		var g1 = (color1 >> 8) & 0xff;
@@ -1656,14 +1733,18 @@ var ColorUtils = {
 		var b2 = color2 & 0xff;
 		
 		//fun deviations from lerp
-		var ratio2 = 1 - Math.pow(1 - ratio, 2);
-		var ratio3 = 1 - Math.pow(1 - (Math.sin(ratio * Math.PI - Math.PI * .5) * .5 + .5), 2);
-		var ratio4 = Math.pow(ratio, 2);
+		remapR = remapR || defaultRemapR;
+		remapG = remapG || defaultRemapG;
+		remapB = remapB || defaultRemapB;
+
+		var ratioR = remapR(ratio);
+		var ratioG = remapG(ratio);
+		var ratioB = remapB(ratio);
 
 		return (~~(a1 + (a2 - a1) * ratio) << 24) |
-			(~~(r1 + (r2 - r1) * ratio2) << 16) |
-			(~~(g1 + (g2 - g1) * ratio3) << 8) |
-			~~(b1 + (b2 - b1) * ratio4);
+			(~~(r1 + (r2 - r1) * ratioB) << 16) |
+			(~~(g1 + (g2 - g1) * ratioG) << 8) |
+			~~(b1 + (b2 - b1) * ratioR);
 	},
 	pretty: function (color) {
 		var a = (color >> 24) & 0xff;
@@ -1690,10 +1771,28 @@ var ColorUtils = {
 			(~~(g * 255) << 8) |
 			~~(b * 255);
 
+	},
+	bump: function(color, rInt, gInt, bInt) {
+		var a = (color >> 24) & 0xff;
+		var r = (color >> 16) & 0xff;
+		var g = (color >> 8) & 0xff;
+		var b = color & 0xff;
+
+		bumpRotation = (bumpRotation+1) % 3;
+		switch(bumpRotation) {
+			case 0: r = Math.min(255, r+1); break;
+			case 1: g = Math.min(255, g+1); break;
+			case 2: b = Math.min(255, b+1); break;
+		};
+
+		return (~~a << 24) |
+			(~~r << 16) |
+			(~~g << 8) |
+			~~b;
+
 	}
 }
-module.exports = ColorUtils;
-},{}],23:[function(require,module,exports){
+},{"./RemapCurves":30}],24:[function(require,module,exports){
 var Events = {
 	addEvent : function(elem, type, eventHandle) {
 	    if (elem == null || typeof(elem) == 'undefined') return;
@@ -1708,7 +1807,7 @@ var Events = {
 }
 
 module.exports = Events;
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 function FPS() {
 	this.lastTime = new Date;
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1743,7 +1842,8 @@ FPS.prototype = {
 };
 
 module.exports = new FPS();
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
+var ArrayUtils = require('./Array');
 var Geometry = require('../model/Geometry');
 
 var attributeList = ["vertices"];
@@ -1903,38 +2003,46 @@ var GeometryUtils = {
 		if(!geometry.faces || geometry.faces.length == 0) {
 			console.log("WARNING: Cannot fill geometry unless it has faces defined");
 		}
+		var proportionalFaces = geometry.proportionalFaces || [];
+		if(!geometry.proportionalFaces) {
 
-		var facesByArea = geometry.faces.slice(0);
-		facesByArea.sort(function(a, b) { return a.area - b.area; });
+			var facesByArea = geometry.faces.slice(0);
+			facesByArea.sort(function(a, b) { return a.area - b.area; });
 
-		var min = facesByArea[0].area;
-		var median = facesByArea[~~(facesByArea.length * .5)].area;
-		var max = facesByArea[facesByArea.length-1].area;
+			var min = facesByArea[0].area;
+			var median = facesByArea[~~(facesByArea.length * .5)].area;
+			var max = facesByArea[facesByArea.length-1].area;
 
-		var medianRatio = ~~(median / min);
-		var maxRatio = ~~(max / min);
-		while(maxRatio > 2000) {
-			min *= 5;
-			medianRatio = ~~(median / min);
-			maxRatio = ~~(max / min);
-		}
+			var medianRatio = ~~(median / min);
+			var maxRatio = ~~(max / min);
+			while(maxRatio > 2000) {
+				min *= 5;
+				medianRatio = ~~(median / min);
+				maxRatio = ~~(max / min);
+			}
 
-		//console.log(medianRatio);
-		//console.log(maxRatio);
+			//console.log(medianRatio);
+			//console.log(maxRatio);
 
-		var proportionalFaces = [];
-		for (var iF = 0; iF < facesByArea.length; iF++) {
-			var face = facesByArea[iF];
-			for (var i = ~~(face.area / min); i >= 0; i--) {
-				proportionalFaces.push(face);
+			for (var iF = 0; iF < facesByArea.length; iF++) {
+				var face = facesByArea[iF];
+				for (var i = ~~(face.area / min); i >= 0; i--) {
+					proportionalFaces.push(face);
+				};
 			};
-		};
-		//console.log(facesByArea.length, proportionalFaces.length);
 
-		var pfLength = proportionalFaces.length;
-		for (var i = length; i < newTotalVertices; i++) {
-			geometry.vertices.push(proportionalFaces[i%pfLength].createRandomPoint())
+			ArrayUtils.orderlyScramble(proportionalFaces);
+			//console.log(facesByArea.length, proportionalFaces.length);
+			geometry.proportionalFaces = proportionalFaces;
+			geometry.lastProportionalFaceVisited = 0;
 		}
+		var pfLength = proportionalFaces.length;
+		var lastProportionalFaceVisited = geometry.lastProportionalFaceVisited;
+		for (var i = length; i < newTotalVertices; i++) {
+			lastProportionalFaceVisited++;
+			geometry.vertices.push(proportionalFaces[lastProportionalFaceVisited%pfLength].createRandomPoint())
+		}
+		geometry.lastProportionalFaceVisited = lastProportionalFaceVisited;
 	},
 	quickBufferClone : function(dstBuffer, srcBuffer, newTotal) {
 		for (var i = dstBuffer.length; i < newTotal; i++) {
@@ -1943,7 +2051,7 @@ var GeometryUtils = {
 	}
 }
 module.exports = GeometryUtils;
-},{"../model/Geometry":11}],26:[function(require,module,exports){
+},{"../model/Geometry":11,"./Array":21}],27:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var GeometryUtils = require('./Geometry');
 var work = [];
@@ -2002,7 +2110,7 @@ var GeometryGarage = {
 };
 
 module.exports = GeometryGarage;
-},{"../model/Geometry":11,"./Geometry":25}],27:[function(require,module,exports){
+},{"../model/Geometry":11,"./Geometry":26}],28:[function(require,module,exports){
 var canvas = null;
 var ctx = null;
 
@@ -2042,7 +2150,7 @@ module.exports = {
 };
 
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var signals = require('../vendor/signals');
 var FPS = require('./FPS');
 
@@ -2096,7 +2204,44 @@ PerformanceTweaker.prototype = {
 }
 
 module.exports = new PerformanceTweaker();
-},{"../vendor/signals":30,"./FPS":24}],29:[function(require,module,exports){
+},{"../vendor/signals":33,"./FPS":25}],30:[function(require,module,exports){
+function makeGamma(pow) {
+	pow = Math.min(8, Math.max(0.01, pow));
+	return function(inVal) {
+		return Math.pow(inVal, 1/pow);
+	}
+};
+function sine(inVal) {
+	return Math.sin(inVal * Math.PI - Math.PI * .5) * .5 + .5;
+};
+function makeInvertedGamma(pow) {
+	var gamma = makeGamma(pow);
+	return function(inVal) {
+		return 1 - gamma(inVal);
+	}
+};
+function makeGammaSine(pow) {
+	var gamma = makeGamma(pow);
+	return function(inVal) {
+		return gamma(sine(inVal));
+	}
+};
+function linear(inVal) {
+	return inVal;
+};
+function interpret(str){
+	console.log(str);
+	return linear;
+};
+module.exports = {
+	linear: linear,
+	makeGamma: makeGamma,
+	makeInvertedGamma: makeInvertedGamma,
+	sine: sine,
+	makeGammaSine: makeGammaSine,
+	interpret: interpret
+}
+},{}],31:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
@@ -2138,7 +2283,26 @@ TestFactory.prototype = {
 };
 
 module.exports = new TestFactory();
-},{"../model/Geometry":11,"../model/Mesh":12}],30:[function(require,module,exports){
+},{"../model/Geometry":11,"../model/Mesh":12}],32:[function(require,module,exports){
+module.exports = {
+	getParam : function(name) {
+		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+		var results = regex.exec(window.location.href);
+		//console.log(name, results);
+		if (results==null){
+		   return undefined;
+		} else if(results[1] == "true"){
+			return true;
+		} else if(results[1] == "false"){
+			return false;
+		} else if(!isNaN(results[1])){
+			return parseInt(results[1]);
+		} else {
+			return results[1] || false;
+		}
+	}
+}
+},{}],33:[function(require,module,exports){
 /**
  * Signals for Node.js
  * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
@@ -2526,7 +2690,7 @@ exports.Signal.prototype = {
 	
 };
 
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -9387,13 +9551,13 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],33:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 var signals = require('../vendor/signals');
 
 /**
@@ -9448,7 +9612,7 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{"../vendor/signals":30}],34:[function(require,module,exports){
+},{"../vendor/signals":33}],37:[function(require,module,exports){
 var BaseRenderer = require('./renderers/Base');
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
@@ -9590,7 +9754,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":8,"../model/Scene":15,"../utils/Events":23,"../utils/PerformanceTweaker":28,"../vendor/signals":30,"./DOMMode":32,"./RenderManager":33,"./renderers/Base":37,"./renderers/Canvas":38}],35:[function(require,module,exports){
+},{"../model/Camera3D":8,"../model/Scene":15,"../utils/Events":24,"../utils/PerformanceTweaker":29,"../vendor/signals":33,"./DOMMode":35,"./RenderManager":36,"./renderers/Base":40,"./renderers/Canvas":41}],38:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');
@@ -9618,7 +9782,7 @@ GlitchOffset.prototype = {
 
 module.exports = GlitchOffset;
 
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
 	console.log('GlitchOffsetSmearBlock initialized!');
@@ -9646,7 +9810,7 @@ GlitchOffsetSmearBlock.prototype = {
 
 module.exports = GlitchOffsetSmearBlock;
 
-},{}],37:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -9680,7 +9844,7 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],38:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
@@ -9877,4 +10041,4 @@ CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 };
 
 module.exports = CanvasRenderer;
-},{"../../model/BlendMesh":7,"../../model/DrawBuffer":9,"../../model/Mesh":12,"../../utils/PerformanceTweaker":28,"./Base":37}]},{},[6])
+},{"../../model/BlendMesh":7,"../../model/DrawBuffer":9,"../../model/Mesh":12,"../../utils/PerformanceTweaker":29,"./Base":40}]},{},[6])

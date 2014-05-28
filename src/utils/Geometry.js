@@ -1,3 +1,4 @@
+var ArrayUtils = require('./Array');
 var Geometry = require('../model/Geometry');
 
 var attributeList = ["vertices"];
@@ -157,38 +158,46 @@ var GeometryUtils = {
 		if(!geometry.faces || geometry.faces.length == 0) {
 			console.log("WARNING: Cannot fill geometry unless it has faces defined");
 		}
+		var proportionalFaces = geometry.proportionalFaces || [];
+		if(!geometry.proportionalFaces) {
 
-		var facesByArea = geometry.faces.slice(0);
-		facesByArea.sort(function(a, b) { return a.area - b.area; });
+			var facesByArea = geometry.faces.slice(0);
+			facesByArea.sort(function(a, b) { return a.area - b.area; });
 
-		var min = facesByArea[0].area;
-		var median = facesByArea[~~(facesByArea.length * .5)].area;
-		var max = facesByArea[facesByArea.length-1].area;
+			var min = facesByArea[0].area;
+			var median = facesByArea[~~(facesByArea.length * .5)].area;
+			var max = facesByArea[facesByArea.length-1].area;
 
-		var medianRatio = ~~(median / min);
-		var maxRatio = ~~(max / min);
-		while(maxRatio > 2000) {
-			min *= 5;
-			medianRatio = ~~(median / min);
-			maxRatio = ~~(max / min);
-		}
+			var medianRatio = ~~(median / min);
+			var maxRatio = ~~(max / min);
+			while(maxRatio > 2000) {
+				min *= 5;
+				medianRatio = ~~(median / min);
+				maxRatio = ~~(max / min);
+			}
 
-		//console.log(medianRatio);
-		//console.log(maxRatio);
+			//console.log(medianRatio);
+			//console.log(maxRatio);
 
-		var proportionalFaces = [];
-		for (var iF = 0; iF < facesByArea.length; iF++) {
-			var face = facesByArea[iF];
-			for (var i = ~~(face.area / min); i >= 0; i--) {
-				proportionalFaces.push(face);
+			for (var iF = 0; iF < facesByArea.length; iF++) {
+				var face = facesByArea[iF];
+				for (var i = ~~(face.area / min); i >= 0; i--) {
+					proportionalFaces.push(face);
+				};
 			};
-		};
-		//console.log(facesByArea.length, proportionalFaces.length);
 
-		var pfLength = proportionalFaces.length;
-		for (var i = length; i < newTotalVertices; i++) {
-			geometry.vertices.push(proportionalFaces[i%pfLength].createRandomPoint())
+			ArrayUtils.orderlyScramble(proportionalFaces);
+			//console.log(facesByArea.length, proportionalFaces.length);
+			geometry.proportionalFaces = proportionalFaces;
+			geometry.lastProportionalFaceVisited = 0;
 		}
+		var pfLength = proportionalFaces.length;
+		var lastProportionalFaceVisited = geometry.lastProportionalFaceVisited;
+		for (var i = length; i < newTotalVertices; i++) {
+			lastProportionalFaceVisited++;
+			geometry.vertices.push(proportionalFaces[lastProportionalFaceVisited%pfLength].createRandomPoint())
+		}
+		geometry.lastProportionalFaceVisited = lastProportionalFaceVisited;
 	},
 	quickBufferClone : function(dstBuffer, srcBuffer, newTotal) {
 		for (var i = dstBuffer.length; i < newTotal; i++) {

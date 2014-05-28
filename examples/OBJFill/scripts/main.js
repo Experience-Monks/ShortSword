@@ -14,10 +14,6 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/" + fileName, function(geome
 		new SHORTSWORD.materials.VoxelGradient({
 			gammaColor: 4,
 			gammaRamp: .5,
-			//remapR: SHORTSWORD.RemapCurves.makeGamma(.5),
-			remapR: SHORTSWORD.RemapCurves.makeGammaSine(2),
-			remapG: SHORTSWORD.RemapCurves.makeGammaSine(3),
-			remapB: SHORTSWORD.RemapCurves.makeGamma(.25)
 		})
 	);
 	ssView.scene.add(mesh);
