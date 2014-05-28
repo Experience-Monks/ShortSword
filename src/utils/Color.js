@@ -2,33 +2,76 @@ var RemapCurves = require('./RemapCurves');
 
 bumpRotation = 0;
 
-var defaultRemapR = RemapCurves.makeGamma(2);
-var defaultRemapG = RemapCurves.makeGamma(1);
-var defaultRemapB = RemapCurves.makeGamma(.5);
+// var defaultRemapR = RemapCurves.makeGamma(2);
+// var defaultRemapG = RemapCurves.makeGamma(1);
+// var defaultRemapB = RemapCurves.makeGamma(.5);
 module.exports = {
 	lerp: function(color1, color2, ratio, remapR, remapG, remapB) {
 		var a1 = (color1 >> 24) & 0xff;
 		var r1 = (color1 >> 16) & 0xff;
 		var g1 = (color1 >> 8) & 0xff;
 		var b1 = color1 & 0xff;
-		var a2 = (color2 >> 24) & 0xff;
+		var a2 = (color2 >>> 24) & 0xff;
 		var r2 = (color2 >> 16) & 0xff;
 		var g2 = (color2 >> 8) & 0xff;
 		var b2 = color2 & 0xff;
+
+		return ((~~(a1 + (a2 - a1) * ratio)) << 24 |
+			   (~~(r1 + (r2 - r1) * ratio)) << 16 |
+			   (~~(g1 + (g2 - g1) * ratio)) << 8 |
+			   ~~(b1 + (b2 - b1) * ratio)) >>> 0;
+
 		
 		//fun deviations from lerp
-		remapR = remapR || defaultRemapR;
-		remapG = remapG || defaultRemapG;
-		remapB = remapB || defaultRemapB;
+		// remapR = remapR || defaultRemapR;
+		// remapG = remapG || defaultRemapG;
+		// remapB = remapB || defaultRemapB;
 
-		var ratioR = remapR(ratio);
-		var ratioG = remapG(ratio);
-		var ratioB = remapB(ratio);
+		// var ratioR = remapR(ratio);
+		// var ratioG = remapG(ratio);
+		// var ratioB = remapB(ratio);
 
-		return (~~(a1 + (a2 - a1) * ratio) << 24) |
-			(~~(r1 + (r2 - r1) * ratioB) << 16) |
-			(~~(g1 + (g2 - g1) * ratioG) << 8) |
-			~~(b1 + (b2 - b1) * ratioR);
+		// return (~~(a1 + (a2 - a1) * ratio) << 24) |
+		// 	(~~(r1 + (r2 - r1) * ratioB) << 16) |
+		// 	(~~(g1 + (g2 - g1) * ratioG) << 8) |
+		// 	~~(b1 + (b2 - b1) * ratioR);
+	},
+	gradientColour: function( percentage, colours, weights ) {
+
+		var startIdx = 0,
+			endIdx = 1,
+			startPerc = 0,
+			endPerc = 0,
+			ratio = 0,
+			startColour = 0,
+			endColour = 0,
+			sa, ea, sr, er, sg, eg, sb, eb;
+
+		for( var i = 0, len = weights.length; i < len; i++ ) {
+
+			if( percentage > weights[ i ] ) {
+
+				startIdx = i;
+				endIdx = i + 1;
+			} else {
+
+				break;
+			}
+		}
+
+		if( endIdx > weights.length - 1 ) 
+			endIdx = weights.length - 1;
+
+		startPerc = weights[ startIdx ];
+		endPerc = weights[ endIdx ];
+		startColour = colours[ startIdx ];
+		endColour = colours[ endIdx ];
+
+		ratio = ( percentage - startPerc ) / ( endPerc - startPerc );
+
+		console.log( ratio, percentage, startPerc, endPerc, startColour.toString( 16 ), endColour.toString( 16 ), this.lerp( startColour, endColour, ratio ).toString( 16 ) );
+
+		return this.lerp( startColour, endColour, ratio );
 	},
 	pretty: function (color) {
 		var a = (color >> 24) & 0xff;
