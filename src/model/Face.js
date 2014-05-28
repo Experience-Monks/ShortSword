@@ -4,7 +4,7 @@ require('../vendor/three');
  * vertices, edges, faces, indexes, etc
  */
 function Face(v1, v2, v3) {
-	this.createRandomPoint = this._createRandomPointRandomDelta;
+	this.createRandomPoint = this._defaultCreateRandomPoint;
 	this.v1 = v1;
 	this.v2 = v2;
 	this.v3 = v3;
@@ -18,13 +18,15 @@ function Face(v1, v2, v3) {
 	var s = (a + b + c) * .5;
 
 	this.area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+	this.edgeIndex = 0;
 }
 
 Face.edgeIndex = 0;
+Face.defaultEdgePower = 4;
 
 Face.prototype = {
 	_createRandomPointEdgy: function(edgePower) {
-		switch(Face.edgeIndex%3) {
+		switch(this.edgeIndex%3) {
 			case 0:
 				v1 = this.v1;
 				v2 = this.v2;
@@ -41,14 +43,14 @@ Face.prototype = {
 				v3 = this.v2;
 				break;
 		}
-		Face.edgeIndex++;
+		this.edgeIndex++;
 
 		return v1.clone().lerp(
 				v2, 
 				Math.random()
 			).lerp(
 				v3, 
-				Math.pow(Math.random(), edgePower || 2)
+				Math.pow(Math.random(), edgePower || Face.defaultEdgePower)
 			);
 	},
 	_createRandomPoint: function() {
@@ -74,4 +76,5 @@ Face.prototype = {
 		return new Face(this.v1, this.v2, this.v3);
 	}
 };
+Face.prototype._defaultCreateRandomPoint = Face.prototype._createRandomPointRandomDelta;
 module.exports = Face;

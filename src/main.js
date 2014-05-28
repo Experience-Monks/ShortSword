@@ -14,6 +14,7 @@ SHORTSWORD = {
 	Scene : require('./model/Scene'),
 	BlendMesh : require('./model/BlendMesh'),
 	Mesh : require('./model/Mesh'),
+	Face : require('./model/Face'),
 	Object3D : require('./model/Object3D'),
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
