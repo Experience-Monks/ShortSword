@@ -21,6 +21,9 @@ function VoxelGradientMaterial(props) {
 		}
 	}
 
+	this.gradientBuffer = new ArrayBuffer( this.steps * 4 );
+	this.gradientBufferView32uint = new Uint32Array( this.gradientBuffer );
+
 	// this.size = props.size || 1;
 	// this.color = props.color || 0xFFFFFFFF;
 	// this.gammaRamp = props.gammaRamp || 1;
@@ -39,14 +42,9 @@ VoxelGradientMaterial.prototype = {
 
 
 
-			this.gradientBuffer = new ArrayBuffer( this.steps * 4 );
-			this.gradientBufferView32uint = new Uint32Array( this.gradientBuffer );
 
 			//generate gradient
-			for( var i = 0; i < this.steps; i++ ) {
-
-				this.gradientBufferView32uint[i] = ColorUtils.gradientColour( i / ( this.steps - 1 ), this.colours, this.weights );
-			}
+			ColorUtils.writeGradient( this.gradientBufferView32uint, this.colours, this.weights );
 
 
 

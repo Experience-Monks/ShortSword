@@ -71,6 +71,13 @@ module.exports = {
 
 		return this.lerp( startColour, endColour, ratio );
 	},
+	writeGradient: function( array, colours, weights ) {
+
+		for( var i = 0, len = array.length, num = len - 1; i < len; i++ ) {
+
+			array[ i ] = this.gradientColour( i / num, colours, weights );
+		}
+	},
 	pretty: function (color) {
 		var a = (color >> 24) & 0xff;
 		var r = (color >> 16) & 0xff;
