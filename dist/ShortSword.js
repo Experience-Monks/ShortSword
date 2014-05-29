@@ -1,8 +1,65 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var BaseAnimator = require( './BaseAnimator' );
+var VoxelGradient = require( '../model/materials/VoxelGradient' );
+var ColorUtil = require( '../utils/Color' );
+var FPS = require( '../utils/FPS' );
+
+var AnimatorMaterialGradient = function( mesh ) {
+
+	BaseAnimator.call( this, mesh );
+
+	this.material = mesh.material;
+	this.ease = 0.005;
+
+	if( !( this.material instanceof VoxelGradient ) )
+		throw new Error( 'The material which is being used needs to be a VoxelGradient' );
+
+	this.colours = this.material.gradientBufferView32uint;
+	this.targetColours = new Uint32Array( this.colours.length );
+	this.targetColours.set( this.material.gradientBufferView32uint );
+};
+
+var p = AnimatorMaterialGradient.prototype = BaseAnimator.prototype;
+
+p.setTarget = function( colours, weights ) {
+
+	ColorUtil.writeGradient( this.targetColours, colours, weights );
+
+	console.log( this.targetColours );
+
+	this.dirty = true;
+};
+
+p.update = function() {
+
+	for( var i = 0, len = this.colours.length; i < len; i++ ) {
+
+		this.colours[ i ] = ColorUtil.lerp( this.colours[ i ], this.targetColours[ i ], this.ease * FPS.animSpeedCompensation );
+	}
+
+	console.log( '--------', this.colours[ 0 ], this.targetColours[ 0 ] );
+
+	this.dirty = this.colours[ 0 ] != this.targetColours[ 0 ];
+};
+
+module.exports = AnimatorMaterialGradient;
+},{"../model/materials/VoxelGradient":19,"../utils/Color":24,"../utils/FPS":26,"./BaseAnimator":4}],2:[function(require,module,exports){
+var BaseAnimator = require( './BaseAnimator' );
 var Mesh = require( '../model/Mesh' );
 var Geometry = require( '../model/Geometry' );
 
+/**
+ * AnimatorBlendVertex will animate vertices from one model to another. It can animate between an infinite number
+ * of models.
+ *
+ * Models are added using array like manipulation functions push, unshift. Or can be added according to another model
+ * using the functions addBefore, addAfter.
+ *
+ * @class AnimatorBlendVertex
+ * @extends {BaseAnimator}
+ * @constructor
+ * @param {[type]} mesh [description]
+ */
 var AnimatorBlendVertex = function( mesh ) {
 
 	BaseAnimator.call( this, mesh );
@@ -18,6 +75,13 @@ var AnimatorBlendVertex = function( mesh ) {
 
 var p = AnimatorBlendVertex.prototype = Object.create( BaseAnimator.prototype );
 
+/**
+ * push can be used to add a new Mesh/vertices to animate between. This function will add
+ * the Mesh/vertices to the end of the list of items to animate between.
+ *
+ * @method push
+ * @param  {Object} step This should be either an array of vertices or a Mesh that we'd like to animate to or from
+ */
 p.push = function( step ) {
 
 	var vertices = getVertices( step, this.oVertices );
@@ -25,6 +89,13 @@ p.push = function( step ) {
 	this.steps.push( vertices );
 };
 
+/**
+ * unshift can be used to add a new Mesh/vertices to animate between. This function will add
+ * the Mesh/vertices to the start of the list of items to animate between.
+ *
+ * @method unshift
+ * @param  {Object} step This should be either an array of vertices or a Mesh that we'd like to animate to or from
+ */
 p.unshift = function( data ) {
 
 	var vertices = getVertices( step, this.oVertices );
@@ -32,20 +103,34 @@ p.unshift = function( data ) {
 	this.steps.unshift( vertices );
 };
 
+/**
+ * addBefore will add vertices to the list of vertices to animate. The new vertices will be added before the vertices
+ * specified.
+ * 
+ * @param {[type]} beforeStep [description]
+ * @param {[type]} step       [description]
+ * @return {Boolean} This value will be true if the vertices or mesh passed in was added to the list of vertices
+ *                   to animate between.
+ */
 p.addBefore = function( beforeStep, step ) {
 
 	var beforeVertices = getVertices( beforeStep, this.oVertices );
 	var vertices = getVertices( step, this.oVertices );
+	var added = false;
 
 	for( var i = 0, len = this.steps.length; i < len; i++ ) {
 
 		if( this.steps[ i ] == beforeStep ) {
+
+			added = true;
 
 			this.steps.splice( i, vertices );
 
 			break;
 		}
 	}
+
+	return added;
 };
 
 p.addAfter = function( beforeStep, step ) {
@@ -125,7 +210,7 @@ function getVertices( step, oVertices ) {
 }
 
 module.exports = AnimatorBlendVertex;
-},{"../model/Geometry":11,"../model/Mesh":12,"./BaseAnimator":3}],2:[function(require,module,exports){
+},{"../model/Geometry":12,"../model/Mesh":13,"./BaseAnimator":4}],3:[function(require,module,exports){
 var BaseAnimator = require( './BaseAnimator' );
 
 var AnimatorVertexRandom = function( mesh ) {
@@ -156,18 +241,39 @@ p.updateVertex = function(){
 }();
 
 module.exports = AnimatorVertexRandom;
-},{"./BaseAnimator":3}],3:[function(require,module,exports){
+},{"./BaseAnimator":4}],4:[function(require,module,exports){
+/**
+ * BaseAnimator is the base class for all animators.
+ * 
+ * @class BaseAnimator
+ * @constructor
+ * @param {Mesh} mesh This is the mesh on which animation should happen.
+ */
 var BaseAnimator = function( mesh ) {
 
 	this.mesh = mesh;
 	this.dirty = true;
 };
 
+/**
+ * Update is called immediately before the animator is run over every vertex.
+ * 
+ * It's handy to for instance reininialize the animator before vertices are updated.
+ *
+ * @method update
+ */
 BaseAnimator.prototype.update = function() {};
+
+/**
+ * Update vertex is called on every vertex of a mesh. This is where the animator should
+ * perform calculations to make things well... animate.
+ * 
+ * @param  {Number} vertexIDX This is the current vertex index of the mesh the animator is assigned to.
+ */
 BaseAnimator.prototype.updateVertex = function( vertexIDX ) {};
 
 module.exports = BaseAnimator;
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var GeometryOBJParser = require('./parsers/GeometryOBJ');
 function Loader() {
 	console.log('Loader initialized!');
@@ -215,7 +321,7 @@ Loader.prototype = {
 };
 
 module.exports = new Loader();
-},{"./parsers/GeometryOBJ":5}],5:[function(require,module,exports){
+},{"./parsers/GeometryOBJ":6}],6:[function(require,module,exports){
 var Geometry = require('../../model/Geometry');
 var Face = require('../../model/Face');
 
@@ -297,7 +403,7 @@ GeometryOBJParser.prototype = {
 };
 
 module.exports = new GeometryOBJParser();
-},{"../../model/Face":10,"../../model/Geometry":11}],6:[function(require,module,exports){
+},{"../../model/Face":11,"../../model/Geometry":12}],7:[function(require,module,exports){
 /**
  * ShortSword is a library for rendering realtime animated voxels to a canvas.
  * Supports standard canvas element.
@@ -338,14 +444,15 @@ SHORTSWORD = {
 	},
 	animators: {
 		VertexBlend: require('./animation/AnimatorVertexBlend'),
-		VertexRandom: require('./animation/AnimatorVertexRandom')
+		VertexRandom: require('./animation/AnimatorVertexRandom'),
+		MaterialGradient: require('./animation/AnimatorMaterialGradient')
 	},
 	effects: {
 		GlitchOffset : require('./view/effects/GlitchOffset'),
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./animation/AnimatorVertexBlend":1,"./animation/AnimatorVertexRandom":2,"./loader/Loader":4,"./loader/parsers/GeometryOBJ":5,"./model/BlendMesh":7,"./model/Camera3D":8,"./model/Face":10,"./model/Mesh":12,"./model/Object3D":13,"./model/Scene":15,"./model/materials/Voxel":17,"./model/materials/VoxelGradient":18,"./model/materials/VoxelImageLookUp":19,"./model/materials/VoxelLookUp":20,"./utils/CanvasGraph":22,"./utils/Color":23,"./utils/FPS":25,"./utils/Geometry":26,"./utils/GeometryGarage":27,"./utils/PerformanceTweaker":29,"./utils/RemapCurves":30,"./utils/TestFactory":31,"./utils/URLParams":32,"./view/View":37,"./view/effects/GlitchOffset":38,"./view/effects/GlitchOffsetSmearBlock":39}],7:[function(require,module,exports){
+},{"./animation/AnimatorMaterialGradient":1,"./animation/AnimatorVertexBlend":2,"./animation/AnimatorVertexRandom":3,"./loader/Loader":5,"./loader/parsers/GeometryOBJ":6,"./model/BlendMesh":8,"./model/Camera3D":9,"./model/Face":11,"./model/Mesh":13,"./model/Object3D":14,"./model/Scene":16,"./model/materials/Voxel":18,"./model/materials/VoxelGradient":19,"./model/materials/VoxelImageLookUp":20,"./model/materials/VoxelLookUp":21,"./utils/CanvasGraph":23,"./utils/Color":24,"./utils/FPS":26,"./utils/Geometry":27,"./utils/GeometryGarage":28,"./utils/PerformanceTweaker":30,"./utils/RemapCurves":31,"./utils/TestFactory":32,"./utils/URLParams":33,"./view/View":38,"./view/effects/GlitchOffset":39,"./view/effects/GlitchOffsetSmearBlock":40}],8:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -487,7 +594,7 @@ BlendMesh.prototype.updateGeometryDelta = function() {
 
 module.exports = BlendMesh;
 
-},{"../animation/AnimatorVertexBlend":1,"../utils/Geometry":26,"../utils/PerformanceTweaker":29,"../vendor/three":34,"./Mesh":12,"./RemapFunctions":14,"./materials/VoxelGradient":18}],8:[function(require,module,exports){
+},{"../animation/AnimatorVertexBlend":2,"../utils/Geometry":27,"../utils/PerformanceTweaker":30,"../vendor/three":35,"./Mesh":13,"./RemapFunctions":15,"./materials/VoxelGradient":19}],9:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -548,7 +655,7 @@ Camera3D.prototype.setAspect = function(aspect) {
 
 module.exports = Camera3D;
 
-},{"../vendor/three":34,"./Object3D":13}],9:[function(require,module,exports){
+},{"../vendor/three":35,"./Object3D":14}],10:[function(require,module,exports){
 var DrawBuffer = function( context, clearColour ) {
 
 	this.context = context;
@@ -624,7 +731,7 @@ DrawBuffer.prototype.present = function() {
 };
 
 module.exports = DrawBuffer;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -706,7 +813,7 @@ Face.prototype = {
 Face.prototype._defaultCreateRandomPoint = Face.prototype._createRandomPointRandomDelta;
 module.exports = Face;
 
-},{"../vendor/three":34}],11:[function(require,module,exports){
+},{"../vendor/three":35}],12:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -757,7 +864,7 @@ Geometry.prototype = {
 };
 module.exports = Geometry;
 
-},{"../vendor/three":34}],12:[function(require,module,exports){
+},{"../vendor/three":35}],13:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
@@ -795,7 +902,7 @@ Mesh.prototype.updateGeometry = function() {};
 
 module.exports = Mesh;
 
-},{"../utils/PerformanceTweaker":29,"../vendor/three":34,"./Object3D":13,"./materials/VoxelGradient":18}],13:[function(require,module,exports){
+},{"../utils/PerformanceTweaker":30,"../vendor/three":35,"./Object3D":14,"./materials/VoxelGradient":19}],14:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
@@ -1209,7 +1316,7 @@ Object3D.prototype = {
 
 module.exports = Object3D;
 
-},{"../vendor/three":34}],14:[function(require,module,exports){
+},{"../vendor/three":35}],15:[function(require,module,exports){
 var RemapFunctions = {
 	remapLinear : function (valIn, extra) {
 		return valIn;
@@ -1234,7 +1341,7 @@ var RemapFunctions = {
 }
 
 module.exports = RemapFunctions;
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var Object3D = require('./Object3D');
 /**
  * The basic root Object3D to build a scene
@@ -1253,7 +1360,7 @@ Scene.prototype = Object.create(Object3D.prototype);
 
 module.exports = Scene;
 
-},{"./Object3D":13}],16:[function(require,module,exports){
+},{"./Object3D":14}],17:[function(require,module,exports){
 var Voxel = require( './Voxel' );
 
 var LookUpMaterial = function( props ) {
@@ -1284,7 +1391,7 @@ LookUpMaterial.prototype.addToLookUp = function( value, toArr ) {
 };
 
 module.exports = LookUpMaterial;
-},{"./Voxel":17}],17:[function(require,module,exports){
+},{"./Voxel":18}],18:[function(require,module,exports){
 function VoxelMaterial(props) {
 	props = props || {};
 
@@ -1317,20 +1424,40 @@ VoxelMaterial.prototype = {
 
 module.exports = VoxelMaterial;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 var ColorUtils = require('../../utils/Color');
 
 function VoxelGradientMaterial(props) {
 	props = props || {};
-	this.size = props.size || 1;
-	this.color = props.color || 0xFFFFFFFF;
-	this.gammaRamp = props.gammaRamp || 1;
-	this.gammaColor = props.gammaColor || 1;
-	this.remapR = props.remapR;
-	this.remapG = props.remapG;
-	this.remapB = props.remapB;
-	
-	console.log('VoxelGradientMaterial initialized!');
+
+	this.colours = props.colours || [ 0xFFFF0000, 0xFF00FF00, 0xFF0000FF ];
+	this.weights = props.weights;
+	this.steps = props.steps || 10;
+
+	if( this.steps > 10 )
+		this.steps = 10;
+
+	//if there were no times then we'll just go in and linearly set every colour
+	if( this.weights === undefined ) {
+
+		this.weights = [];
+
+		for( var i = 0, len = this.colours.length; i < len; i++ ) {
+
+			this.weights[ i ] = i / ( len - 1 );
+		}
+	}
+
+	this.gradientBuffer = new ArrayBuffer( this.steps * 4 );
+	this.gradientBufferView32uint = new Uint32Array( this.gradientBuffer );
+
+	// this.size = props.size || 1;
+	// this.color = props.color || 0xFFFFFFFF;
+	// this.gammaRamp = props.gammaRamp || 1;
+	// this.gammaColor = props.gammaColor || 1;
+	// this.remapR = props.remapR;
+	// this.remapG = props.remapG;
+	// this.remapB = props.remapB;
 }
 
 VoxelGradientMaterial.prototype = {
@@ -1340,63 +1467,73 @@ VoxelGradientMaterial.prototype = {
 
 			this.clearColor = clearColor;
 
-			var gradientSteps = 10;
-			this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
-			this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
+
+
 
 			//generate gradient
-			for (var i = 0; i < gradientSteps; i++) {
-				var ratio = ( i + 1 ) / gradientSteps;
-				ratio = Math.pow(ratio, 1 / this.gammaRamp);
-				this.gradientBufferView32uint[i] = ColorUtils.lerp(
-					this.clearColor,
-					this.color,
-					ratio,
-					this.remapR,
-					this.remapG,
-					this.remapB
-				);
-			};
+			ColorUtils.writeGradient( this.gradientBufferView32uint, this.colours, this.weights );
 
-			//apply gamma
-			if(this.gammaColor != 1) {
-				for (var i = 0; i < gradientSteps; i++) {
-					this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
-				}
-			}
 
-			//make sure no 2 colors are the same by bumping color a bit
-			//this also makes all colors unique so you don't get color loops (though fun, not cool here)
-			//
-			//first we need to make sure the gradient doesn't include the clearColor
-			if(this.gradientBufferView32uint[0] == clearColor) {
-				var clearColorBumpJustInCase = ColorUtils.bump(clearColor);
-				console.log("!", clearColor);
-				console.log("!", clearColorBumpJustInCase);
+
+
+
+			// var gradientSteps = 10;
+			// this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
+			// this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
+
+			// //generate gradient
+			// for (var i = 0; i < gradientSteps; i++) {
+			// 	var ratio = ( i + 1 ) / gradientSteps;
+			// 	ratio = Math.pow(ratio, 1 / this.gammaRamp);
+			// 	this.gradientBufferView32uint[i] = ColorUtils.lerp(
+			// 		this.clearColor,
+			// 		this.color,
+			// 		ratio,
+			// 		this.remapR,
+			// 		this.remapG,
+			// 		this.remapB
+			// 	);
+			// };
+
+			// //apply gamma
+			// if(this.gammaColor != 1) {
+			// 	for (var i = 0; i < gradientSteps; i++) {
+			// 		this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
+			// 	}
+			// }
+
+			// //make sure no 2 colors are the same by bumping color a bit
+			// //this also makes all colors unique so you don't get color loops (though fun, not cool here)
+			// //
+			// //first we need to make sure the gradient doesn't include the clearColor
+			// if(this.gradientBufferView32uint[0] == clearColor) {
+			// 	var clearColorBumpJustInCase = ColorUtils.bump(clearColor);
+			// 	console.log("!", clearColor);
+			// 	console.log("!", clearColorBumpJustInCase);
 				
 				
-				for (var i = 0; i < gradientSteps; i++) {
-					if(clearColor == this.gradientBufferView32uint[i]) {
-						this.gradientBufferView32uint[i] = clearColorBumpJustInCase;
-					}
-				}
+			// 	for (var i = 0; i < gradientSteps; i++) {
+			// 		if(clearColor == this.gradientBufferView32uint[i]) {
+			// 			this.gradientBufferView32uint[i] = clearColorBumpJustInCase;
+			// 		}
+			// 	}
 				
-			}
-			//then we step through the gradient and bump as we go to avoid repeated colors
-			for (var i = 1; i < gradientSteps; i++) {
-				if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[i]) {
-					var bumped = ColorUtils.bump(this.gradientBufferView32uint[i]);
-					for (var j = i; j < gradientSteps; j++) {
-						if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[j]) {
-							this.gradientBufferView32uint[j] = bumped;
-						}
-					}
-				}
-			}
+			// }
+			// //then we step through the gradient and bump as we go to avoid repeated colors
+			// for (var i = 1; i < gradientSteps; i++) {
+			// 	if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[i]) {
+			// 		var bumped = ColorUtils.bump(this.gradientBufferView32uint[i]);
+			// 		for (var j = i; j < gradientSteps; j++) {
+			// 			if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[j]) {
+			// 				this.gradientBufferView32uint[j] = bumped;
+			// 			}
+			// 		}
+			// 	}
+			// }
 			
-			for (var i = 0; i < this.gradientBufferView32uint.length; i++) {
-				console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
-			};
+			// for (var i = 0; i < this.gradientBufferView32uint.length; i++) {
+			// 	console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
+			// };
 			
 
 		}
@@ -1424,7 +1561,7 @@ VoxelGradientMaterial.prototype = {
 
 module.exports = VoxelGradientMaterial;
 
-},{"../../utils/Color":23}],19:[function(require,module,exports){
+},{"../../utils/Color":24}],20:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 var utilImage = require( '../../utils/Image' );
 
@@ -1536,7 +1673,7 @@ function alphaBlend( src, dest ) {
 }
 
 module.exports = VoxelLookUp;
-},{"../../utils/Image":28,"./LookupBase":16}],20:[function(require,module,exports){
+},{"../../utils/Image":29,"./LookupBase":17}],21:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 
 var VoxelLookUp = function( props ) {
@@ -1571,7 +1708,7 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, index, vertexIDX, screenW
 };
 
 module.exports = VoxelLookUp;
-},{"./LookupBase":16}],21:[function(require,module,exports){
+},{"./LookupBase":17}],22:[function(require,module,exports){
 module.exports = {
 	orderlyScramble: function(array, newOrder) {
 		var length = array.length;
@@ -1596,7 +1733,7 @@ module.exports = {
 		return newOrder;
 	}
 }
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 function CanvasGraph(props) {
 	this.addCanvasToDOMBody = this.addCanvasToDOMBody.bind(this);
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1717,38 +1854,86 @@ CanvasGraph.prototype = {
 };
 
 module.exports = CanvasGraph;
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var RemapCurves = require('./RemapCurves');
 
 bumpRotation = 0;
 
-var defaultRemapR = RemapCurves.makeGamma(2);
-var defaultRemapG = RemapCurves.makeGamma(1);
-var defaultRemapB = RemapCurves.makeGamma(.5);
+// var defaultRemapR = RemapCurves.makeGamma(2);
+// var defaultRemapG = RemapCurves.makeGamma(1);
+// var defaultRemapB = RemapCurves.makeGamma(.5);
 module.exports = {
 	lerp: function(color1, color2, ratio, remapR, remapG, remapB) {
 		var a1 = (color1 >> 24) & 0xff;
 		var r1 = (color1 >> 16) & 0xff;
 		var g1 = (color1 >> 8) & 0xff;
 		var b1 = color1 & 0xff;
-		var a2 = (color2 >> 24) & 0xff;
+		var a2 = (color2 >>> 24) & 0xff;
 		var r2 = (color2 >> 16) & 0xff;
 		var g2 = (color2 >> 8) & 0xff;
 		var b2 = color2 & 0xff;
+
+		return ((~~(a1 + (a2 - a1) * ratio)) << 24 |
+			   (~~(r1 + (r2 - r1) * ratio)) << 16 |
+			   (~~(g1 + (g2 - g1) * ratio)) << 8 |
+			   ~~(b1 + (b2 - b1) * ratio)) >>> 0;
+
 		
 		//fun deviations from lerp
-		remapR = remapR || defaultRemapR;
-		remapG = remapG || defaultRemapG;
-		remapB = remapB || defaultRemapB;
+		// remapR = remapR || defaultRemapR;
+		// remapG = remapG || defaultRemapG;
+		// remapB = remapB || defaultRemapB;
 
-		var ratioR = remapR(ratio);
-		var ratioG = remapG(ratio);
-		var ratioB = remapB(ratio);
+		// var ratioR = remapR(ratio);
+		// var ratioG = remapG(ratio);
+		// var ratioB = remapB(ratio);
 
-		return (~~(a1 + (a2 - a1) * ratio) << 24) |
-			(~~(r1 + (r2 - r1) * ratioB) << 16) |
-			(~~(g1 + (g2 - g1) * ratioG) << 8) |
-			~~(b1 + (b2 - b1) * ratioR);
+		// return (~~(a1 + (a2 - a1) * ratio) << 24) |
+		// 	(~~(r1 + (r2 - r1) * ratioB) << 16) |
+		// 	(~~(g1 + (g2 - g1) * ratioG) << 8) |
+		// 	~~(b1 + (b2 - b1) * ratioR);
+	},
+	gradientColour: function( percentage, colours, weights ) {
+
+		var startIdx = 0,
+			endIdx = 1,
+			startPerc = 0,
+			endPerc = 0,
+			ratio = 0,
+			startColour = 0,
+			endColour = 0,
+			sa, ea, sr, er, sg, eg, sb, eb;
+
+		for( var i = 0, len = weights.length; i < len; i++ ) {
+
+			if( percentage > weights[ i ] ) {
+
+				startIdx = i;
+				endIdx = i + 1;
+			} else {
+
+				break;
+			}
+		}
+
+		if( endIdx > weights.length - 1 ) 
+			endIdx = weights.length - 1;
+
+		startPerc = weights[ startIdx ];
+		endPerc = weights[ endIdx ];
+		startColour = colours[ startIdx ];
+		endColour = colours[ endIdx ];
+
+		ratio = ( percentage - startPerc ) / ( endPerc - startPerc );
+
+		return this.lerp( startColour, endColour, ratio );
+	},
+	writeGradient: function( array, colours, weights ) {
+
+		for( var i = 0, len = array.length, num = len - 1; i < len; i++ ) {
+
+			array[ i ] = this.gradientColour( i / num, colours, weights );
+		}
 	},
 	pretty: function (color) {
 		var a = (color >> 24) & 0xff;
@@ -1796,7 +1981,7 @@ module.exports = {
 
 	}
 }
-},{"./RemapCurves":30}],24:[function(require,module,exports){
+},{"./RemapCurves":31}],25:[function(require,module,exports){
 var Events = {
 	addEvent : function(elem, type, eventHandle) {
 	    if (elem == null || typeof(elem) == 'undefined') return;
@@ -1811,7 +1996,7 @@ var Events = {
 }
 
 module.exports = Events;
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 function FPS() {
 	this.lastTime = new Date;
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1846,7 +2031,7 @@ FPS.prototype = {
 };
 
 module.exports = new FPS();
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 var ArrayUtils = require('./Array');
 var Geometry = require('../model/Geometry');
 
@@ -2055,7 +2240,7 @@ var GeometryUtils = {
 	}
 }
 module.exports = GeometryUtils;
-},{"../model/Geometry":11,"./Array":21}],27:[function(require,module,exports){
+},{"../model/Geometry":12,"./Array":22}],28:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var GeometryUtils = require('./Geometry');
 var work = [];
@@ -2114,7 +2299,7 @@ var GeometryGarage = {
 };
 
 module.exports = GeometryGarage;
-},{"../model/Geometry":11,"./Geometry":26}],28:[function(require,module,exports){
+},{"../model/Geometry":12,"./Geometry":27}],29:[function(require,module,exports){
 var canvas = null;
 var ctx = null;
 
@@ -2154,7 +2339,7 @@ module.exports = {
 };
 
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 var signals = require('../vendor/signals');
 var FPS = require('./FPS');
 
@@ -2208,7 +2393,7 @@ PerformanceTweaker.prototype = {
 }
 
 module.exports = new PerformanceTweaker();
-},{"../vendor/signals":33,"./FPS":25}],30:[function(require,module,exports){
+},{"../vendor/signals":34,"./FPS":26}],31:[function(require,module,exports){
 function makeGamma(pow) {
 	pow = Math.min(8, Math.max(0.01, pow));
 	return function(inVal) {
@@ -2245,7 +2430,7 @@ module.exports = {
 	makeGammaSine: makeGammaSine,
 	interpret: interpret
 }
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
@@ -2287,7 +2472,7 @@ TestFactory.prototype = {
 };
 
 module.exports = new TestFactory();
-},{"../model/Geometry":11,"../model/Mesh":12}],32:[function(require,module,exports){
+},{"../model/Geometry":12,"../model/Mesh":13}],33:[function(require,module,exports){
 module.exports = {
 	getParam : function(name) {
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -2306,7 +2491,7 @@ module.exports = {
 		}
 	}
 }
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /**
  * Signals for Node.js
  * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
@@ -2694,7 +2879,7 @@ exports.Signal.prototype = {
 	
 };
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -9555,13 +9740,13 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 var signals = require('../vendor/signals');
 
 /**
@@ -9616,7 +9801,7 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{"../vendor/signals":33}],37:[function(require,module,exports){
+},{"../vendor/signals":34}],38:[function(require,module,exports){
 var BaseRenderer = require('./renderers/Base');
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
@@ -9758,7 +9943,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":8,"../model/Scene":15,"../utils/Events":24,"../utils/PerformanceTweaker":29,"../vendor/signals":33,"./DOMMode":35,"./RenderManager":36,"./renderers/Base":40,"./renderers/Canvas":41}],38:[function(require,module,exports){
+},{"../model/Camera3D":9,"../model/Scene":16,"../utils/Events":25,"../utils/PerformanceTweaker":30,"../vendor/signals":34,"./DOMMode":36,"./RenderManager":37,"./renderers/Base":41,"./renderers/Canvas":42}],39:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');
@@ -9786,7 +9971,7 @@ GlitchOffset.prototype = {
 
 module.exports = GlitchOffset;
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
 	console.log('GlitchOffsetSmearBlock initialized!');
@@ -9814,7 +9999,7 @@ GlitchOffsetSmearBlock.prototype = {
 
 module.exports = GlitchOffsetSmearBlock;
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -9848,7 +10033,7 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
@@ -10045,4 +10230,4 @@ CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 };
 
 module.exports = CanvasRenderer;
-},{"../../model/BlendMesh":7,"../../model/DrawBuffer":9,"../../model/Mesh":12,"../../utils/PerformanceTweaker":29,"./Base":40}]},{},[6])
+},{"../../model/BlendMesh":8,"../../model/DrawBuffer":10,"../../model/Mesh":13,"../../utils/PerformanceTweaker":30,"./Base":41}]},{},[7])
