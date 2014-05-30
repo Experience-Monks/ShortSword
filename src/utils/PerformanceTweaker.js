@@ -23,16 +23,16 @@ PerformanceTweaker.prototype = {
 			if(FPS.fps <= this.degradeWhen) {
 			  	this.denominator *= this.changeFactor;
 				if(this.denominator <= this.denominatorMax) {
+
 					this.makeDirty();
-				  	//console.log("quality down");
 				} else {
 					this.denominator = this.denominatorMax;
 				}
 			} else if (FPS.fps >= this.upgradeWhen) {
 				this.denominator /= this.changeFactor;
 				if(this.denominator >= .99) {
+					
 					this.makeDirty();
-				  	//console.log("quality up");
 				} else {
 					this.denominator = 1;
 				}

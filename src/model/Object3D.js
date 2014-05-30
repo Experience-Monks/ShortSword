@@ -4,7 +4,6 @@ require('../vendor/three');
  * Acts as base for other objects
  */
 function Object3D() {
-	console.log('Object3D initialized!');
 
 	this.children = [];
 	this.parent = undefined;

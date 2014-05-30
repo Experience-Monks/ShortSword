@@ -24,8 +24,6 @@ p.setTarget = function( colours, weights ) {
 
 	ColorUtil.writeGradient( this.targetColours, colours, weights );
 
-	console.log( this.targetColours );
-
 	this.dirty = true;
 };
 
@@ -35,8 +33,6 @@ p.update = function() {
 
 		this.colours[ i ] = ColorUtil.lerp( this.colours[ i ], this.targetColours[ i ], this.ease * FPS.animSpeedCompensation );
 	}
-
-	console.log( '--------', this.colours[ 0 ], this.targetColours[ 0 ] );
 
 	this.dirty = this.colours[ 0 ] != this.targetColours[ 0 ];
 };

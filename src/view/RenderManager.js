@@ -5,13 +5,12 @@ var signals = require('../vendor/signals');
  * @param {View} view the view to manage
  */
 function RenderManager(view) {
+	
 	this.view = view;
 	this.skipFrames = 0;
 	this.skipFramesCounter = 0;
 	this.onEnterFrame = new signals.Signal();
 	this.renderLoop = this.renderLoop.bind(this);
-
-	console.log('RenderManager initialized!');
 };
 
 RenderManager.prototype = {	

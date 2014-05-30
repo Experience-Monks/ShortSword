@@ -19,8 +19,6 @@ function Camera3D(props) {
 	this.translationMatrix = new THREE.Matrix4();
 
 	this.updateProjectionMatrix();
-
-	console.log('Camera3D initialized!');
 }
 
 /**

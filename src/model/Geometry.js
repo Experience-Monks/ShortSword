@@ -10,22 +10,20 @@ function Geometry(props) {
 	this.drawOrder = [];
 	this.faces = props.faces || [];
 	this.materialIndex = props.materialIndex || [];
-	
-	console.log('Geometry initialized!');
 }
 
 Geometry.prototype = {
 	updateDrawOrderLength: function(total) {
 		if(total == this.vertices.length) return;
 		var drawOrder = this.drawOrder;
-		//console.log("WAS", drawOrder.length)
+
 		for (var i = 0; i < total; i++) {
 			drawOrder[i] = i;
 		};
 		if(drawOrder.length > total) {
 			drawOrder.splice(total, drawOrder.length - total);
 		}
-		//console.log("IS", drawOrder.length)
+
 	},
 	clone: function() {
 		vertices = [];

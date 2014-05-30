@@ -8,9 +8,6 @@ function BaseRenderer(canvas, props) {
 	this.canvas = canvas;
 	
 	props = props || {};
-
-	console.log('BaseRenderer initialized!');
-
 }
 
 BaseRenderer.prototype = {

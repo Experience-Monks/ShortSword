@@ -1,6 +1,6 @@
 var GeometryOBJParser = require('./parsers/GeometryOBJ');
 function Loader() {
-	console.log('Loader initialized!');
+	
 }
 
 Loader.prototype = {

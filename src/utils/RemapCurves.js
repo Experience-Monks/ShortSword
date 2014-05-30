@@ -23,7 +23,7 @@ function linear(inVal) {
 	return inVal;
 };
 function interpret(str){
-	console.log(str);
+	
 	return linear;
 };
 module.exports = {

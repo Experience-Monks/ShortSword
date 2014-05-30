@@ -2,7 +2,7 @@ module.exports = {
 	getParam : function(name) {
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
 		var results = regex.exec(window.location.href);
-		//console.log(name, results);
+		
 		if (results==null){
 		   return undefined;
 		} else if(results[1] == "true"){
