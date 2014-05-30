@@ -1,0 +1,24 @@
+{
+  "name": "ShortSword",
+  "version": "0.0.1",
+  "homepage": "https://github.com/Jam3/ShortSword",
+  "authors": [
+    "Mikko Haapoja <me@mikkoh.com>"
+  ],
+  "description": "This is a voxel/particle engine that renders on Canvas",
+  "main": "src/main.js",
+  "keywords": [
+    "particle",
+    "voxel"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/components",
+    "test",
+    "tests"
+  ]
+}
