@@ -33,8 +33,6 @@ function View(props) {
 	else 
 		this.renderer = new (require('./renderers/Canvas'))(this.canvas, props.renderer);
 
-	console.log('View initialized!');
-
 	this.renderManager = new(require('./RenderManager'))(this);
 	this.setDOMMode(this.domMode);
 	if(this.autoStartRender) this.renderManager.start();
@@ -49,7 +47,7 @@ View.prototype = {
 		this.onResize = new signals.Signal();
 		this.setSize = this.setSize.bind(this);
 		EventUtils.addEvent(window, "resize", function(event) {
-			console.log(event);
+	
 			this.onResize.dispatch(window.innerWidth, window.innerHeight);
 		}.bind(this));
 		this.onResize.add(this.setSize);
@@ -86,10 +84,10 @@ View.prototype = {
 	addCanvasToDOMBody: function(canvas) {
 		canvas = canvas || this.canvas;
 		if(document.body) {
-			console.log("adding canvas to DOM");
+			
 			document.body.appendChild(canvas);
 		} else {
-			console.log("wait for DOM")
+			
 			setTimeout(this.addCanvasToDOMBody, 50);
 		}
 	},

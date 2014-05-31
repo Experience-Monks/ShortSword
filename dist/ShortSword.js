@@ -23,7 +23,6 @@ var AnimatorMaterialGradient = function( mesh ) {
 var p = AnimatorMaterialGradient.prototype = BaseAnimator.prototype;
 
 p.setTarget = function( colors ) {
-
 	for (var i = 0; i < colors.length; i++) {
 		this.targetColors[i] = colors[i];
 	};
@@ -42,7 +41,7 @@ p.update = function() {
 
 	//console.log( '--------', ColorUtil.pretty(this.colors[ 0 ]), ColorUtil.pretty(this.targetColors[ 0 ]) );
 
-	this.dirty = this.colors[ 0 ] != this.targetColors[ 0 ];
+	this.dirty = this.colors[ 3 ] != this.targetColors[ 3 ] || this.colors[ 6 ] != this.targetColors[ 6 ];
 };
 
 module.exports = AnimatorMaterialGradient;
@@ -279,7 +278,7 @@ module.exports = BaseAnimator;
 },{}],5:[function(require,module,exports){
 var GeometryOBJParser = require('./parsers/GeometryOBJ');
 function Loader() {
-	console.log('Loader initialized!');
+	
 }
 
 Loader.prototype = {
@@ -329,7 +328,7 @@ var Geometry = require('../../model/Geometry');
 var Face = require('../../model/Face');
 
 function GeometryOBJParser() {
-	console.log('GeometryOBJParser initialized!');
+	
 }
 
 GeometryOBJParser.prototype = {
@@ -362,7 +361,7 @@ GeometryOBJParser.prototype = {
 			centroid.add(vertices[i]);
 		};
 		centroid.multiplyScalar(1/totalSamples);
-		//console.log("recentered", centroid);
+		
 		for (var i = vertices.length - 1; i >= 0; i--) {
 			vertices[i].x -= centroid.x;
 			vertices[i].y -= centroid.y;
@@ -623,8 +622,6 @@ function Camera3D(props) {
 	this.translationMatrix = new THREE.Matrix4();
 
 	this.updateProjectionMatrix();
-
-	console.log('Camera3D initialized!');
 }
 
 /**
@@ -833,22 +830,20 @@ function Geometry(props) {
 	this.drawOrder = [];
 	this.faces = props.faces || [];
 	this.materialIndex = props.materialIndex || [];
-	
-	console.log('Geometry initialized!');
 }
 
 Geometry.prototype = {
 	updateDrawOrderLength: function(total) {
 		if(total == this.vertices.length) return;
 		var drawOrder = this.drawOrder;
-		//console.log("WAS", drawOrder.length)
+
 		for (var i = 0; i < total; i++) {
 			drawOrder[i] = i;
 		};
 		if(drawOrder.length > total) {
 			drawOrder.splice(total, drawOrder.length - total);
 		}
-		//console.log("IS", drawOrder.length)
+
 	},
 	clone: function() {
 		vertices = [];
@@ -878,12 +873,11 @@ var VoxelGradientMaterial = require('./materials/VoxelGradient');
 var PerformanceTweaker = require('../utils/PerformanceTweaker');
 
 function Mesh(geometry, material) {
+	
 	Object3D.call( this );
 	this.geometry = geometry;
 	this.material = material || new VoxelGradientMaterial();
 	this.animators = [];
-
-	console.log('Mesh initialized!');
 }
 
 /**
@@ -916,7 +910,6 @@ require('../vendor/three');
  * Acts as base for other objects
  */
 function Object3D() {
-	console.log('Object3D initialized!');
 
 	this.children = [];
 	this.parent = undefined;
@@ -1334,8 +1327,8 @@ var RemapFunctions = {
 		var quickSinCurveLookupSteps = 1000;
 		var quickSinCurveLookupTable = [];
 		for (var i = 0; i < quickSinCurveLookupSteps; i++) {
+			
 			quickSinCurveLookupTable[i] = 1 - (Math.cos(i/quickSinCurveLookupSteps * Math.PI) * .5 + .5);
-			//console.log(i, quickSinCurveLookupTable[i]);
 		};
 		quickSinCurveLookupTable[quickSinCurveLookupSteps] = 1;
 		function quickSinCurveLookup(valIn) {
@@ -1355,8 +1348,6 @@ var Object3D = require('./Object3D');
  */
 function Scene() {
 	Object3D.call( this );
-
-	console.log('Scene initialized!');
 
 }
 
@@ -1409,8 +1400,6 @@ function VoxelMaterial(props) {
 	this._r = props.r === undefined ? 120 : props.r;
 	this._g = props.g === undefined ? 0 : props.g;
 	this._b = props.b === undefined ? 0 : props.b;
-	
-	console.log('VoxelMaterial initialized!');
 }
 
 VoxelMaterial.prototype = {
@@ -1814,10 +1803,10 @@ CanvasGraph.prototype = {
 	addCanvasToDOMBody: function(canvas) {
 		canvas = canvas || this.canvas;
 		if(document.body) {
-			console.log("adding canvas to DOM");
+			
 			document.body.appendChild(canvas);
 		} else {
-			console.log("wait for DOM")
+			
 			setTimeout(this.addCanvasToDOMBody, 50);
 		}
 	},
@@ -2124,15 +2113,15 @@ var GeometryUtils = {
 		return function(geometry) {
 			var timeBefore = new Date;
 			var total = geometry.vertices.length;
-			console.log("octTree start!!!");
+			
 			geometry.vertices = recurseTreeSortX(geometry.vertices);
 			var arrFlat = [];
 			var timeMiddle = new Date;
-			console.log("octTree sorted " + total + " vertices in " + (timeMiddle-timeBefore) + "ms");
+			
 			recurseUnroll(geometry.vertices, arrFlat);
 			geometry.vertices = arrFlat;
 			var timeAfter = new Date;
-			console.log("octTree unrolled " + geometry.vertices.length + " vertices in " + (timeAfter-timeMiddle) + "ms");
+			
 			return geometry;
 		}
 	}(),
@@ -2212,7 +2201,6 @@ var GeometryUtils = {
 			}
 		}
 		var timeAfter = new Date;
-		console.log("orderlyScramble scrambled " + length * geometries.length + " vertices in " + (timeAfter-timeBefore) + "ms");
 
 		return newOrder;
 	},
@@ -2260,9 +2248,7 @@ var GeometryUtils = {
 				maxRatio = ~~(max / min);
 			}
 
-			//console.log(medianRatio);
-			//console.log(maxRatio);
-
+			
 			for (var iF = 0; iF < facesByArea.length; iF++) {
 				var face = facesByArea[iF];
 				for (var i = ~~(face.area / min); i >= 0; i--) {
@@ -2271,7 +2257,7 @@ var GeometryUtils = {
 			};
 
 			ArrayUtils.orderlyScramble(proportionalFaces);
-			//console.log(facesByArea.length, proportionalFaces.length);
+			
 			geometry.proportionalFaces = proportionalFaces;
 			geometry.lastProportionalFaceVisited = 0;
 		}
@@ -2325,7 +2311,7 @@ var GeometryGarage = {
 						verticesPerWorkRun = ~~(verticesPerWorkRun / targetTweakRatio);
 					}
 					verticesPerWorkRun = Math.max(verticesPerWorkRun, verticesPerWorkRunMin);
-					console.log("added " + verticesPerWorkRun + " vertices in " + (timeAfter-timeBefore) + "ms");
+					
 					if(this.targetTotalVertices == this.currentTotalVertices) {
 						this.done = true;
 						if(this.callback) this.callback();
@@ -2469,16 +2455,16 @@ PerformanceTweaker.prototype = {
 			if(FPS.fps <= this.degradeWhen) {
 			  	this.denominator *= this.changeFactor;
 				if(this.denominator <= this.denominatorMax) {
+
 					this.makeDirty();
-				  	//console.log("quality down");
 				} else {
 					this.denominator = this.denominatorMax;
 				}
 			} else if (FPS.fps >= this.upgradeWhen) {
 				this.denominator /= this.changeFactor;
 				if(this.denominator >= .99) {
+					
 					this.makeDirty();
-				  	//console.log("quality up");
 				} else {
 					this.denominator = 1;
 				}
@@ -2542,7 +2528,7 @@ function linear(inVal) {
 	return inVal;
 };
 function interpret(str){
-	console.log(str);
+	
 	return linear;
 };
 module.exports = {
@@ -2560,7 +2546,7 @@ module.exports = {
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
-	console.log('TestFactory initialized!');
+	
 }
 
 TestFactory.prototype = {
@@ -2603,7 +2589,7 @@ module.exports = {
 	getParam : function(name) {
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
 		var results = regex.exec(window.location.href);
-		//console.log(name, results);
+		
 		if (results==null){
 		   return undefined;
 		} else if(results[1] == "true"){
@@ -9880,13 +9866,12 @@ var signals = require('../vendor/signals');
  * @param {View} view the view to manage
  */
 function RenderManager(view) {
+	
 	this.view = view;
 	this.skipFrames = 0;
 	this.skipFramesCounter = 0;
 	this.onEnterFrame = new signals.Signal();
 	this.renderLoop = this.renderLoop.bind(this);
-
-	console.log('RenderManager initialized!');
 };
 
 RenderManager.prototype = {	
@@ -9963,8 +9948,6 @@ function View(props) {
 	else 
 		this.renderer = new (require('./renderers/Canvas'))(this.canvas, props.renderer);
 
-	console.log('View initialized!');
-
 	this.renderManager = new(require('./RenderManager'))(this);
 	this.setDOMMode(this.domMode);
 	if(this.autoStartRender) this.renderManager.start();
@@ -9979,7 +9962,7 @@ View.prototype = {
 		this.onResize = new signals.Signal();
 		this.setSize = this.setSize.bind(this);
 		EventUtils.addEvent(window, "resize", function(event) {
-			console.log(event);
+	
 			this.onResize.dispatch(window.innerWidth, window.innerHeight);
 		}.bind(this));
 		this.onResize.add(this.setSize);
@@ -10016,10 +9999,10 @@ View.prototype = {
 	addCanvasToDOMBody: function(canvas) {
 		canvas = canvas || this.canvas;
 		if(document.body) {
-			console.log("adding canvas to DOM");
+			
 			document.body.appendChild(canvas);
 		} else {
-			console.log("wait for DOM")
+			
 			setTimeout(this.addCanvasToDOMBody, 50);
 		}
 	},
@@ -10072,7 +10055,6 @@ module.exports = View;
 },{"../model/Camera3D":9,"../model/Scene":16,"../utils/Events":27,"../utils/PerformanceTweaker":33,"../vendor/signals":37,"./DOMMode":39,"./RenderManager":40,"./renderers/Base":44,"./renderers/Canvas":45}],42:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
-	console.log('GlitchOffset initialized!');
 }
 
 GlitchOffset.prototype = {
@@ -10100,7 +10082,6 @@ module.exports = GlitchOffset;
 },{}],43:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
-	console.log('GlitchOffsetSmearBlock initialized!');
 }
 
 GlitchOffsetSmearBlock.prototype = {
@@ -10136,9 +10117,6 @@ function BaseRenderer(canvas, props) {
 	this.canvas = canvas;
 	
 	props = props || {};
-
-	console.log('BaseRenderer initialized!');
-
 }
 
 BaseRenderer.prototype = {

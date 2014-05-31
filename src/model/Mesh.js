@@ -4,12 +4,11 @@ var VoxelGradientMaterial = require('./materials/VoxelGradient');
 var PerformanceTweaker = require('../utils/PerformanceTweaker');
 
 function Mesh(geometry, material) {
+	
 	Object3D.call( this );
 	this.geometry = geometry;
 	this.material = material || new VoxelGradientMaterial();
 	this.animators = [];
-
-	console.log('Mesh initialized!');
 }
 
 /**

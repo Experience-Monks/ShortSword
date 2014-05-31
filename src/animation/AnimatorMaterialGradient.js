@@ -22,7 +22,6 @@ var AnimatorMaterialGradient = function( mesh ) {
 var p = AnimatorMaterialGradient.prototype = BaseAnimator.prototype;
 
 p.setTarget = function( colors ) {
-
 	for (var i = 0; i < colors.length; i++) {
 		this.targetColors[i] = colors[i];
 	};
@@ -41,7 +40,7 @@ p.update = function() {
 
 	//console.log( '--------', ColorUtil.pretty(this.colors[ 0 ]), ColorUtil.pretty(this.targetColors[ 0 ]) );
 
-	this.dirty = this.colors[ 0 ] != this.targetColors[ 0 ];
+	this.dirty = this.colors[ 3 ] != this.targetColors[ 3 ] || this.colors[ 6 ] != this.targetColors[ 6 ];
 };
 
 module.exports = AnimatorMaterialGradient;

@@ -46,10 +46,10 @@ CanvasGraph.prototype = {
 	addCanvasToDOMBody: function(canvas) {
 		canvas = canvas || this.canvas;
 		if(document.body) {
-			console.log("adding canvas to DOM");
+			
 			document.body.appendChild(canvas);
 		} else {
-			console.log("wait for DOM")
+			
 			setTimeout(this.addCanvasToDOMBody, 50);
 		}
 	},

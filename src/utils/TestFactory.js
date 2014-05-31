@@ -1,7 +1,7 @@
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
-	console.log('TestFactory initialized!');
+	
 }
 
 TestFactory.prototype = {

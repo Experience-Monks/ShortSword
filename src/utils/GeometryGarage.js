@@ -32,7 +32,7 @@ var GeometryGarage = {
 						verticesPerWorkRun = ~~(verticesPerWorkRun / targetTweakRatio);
 					}
 					verticesPerWorkRun = Math.max(verticesPerWorkRun, verticesPerWorkRunMin);
-					console.log("added " + verticesPerWorkRun + " vertices in " + (timeAfter-timeBefore) + "ms");
+					
 					if(this.targetTotalVertices == this.currentTotalVertices) {
 						this.done = true;
 						if(this.callback) this.callback();

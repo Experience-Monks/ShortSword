@@ -1,6 +1,5 @@
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
-	console.log('GlitchOffset initialized!');
 }
 
 GlitchOffset.prototype = {

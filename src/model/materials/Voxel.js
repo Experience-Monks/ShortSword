@@ -8,8 +8,6 @@ function VoxelMaterial(props) {
 	this._r = props.r === undefined ? 120 : props.r;
 	this._g = props.g === undefined ? 0 : props.g;
 	this._b = props.b === undefined ? 0 : props.b;
-	
-	console.log('VoxelMaterial initialized!');
 }
 
 VoxelMaterial.prototype = {

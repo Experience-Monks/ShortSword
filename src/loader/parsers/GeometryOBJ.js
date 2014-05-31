@@ -2,7 +2,7 @@ var Geometry = require('../../model/Geometry');
 var Face = require('../../model/Face');
 
 function GeometryOBJParser() {
-	console.log('GeometryOBJParser initialized!');
+	
 }
 
 GeometryOBJParser.prototype = {
@@ -35,7 +35,7 @@ GeometryOBJParser.prototype = {
 			centroid.add(vertices[i]);
 		};
 		centroid.multiplyScalar(1/totalSamples);
-		//console.log("recentered", centroid);
+		
 		for (var i = vertices.length - 1; i >= 0; i--) {
 			vertices[i].x -= centroid.x;
 			vertices[i].y -= centroid.y;

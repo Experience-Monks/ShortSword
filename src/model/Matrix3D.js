@@ -4,7 +4,7 @@ function Matrix3D(props) {
 
 Matrix3D.prototype = {
 	multiply : function (matrix) {
-		console.log('matrix multiplied');
+		
 	}
 };
 

@@ -5,8 +5,6 @@ var Object3D = require('./Object3D');
 function Scene() {
 	Object3D.call( this );
 
-	console.log('Scene initialized!');
-
 }
 
 /**

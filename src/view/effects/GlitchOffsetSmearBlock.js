@@ -1,6 +1,5 @@
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
-	console.log('GlitchOffsetSmearBlock initialized!');
 }
 
 GlitchOffsetSmearBlock.prototype = {
