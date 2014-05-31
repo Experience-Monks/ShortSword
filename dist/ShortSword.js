@@ -2,6 +2,7 @@
 var BaseAnimator = require( './BaseAnimator' );
 var VoxelGradient = require( '../model/materials/VoxelGradient' );
 var ColorUtil = require( '../utils/Color' );
+var GradientUtil = require( '../utils/Gradient' );
 var FPS = require( '../utils/FPS' );
 
 var AnimatorMaterialGradient = function( mesh ) {
@@ -14,36 +15,38 @@ var AnimatorMaterialGradient = function( mesh ) {
 	if( !( this.material instanceof VoxelGradient ) )
 		throw new Error( 'The material which is being used needs to be a VoxelGradient' );
 
-	this.colours = this.material.gradientBufferView32uint;
-	this.targetColours = new Uint32Array( this.colours.length );
-	this.targetColours.set( this.material.gradientBufferView32uint );
+	this.colors = this.material.gradientBufferView32uint;
+	this.targetColors = new Uint32Array( this.colors.length );
+	this.targetColors.set( this.material.gradientBufferView32uint );
 };
 
 var p = AnimatorMaterialGradient.prototype = BaseAnimator.prototype;
 
-p.setTarget = function( colours, weights ) {
+p.setTarget = function( colors ) {
 
-	ColorUtil.writeGradient( this.targetColours, colours, weights );
-
-	console.log( this.targetColours );
+	for (var i = 0; i < colors.length; i++) {
+		this.targetColors[i] = colors[i];
+	};
 
 	this.dirty = true;
 };
 
 p.update = function() {
 
-	for( var i = 0, len = this.colours.length; i < len; i++ ) {
+	for( var i = 0, len = this.colors.length; i < len; i++ ) {
 
-		this.colours[ i ] = ColorUtil.lerp( this.colours[ i ], this.targetColours[ i ], this.ease * FPS.animSpeedCompensation );
+		this.colors[ i ] = ColorUtil.lerp( this.colors[ i ], this.targetColors[ i ], this.ease * FPS.animSpeedCompensation );
 	}
 
-	console.log( '--------', this.colours[ 0 ], this.targetColours[ 0 ] );
+	GradientUtil.makeUnique(this.colors, 0xFF000000);
 
-	this.dirty = this.colours[ 0 ] != this.targetColours[ 0 ];
+	//console.log( '--------', ColorUtil.pretty(this.colors[ 0 ]), ColorUtil.pretty(this.targetColors[ 0 ]) );
+
+	this.dirty = this.colors[ 0 ] != this.targetColors[ 0 ];
 };
 
 module.exports = AnimatorMaterialGradient;
-},{"../model/materials/VoxelGradient":19,"../utils/Color":24,"../utils/FPS":26,"./BaseAnimator":4}],2:[function(require,module,exports){
+},{"../model/materials/VoxelGradient":19,"../utils/Color":26,"../utils/FPS":28,"../utils/Gradient":31,"./BaseAnimator":4}],2:[function(require,module,exports){
 var BaseAnimator = require( './BaseAnimator' );
 var Mesh = require( '../model/Mesh' );
 var Geometry = require( '../model/Geometry' );
@@ -424,7 +427,9 @@ SHORTSWORD = {
 	Object3D : require('./model/Object3D'),
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
+	GradientUtils : require('./utils/Gradient'),
 	ColorUtils : require('./utils/Color'),
+	ImageUtils : require('./utils/Image'),
 	URLParamUtils : require('./utils/URLParams'),
 	GeometryUtils : require('./utils/Geometry'),
 	GeometryGarage : require('./utils/GeometryGarage'),
@@ -439,6 +444,8 @@ SHORTSWORD = {
 	materials: {
 		Voxel: require( './model/materials/Voxel' ),
 		VoxelGradient: require( './model/materials/VoxelGradient' ),
+		VoxelGradientLerp: require( './model/materials/VoxelGradientLerp' ),
+		VoxelGradientCurves: require( './model/materials/VoxelGradientCurves' ),
 		VoxelLookUp: require( './model/materials/VoxelLookUp' ),
 		VoxelImageLookUp: require( './model/materials/VoxelImageLookUp' )
 	},
@@ -452,7 +459,7 @@ SHORTSWORD = {
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./animation/AnimatorMaterialGradient":1,"./animation/AnimatorVertexBlend":2,"./animation/AnimatorVertexRandom":3,"./loader/Loader":5,"./loader/parsers/GeometryOBJ":6,"./model/BlendMesh":8,"./model/Camera3D":9,"./model/Face":11,"./model/Mesh":13,"./model/Object3D":14,"./model/Scene":16,"./model/materials/Voxel":18,"./model/materials/VoxelGradient":19,"./model/materials/VoxelImageLookUp":20,"./model/materials/VoxelLookUp":21,"./utils/CanvasGraph":23,"./utils/Color":24,"./utils/FPS":26,"./utils/Geometry":27,"./utils/GeometryGarage":28,"./utils/PerformanceTweaker":30,"./utils/RemapCurves":31,"./utils/TestFactory":32,"./utils/URLParams":33,"./view/View":38,"./view/effects/GlitchOffset":39,"./view/effects/GlitchOffsetSmearBlock":40}],8:[function(require,module,exports){
+},{"./animation/AnimatorMaterialGradient":1,"./animation/AnimatorVertexBlend":2,"./animation/AnimatorVertexRandom":3,"./loader/Loader":5,"./loader/parsers/GeometryOBJ":6,"./model/BlendMesh":8,"./model/Camera3D":9,"./model/Face":11,"./model/Mesh":13,"./model/Object3D":14,"./model/Scene":16,"./model/materials/Voxel":18,"./model/materials/VoxelGradient":19,"./model/materials/VoxelGradientCurves":20,"./model/materials/VoxelGradientLerp":21,"./model/materials/VoxelImageLookUp":22,"./model/materials/VoxelLookUp":23,"./utils/CanvasGraph":25,"./utils/Color":26,"./utils/FPS":28,"./utils/Geometry":29,"./utils/GeometryGarage":30,"./utils/Gradient":31,"./utils/Image":32,"./utils/PerformanceTweaker":33,"./utils/RemapCurves":34,"./utils/TestFactory":35,"./utils/URLParams":36,"./view/View":41,"./view/effects/GlitchOffset":42,"./view/effects/GlitchOffsetSmearBlock":43}],8:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
@@ -594,7 +601,7 @@ BlendMesh.prototype.updateGeometryDelta = function() {
 
 module.exports = BlendMesh;
 
-},{"../animation/AnimatorVertexBlend":2,"../utils/Geometry":27,"../utils/PerformanceTweaker":30,"../vendor/three":35,"./Mesh":13,"./RemapFunctions":15,"./materials/VoxelGradient":19}],9:[function(require,module,exports){
+},{"../animation/AnimatorVertexBlend":2,"../utils/Geometry":29,"../utils/PerformanceTweaker":33,"../vendor/three":38,"./Mesh":13,"./RemapFunctions":15,"./materials/VoxelGradient":19}],9:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -655,7 +662,7 @@ Camera3D.prototype.setAspect = function(aspect) {
 
 module.exports = Camera3D;
 
-},{"../vendor/three":35,"./Object3D":14}],10:[function(require,module,exports){
+},{"../vendor/three":38,"./Object3D":14}],10:[function(require,module,exports){
 var DrawBuffer = function( context, clearColour ) {
 
 	this.context = context;
@@ -813,7 +820,7 @@ Face.prototype = {
 Face.prototype._defaultCreateRandomPoint = Face.prototype._createRandomPointRandomDelta;
 module.exports = Face;
 
-},{"../vendor/three":35}],12:[function(require,module,exports){
+},{"../vendor/three":38}],12:[function(require,module,exports){
 require('../vendor/three');
 /**
  * geometry is a collection of buffers
@@ -864,7 +871,7 @@ Geometry.prototype = {
 };
 module.exports = Geometry;
 
-},{"../vendor/three":35}],13:[function(require,module,exports){
+},{"../vendor/three":38}],13:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 var VoxelGradientMaterial = require('./materials/VoxelGradient');
@@ -902,7 +909,7 @@ Mesh.prototype.updateGeometry = function() {};
 
 module.exports = Mesh;
 
-},{"../utils/PerformanceTweaker":30,"../vendor/three":35,"./Object3D":14,"./materials/VoxelGradient":19}],14:[function(require,module,exports){
+},{"../utils/PerformanceTweaker":33,"../vendor/three":38,"./Object3D":14,"./materials/VoxelGradient":19}],14:[function(require,module,exports){
 require('../vendor/three');
 /**
  * Basic 3D object
@@ -1316,7 +1323,7 @@ Object3D.prototype = {
 
 module.exports = Object3D;
 
-},{"../vendor/three":35}],15:[function(require,module,exports){
+},{"../vendor/three":38}],15:[function(require,module,exports){
 var RemapFunctions = {
 	remapLinear : function (valIn, extra) {
 		return valIn;
@@ -1426,38 +1433,44 @@ module.exports = VoxelMaterial;
 
 },{}],19:[function(require,module,exports){
 var ColorUtils = require('../../utils/Color');
+var GradientUtils = require('../../utils/Gradient');
 
+var steps = 10;
 function VoxelGradientMaterial(props) {
 	props = props || {};
+	if(props.bumpFirst === undefined) props.bumpFirst = true;
 
-	this.colours = props.colours || [ 0xFFFF0000, 0xFF00FF00, 0xFF0000FF ];
-	this.weights = props.weights;
-	this.steps = props.steps || 10;
+	this.steps = 10;
 
-	if( this.steps > 10 )
-		this.steps = 10;
+	props.colors = props.colors || [
+		0xFF333333,
+		0xFF555555,
+		0xFF777777,
+		0xFF888888,
+		0xFFAAAAAA,
+		0xFFBBBBBB,
+		0xFFCCCCCC,
+		0xFFDDDDDD,
+		0xFFEEEEEE,
+		0xFFFFFFFF
+	];
 
-	//if there were no times then we'll just go in and linearly set every colour
-	if( this.weights === undefined ) {
+	if (props.colors.length != this.steps) {
+		throw("Number of colors in gradient is not correct.");
+	};
 
-		this.weights = [];
 
-		for( var i = 0, len = this.colours.length; i < len; i++ ) {
-
-			this.weights[ i ] = i / ( len - 1 );
-		}
-	}
 
 	this.gradientBuffer = new ArrayBuffer( this.steps * 4 );
 	this.gradientBufferView32uint = new Uint32Array( this.gradientBuffer );
 
-	// this.size = props.size || 1;
-	// this.color = props.color || 0xFFFFFFFF;
-	// this.gammaRamp = props.gammaRamp || 1;
-	// this.gammaColor = props.gammaColor || 1;
-	// this.remapR = props.remapR;
-	// this.remapG = props.remapG;
-	// this.remapB = props.remapB;
+	for (var i = 0; i < props.colors.length; i++) {
+		this.gradientBufferView32uint[i] = props.colors[i];
+	};
+
+	if(props.bumpFirst) {
+		GradientUtils.bump(this.gradientBufferView32uint);
+	}
 }
 
 VoxelGradientMaterial.prototype = {
@@ -1467,75 +1480,7 @@ VoxelGradientMaterial.prototype = {
 
 			this.clearColor = clearColor;
 
-
-
-
-			//generate gradient
-			ColorUtils.writeGradient( this.gradientBufferView32uint, this.colours, this.weights );
-
-
-
-
-
-			// var gradientSteps = 10;
-			// this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
-			// this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
-
-			// //generate gradient
-			// for (var i = 0; i < gradientSteps; i++) {
-			// 	var ratio = ( i + 1 ) / gradientSteps;
-			// 	ratio = Math.pow(ratio, 1 / this.gammaRamp);
-			// 	this.gradientBufferView32uint[i] = ColorUtils.lerp(
-			// 		this.clearColor,
-			// 		this.color,
-			// 		ratio,
-			// 		this.remapR,
-			// 		this.remapG,
-			// 		this.remapB
-			// 	);
-			// };
-
-			// //apply gamma
-			// if(this.gammaColor != 1) {
-			// 	for (var i = 0; i < gradientSteps; i++) {
-			// 		this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
-			// 	}
-			// }
-
-			// //make sure no 2 colors are the same by bumping color a bit
-			// //this also makes all colors unique so you don't get color loops (though fun, not cool here)
-			// //
-			// //first we need to make sure the gradient doesn't include the clearColor
-			// if(this.gradientBufferView32uint[0] == clearColor) {
-			// 	var clearColorBumpJustInCase = ColorUtils.bump(clearColor);
-			// 	console.log("!", clearColor);
-			// 	console.log("!", clearColorBumpJustInCase);
-				
-				
-			// 	for (var i = 0; i < gradientSteps; i++) {
-			// 		if(clearColor == this.gradientBufferView32uint[i]) {
-			// 			this.gradientBufferView32uint[i] = clearColorBumpJustInCase;
-			// 		}
-			// 	}
-				
-			// }
-			// //then we step through the gradient and bump as we go to avoid repeated colors
-			// for (var i = 1; i < gradientSteps; i++) {
-			// 	if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[i]) {
-			// 		var bumped = ColorUtils.bump(this.gradientBufferView32uint[i]);
-			// 		for (var j = i; j < gradientSteps; j++) {
-			// 			if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[j]) {
-			// 				this.gradientBufferView32uint[j] = bumped;
-			// 			}
-			// 		}
-			// 	}
-			// }
-			
-			// for (var i = 0; i < this.gradientBufferView32uint.length; i++) {
-			// 	console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
-			// };
-			
-
+			GradientUtils.makeUnique(this.gradientBufferView32uint, clearColor);
 		}
 	},
 
@@ -1558,10 +1503,97 @@ VoxelGradientMaterial.prototype = {
 		}
 	}
 }
+VoxelGradientMaterial.steps = steps;
 
 module.exports = VoxelGradientMaterial;
 
-},{"../../utils/Color":24}],20:[function(require,module,exports){
+},{"../../utils/Color":26,"../../utils/Gradient":31}],20:[function(require,module,exports){
+var ColorUtils = require('../../utils/Color');
+var VoxelGradient = require('./VoxelGradient');
+function VoxelGradientCurvesMaterial(props) {
+	props = props || {};
+
+	VoxelGradient.call( this, props );
+
+	this.color = props.color || 0xFFFFFFFF;
+	this.gammaRamp = props.gammaRamp || 1;
+	this.gammaColor = props.gammaColor || 1;
+	this.remapR = props.remapR;
+	this.remapG = props.remapG;
+	this.remapB = props.remapB;
+};
+
+VoxelGradientCurvesMaterial.prototype = Object.create( VoxelGradient.prototype );
+
+VoxelGradientCurvesMaterial.prototype.init = function(context, clearColor) {
+
+	if( this.clearColor != clearColor ) {
+
+		this.clearColor = clearColor;
+
+		var gradientSteps = this.steps;
+		this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
+		this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
+
+		//generate gradient
+		for (var i = 0; i < gradientSteps; i++) {
+			var ratio = ( i + 1 ) / gradientSteps;
+			ratio = Math.pow(ratio, 1 / this.gammaRamp);
+			this.gradientBufferView32uint[i] = ColorUtils.ramp(
+				this.clearColor,
+				this.color,
+				ratio,
+				this.remapR,
+				this.remapG,
+				this.remapB
+			);
+		};
+
+		//apply gamma
+		if(this.gammaColor != 1) {
+			for (var i = 0; i < gradientSteps; i++) {
+				this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
+			}
+		}
+
+	}
+};
+
+module.exports = VoxelGradientCurvesMaterial;
+
+},{"../../utils/Color":26,"./VoxelGradient":19}],21:[function(require,module,exports){
+var ColorUtils = require('../../utils/Color');
+var VoxelGradient = require('./VoxelGradient');
+
+function VoxelGradientLerpMaterial(props) {
+	props = props || {};
+
+	props.colors = props.colors || [ 0xFFFF0000, 0xFF00FF00, 0xFF0000FF ];
+	props.weights = props.weights;
+
+
+	//if there were no times then we'll just go in and linearly set every colour
+	if( props.weights === undefined ) {
+
+		props.weights = [];
+
+		for( var i = 0, len = props.colors.length; i < len; i++ ) {
+
+			props.weights[ i ] = i / ( len - 1 );
+		}
+	} else {
+		if(props.colors.length != props.weights.length) throw("You need an equal number of colors and weights to generate a gradient this way.");
+	}
+
+	props.colors = ColorUtils.sampleGradient( props.colors, props.weights, VoxelGradient.steps );
+
+	VoxelGradient.call(this, props);
+}
+
+VoxelGradientLerpMaterial.prototype = Object.create( VoxelGradient.prototype );
+
+module.exports = VoxelGradientLerpMaterial;
+},{"../../utils/Color":26,"./VoxelGradient":19}],22:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 var utilImage = require( '../../utils/Image' );
 
@@ -1673,7 +1705,7 @@ function alphaBlend( src, dest ) {
 }
 
 module.exports = VoxelLookUp;
-},{"../../utils/Image":29,"./LookupBase":17}],21:[function(require,module,exports){
+},{"../../utils/Image":32,"./LookupBase":17}],23:[function(require,module,exports){
 var LookupBase = require( './LookupBase' );
 
 var VoxelLookUp = function( props ) {
@@ -1708,7 +1740,7 @@ VoxelLookUp.prototype.drawToBuffer = function( buffer, index, vertexIDX, screenW
 };
 
 module.exports = VoxelLookUp;
-},{"./LookupBase":17}],22:[function(require,module,exports){
+},{"./LookupBase":17}],24:[function(require,module,exports){
 module.exports = {
 	orderlyScramble: function(array, newOrder) {
 		var length = array.length;
@@ -1733,7 +1765,7 @@ module.exports = {
 		return newOrder;
 	}
 }
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 function CanvasGraph(props) {
 	this.addCanvasToDOMBody = this.addCanvasToDOMBody.bind(this);
 	this.animationFrame = this.animationFrame.bind(this);
@@ -1854,14 +1886,14 @@ CanvasGraph.prototype = {
 };
 
 module.exports = CanvasGraph;
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var RemapCurves = require('./RemapCurves');
 
 bumpRotation = 0;
 
-// var defaultRemapR = RemapCurves.makeGamma(2);
-// var defaultRemapG = RemapCurves.makeGamma(1);
-// var defaultRemapB = RemapCurves.makeGamma(.5);
+var defaultRemapR = RemapCurves.makeGamma(2);
+var defaultRemapG = RemapCurves.makeGamma(1);
+var defaultRemapB = RemapCurves.makeGamma(.5);
 module.exports = {
 	lerp: function(color1, color2, ratio, remapR, remapG, remapB) {
 		var a1 = (color1 >> 24) & 0xff;
@@ -1877,31 +1909,40 @@ module.exports = {
 			   (~~(r1 + (r2 - r1) * ratio)) << 16 |
 			   (~~(g1 + (g2 - g1) * ratio)) << 8 |
 			   ~~(b1 + (b2 - b1) * ratio)) >>> 0;
-
-		
-		//fun deviations from lerp
-		// remapR = remapR || defaultRemapR;
-		// remapG = remapG || defaultRemapG;
-		// remapB = remapB || defaultRemapB;
-
-		// var ratioR = remapR(ratio);
-		// var ratioG = remapG(ratio);
-		// var ratioB = remapB(ratio);
-
-		// return (~~(a1 + (a2 - a1) * ratio) << 24) |
-		// 	(~~(r1 + (r2 - r1) * ratioB) << 16) |
-		// 	(~~(g1 + (g2 - g1) * ratioG) << 8) |
-		// 	~~(b1 + (b2 - b1) * ratioR);
 	},
-	gradientColour: function( percentage, colours, weights ) {
+	ramp: function(color1, color2, ratio, remapR, remapG, remapB) {
+
+		var a1 = (color1 >> 24) & 0xff;
+		var r1 = (color1 >> 16) & 0xff;
+		var g1 = (color1 >> 8) & 0xff;
+		var b1 = color1 & 0xff;
+		var a2 = (color2 >>> 24) & 0xff;
+		var r2 = (color2 >> 16) & 0xff;
+		var g2 = (color2 >> 8) & 0xff;
+		var b2 = color2 & 0xff;
+		
+		remapR = remapR || defaultRemapR;
+		remapG = remapG || defaultRemapG;
+		remapB = remapB || defaultRemapB;
+
+		var ratioR = remapR(ratio);
+		var ratioG = remapG(ratio);
+		var ratioB = remapB(ratio);
+
+		return (~~(a1 + (a2 - a1) * ratio) << 24) |
+		 	(~~(r1 + (r2 - r1) * ratioB) << 16) |
+		 	(~~(g1 + (g2 - g1) * ratioG) << 8) |
+		 	~~(b1 + (b2 - b1) * ratioR);
+	},
+	gradientColor: function( percentage, colors, weights ) {
 
 		var startIdx = 0,
 			endIdx = 1,
 			startPerc = 0,
 			endPerc = 0,
 			ratio = 0,
-			startColour = 0,
-			endColour = 0,
+			startColor = 0,
+			endColor = 0,
 			sa, ea, sr, er, sg, eg, sb, eb;
 
 		for( var i = 0, len = weights.length; i < len; i++ ) {
@@ -1921,19 +1962,19 @@ module.exports = {
 
 		startPerc = weights[ startIdx ];
 		endPerc = weights[ endIdx ];
-		startColour = colours[ startIdx ];
-		endColour = colours[ endIdx ];
+		startColor = colors[ startIdx ];
+		endColor = colors[ endIdx ];
 
 		ratio = ( percentage - startPerc ) / ( endPerc - startPerc );
 
-		return this.lerp( startColour, endColour, ratio );
+		return this.lerp( startColor, endColor, ratio );
 	},
-	writeGradient: function( array, colours, weights ) {
-
-		for( var i = 0, len = array.length, num = len - 1; i < len; i++ ) {
-
-			array[ i ] = this.gradientColour( i / num, colours, weights );
+	sampleGradient: function( colors, weights, steps ) {
+		var array = [];
+		for( var i = 0, num = steps - 1; i < steps; i++ ) {
+			array[ i ] = this.gradientColor( i / num, colors, weights );
 		}
+		return array;
 	},
 	pretty: function (color) {
 		var a = (color >> 24) & 0xff;
@@ -1979,9 +2020,18 @@ module.exports = {
 			(~~g << 8) |
 			~~b;
 
+	},
+	extractRowFromCanvas: function(canvas, y) {
+		var row = [];
+		var w = canvas.width;
+		var context = canvas.getContext('2d');
+		if(y > canvas.height) throw("Cannot grab row " + y + " from an image of height " + canvas.height);
+		var rowData = context.getImageData(0, y, canvas.width, 1);
+		var rowData32 = new Uint32Array(rowData.data.buffer);
+		return rowData32;
 	}
 }
-},{"./RemapCurves":31}],25:[function(require,module,exports){
+},{"./RemapCurves":34}],27:[function(require,module,exports){
 var Events = {
 	addEvent : function(elem, type, eventHandle) {
 	    if (elem == null || typeof(elem) == 'undefined') return;
@@ -1996,7 +2046,7 @@ var Events = {
 }
 
 module.exports = Events;
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 function FPS() {
 	this.lastTime = new Date;
 	this.animationFrame = this.animationFrame.bind(this);
@@ -2031,7 +2081,7 @@ FPS.prototype = {
 };
 
 module.exports = new FPS();
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var ArrayUtils = require('./Array');
 var Geometry = require('../model/Geometry');
 
@@ -2240,7 +2290,7 @@ var GeometryUtils = {
 	}
 }
 module.exports = GeometryUtils;
-},{"../model/Geometry":12,"./Array":22}],28:[function(require,module,exports){
+},{"../model/Geometry":12,"./Array":24}],30:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var GeometryUtils = require('./Geometry');
 var work = [];
@@ -2299,7 +2349,47 @@ var GeometryGarage = {
 };
 
 module.exports = GeometryGarage;
-},{"../model/Geometry":12,"./Geometry":27}],29:[function(require,module,exports){
+},{"../model/Geometry":12,"./Geometry":29}],31:[function(require,module,exports){
+var ColorUtils = require('./Color');
+module.exports = {
+	bump: function(gradient) {
+		for (var i = 0, steps = gradient.length; i < steps - 2; i++) {
+			gradient[i] = gradient[i+1];
+		};
+	},
+	preventColor: function(gradient, clearColor) {
+		var gradientSteps = gradient.length;
+		//make sure the gradient doesn't include the clearColor
+		if(gradient[0] == clearColor) {
+			var clearColorBumpJustInCase = ColorUtils.bump(clearColor);
+			
+			for (var i = 0; i < gradientSteps; i++) {
+				if(clearColor == gradient[i]) {
+					gradient[i] = clearColorBumpJustInCase;
+				}
+			}
+		}
+	},
+	makeUnique: function(gradient){
+		//make sure no 2 colors are the same by bumping color a bit
+		//this also makes all colors unique so you don't get color loops (though fun, not cool here)
+
+		var gradientSteps = gradient.length;
+
+		//step through the gradient and bump as we go to avoid repeated colors
+		for (var i = 1; i < gradientSteps; i++) {
+			if(gradient[i-1] == gradient[i]) {
+				var bumped = ColorUtils.bump(gradient[i]);
+				for (var j = i; j < gradientSteps; j++) {
+					if(gradient[i-1] == gradient[j]) {
+						gradient[j] = bumped;
+					}
+				}
+			}
+		}
+	}
+};
+},{"./Color":26}],32:[function(require,module,exports){
 var canvas = null;
 var ctx = null;
 
@@ -2335,11 +2425,25 @@ module.exports = {
 		var imageData = this.getData( image );
 
 		return new Uint32Array( imageData.data.buffer );
+	},
+	
+	loadAsCanvas: function(url, callback) {
+		var img = new Image();
+		var canvas = document.createElement('canvas');
+		canvas.id = "voxelColors";
+		var canvasContext = canvas.getContext('2d');
+		img.onload = function(){
+		    canvas.width = img.width;
+		    canvas.height = img.height;
+		    canvasContext.drawImage(img, 0, 0, img.width, img.height);
+		    callback(canvas);
+		}
+		img.src = url;
 	}
 };
 
 
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 var signals = require('../vendor/signals');
 var FPS = require('./FPS');
 
@@ -2393,7 +2497,7 @@ PerformanceTweaker.prototype = {
 }
 
 module.exports = new PerformanceTweaker();
-},{"../vendor/signals":34,"./FPS":26}],31:[function(require,module,exports){
+},{"../vendor/signals":37,"./FPS":28}],34:[function(require,module,exports){
 function makeGamma(pow) {
 	pow = Math.min(8, Math.max(0.01, pow));
 	return function(inVal) {
@@ -2402,6 +2506,25 @@ function makeGamma(pow) {
 };
 function sine(inVal) {
 	return Math.sin(inVal * Math.PI - Math.PI * .5) * .5 + .5;
+};
+function makePowerSine(pow) {
+	return function(inVal) {
+		for (var i = 0; i < pow; i++) {
+			inVal = sine(inVal);
+		};
+		return inVal;
+	}
+};
+function cosine(inVal) {
+	return inVal + inVal - (Math.sin(inVal * Math.PI - Math.PI * .5) * .5 + .5);
+};
+function makePowerCosine(pow) {
+	return function(inVal) {
+		for (var i = 0; i < pow; i++) {
+			inVal = cosine(inVal);
+		};
+		return inVal;
+	}
 };
 function makeInvertedGamma(pow) {
 	var gamma = makeGamma(pow);
@@ -2427,10 +2550,13 @@ module.exports = {
 	makeGamma: makeGamma,
 	makeInvertedGamma: makeInvertedGamma,
 	sine: sine,
+	makePowerSine: makePowerSine,
+	cosine: cosine,
+	makePowerCosine: makePowerCosine,
 	makeGammaSine: makeGammaSine,
 	interpret: interpret
 }
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 var Geometry = require('../model/Geometry');
 var Mesh = require('../model/Mesh');
 function TestFactory() {
@@ -2472,7 +2598,7 @@ TestFactory.prototype = {
 };
 
 module.exports = new TestFactory();
-},{"../model/Geometry":12,"../model/Mesh":13}],33:[function(require,module,exports){
+},{"../model/Geometry":12,"../model/Mesh":13}],36:[function(require,module,exports){
 module.exports = {
 	getParam : function(name) {
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -2491,7 +2617,7 @@ module.exports = {
 		}
 	}
 }
-},{}],34:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /**
  * Signals for Node.js
  * Node.js version of JS Signals <http://millermedeiros.github.com/js-signals/> by Miller Medeiros <http://millermedeiros.com/>
@@ -2879,7 +3005,7 @@ exports.Signal.prototype = {
 	
 };
 
-},{}],35:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author Larry Battle / http://bateru.com/news
@@ -9740,13 +9866,13 @@ THREE.Triangle.prototype = {
 };
 
 
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 var enums = {
 	FULLSCREEN : "fullscreen"
 }
 
 module.exports = enums;
-},{}],37:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 var signals = require('../vendor/signals');
 
 /**
@@ -9801,7 +9927,7 @@ RenderManager.prototype = {
 }
 
 module.exports = RenderManager;
-},{"../vendor/signals":34}],38:[function(require,module,exports){
+},{"../vendor/signals":37}],41:[function(require,module,exports){
 var BaseRenderer = require('./renderers/Base');
 var DOMMode = require('./DOMMode');
 var EventUtils = require('../utils/Events');
@@ -9943,7 +10069,7 @@ View.prototype = {
 };
 
 module.exports = View;
-},{"../model/Camera3D":9,"../model/Scene":16,"../utils/Events":25,"../utils/PerformanceTweaker":30,"../vendor/signals":34,"./DOMMode":36,"./RenderManager":37,"./renderers/Base":41,"./renderers/Canvas":42}],39:[function(require,module,exports){
+},{"../model/Camera3D":9,"../model/Scene":16,"../utils/Events":27,"../utils/PerformanceTweaker":33,"../vendor/signals":37,"./DOMMode":39,"./RenderManager":40,"./renderers/Base":44,"./renderers/Canvas":45}],42:[function(require,module,exports){
 function GlitchOffset(totalOffsets) {
 	this.totalOffsets = totalOffsets ? totalOffsets : 1;
 	console.log('GlitchOffset initialized!');
@@ -9971,7 +10097,7 @@ GlitchOffset.prototype = {
 
 module.exports = GlitchOffset;
 
-},{}],40:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 function GlitchOffsetSmearBlock(totalSmears) {
 	this.totalSmears = totalSmears ? totalSmears : 1;
 	console.log('GlitchOffsetSmearBlock initialized!');
@@ -9999,7 +10125,7 @@ GlitchOffsetSmearBlock.prototype = {
 
 module.exports = GlitchOffsetSmearBlock;
 
-},{}],41:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 /**
  * Base renderer to extend
  * @param {CanvasElement} canvas the target of the renderer
@@ -10033,7 +10159,7 @@ BaseRenderer.prototype = {
 };
 
 module.exports = BaseRenderer;
-},{}],42:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 var BaseRenderer = require('./Base');
 var Mesh = require('../../model/Mesh');
 var BlendMesh = require('../../model/BlendMesh');
@@ -10230,4 +10356,4 @@ CanvasRenderer.prototype.applyEffectsToBuffer = function() {
 };
 
 module.exports = CanvasRenderer;
-},{"../../model/BlendMesh":8,"../../model/DrawBuffer":10,"../../model/Mesh":13,"../../utils/PerformanceTweaker":30,"./Base":41}]},{},[7])
+},{"../../model/BlendMesh":8,"../../model/DrawBuffer":10,"../../model/Mesh":13,"../../utils/PerformanceTweaker":33,"./Base":44}]},{},[7])

@@ -1,36 +1,42 @@
 var ColorUtils = require('../../utils/Color');
+var GradientUtils = require('../../utils/Gradient');
 
+var steps = 10;
 function VoxelGradientMaterial(props) {
 	props = props || {};
+	if(props.bumpFirst === undefined) props.bumpFirst = true;
 
-	this.colours = props.colours || [ 0xFFFF0000, 0xFF00FF00, 0xFF0000FF ];
-	this.weights = props.weights;
-	this.steps = props.steps || 10;
+	this.steps = 10;
 
-	if( this.steps > 10 )
-		this.steps = 10;
+	props.colors = props.colors || [
+		0xFF333333,
+		0xFF555555,
+		0xFF777777,
+		0xFF888888,
+		0xFFAAAAAA,
+		0xFFBBBBBB,
+		0xFFCCCCCC,
+		0xFFDDDDDD,
+		0xFFEEEEEE,
+		0xFFFFFFFF
+	];
 
-	//if there were no times then we'll just go in and linearly set every colour
-	if( this.weights === undefined ) {
+	if (props.colors.length != this.steps) {
+		throw("Number of colors in gradient is not correct.");
+	};
 
-		this.weights = [];
 
-		for( var i = 0, len = this.colours.length; i < len; i++ ) {
-
-			this.weights[ i ] = i / ( len - 1 );
-		}
-	}
 
 	this.gradientBuffer = new ArrayBuffer( this.steps * 4 );
 	this.gradientBufferView32uint = new Uint32Array( this.gradientBuffer );
 
-	// this.size = props.size || 1;
-	// this.color = props.color || 0xFFFFFFFF;
-	// this.gammaRamp = props.gammaRamp || 1;
-	// this.gammaColor = props.gammaColor || 1;
-	// this.remapR = props.remapR;
-	// this.remapG = props.remapG;
-	// this.remapB = props.remapB;
+	for (var i = 0; i < props.colors.length; i++) {
+		this.gradientBufferView32uint[i] = props.colors[i];
+	};
+
+	if(props.bumpFirst) {
+		GradientUtils.bump(this.gradientBufferView32uint);
+	}
 }
 
 VoxelGradientMaterial.prototype = {
@@ -40,75 +46,7 @@ VoxelGradientMaterial.prototype = {
 
 			this.clearColor = clearColor;
 
-
-
-
-			//generate gradient
-			ColorUtils.writeGradient( this.gradientBufferView32uint, this.colours, this.weights );
-
-
-
-
-
-			// var gradientSteps = 10;
-			// this.gradientBuffer = new ArrayBuffer(gradientSteps*4);
-			// this.gradientBufferView32uint = new Uint32Array(this.gradientBuffer);
-
-			// //generate gradient
-			// for (var i = 0; i < gradientSteps; i++) {
-			// 	var ratio = ( i + 1 ) / gradientSteps;
-			// 	ratio = Math.pow(ratio, 1 / this.gammaRamp);
-			// 	this.gradientBufferView32uint[i] = ColorUtils.lerp(
-			// 		this.clearColor,
-			// 		this.color,
-			// 		ratio,
-			// 		this.remapR,
-			// 		this.remapG,
-			// 		this.remapB
-			// 	);
-			// };
-
-			// //apply gamma
-			// if(this.gammaColor != 1) {
-			// 	for (var i = 0; i < gradientSteps; i++) {
-			// 		this.gradientBufferView32uint[i] = ColorUtils.applyGamma(this.gradientBufferView32uint[i], this.gammaColor);
-			// 	}
-			// }
-
-			// //make sure no 2 colors are the same by bumping color a bit
-			// //this also makes all colors unique so you don't get color loops (though fun, not cool here)
-			// //
-			// //first we need to make sure the gradient doesn't include the clearColor
-			// if(this.gradientBufferView32uint[0] == clearColor) {
-			// 	var clearColorBumpJustInCase = ColorUtils.bump(clearColor);
-			// 	console.log("!", clearColor);
-			// 	console.log("!", clearColorBumpJustInCase);
-				
-				
-			// 	for (var i = 0; i < gradientSteps; i++) {
-			// 		if(clearColor == this.gradientBufferView32uint[i]) {
-			// 			this.gradientBufferView32uint[i] = clearColorBumpJustInCase;
-			// 		}
-			// 	}
-				
-			// }
-			// //then we step through the gradient and bump as we go to avoid repeated colors
-			// for (var i = 1; i < gradientSteps; i++) {
-			// 	if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[i]) {
-			// 		var bumped = ColorUtils.bump(this.gradientBufferView32uint[i]);
-			// 		for (var j = i; j < gradientSteps; j++) {
-			// 			if(this.gradientBufferView32uint[i-1] == this.gradientBufferView32uint[j]) {
-			// 				this.gradientBufferView32uint[j] = bumped;
-			// 			}
-			// 		}
-			// 	}
-			// }
-			
-			// for (var i = 0; i < this.gradientBufferView32uint.length; i++) {
-			// 	console.log(ColorUtils.pretty(this.gradientBufferView32uint[i]));
-			// };
-			
-
+			GradientUtils.makeUnique(this.gradientBufferView32uint, clearColor);
 		}
 	},
 
@@ -131,5 +69,6 @@ VoxelGradientMaterial.prototype = {
 		}
 	}
 }
+VoxelGradientMaterial.steps = steps;
 
 module.exports = VoxelGradientMaterial;

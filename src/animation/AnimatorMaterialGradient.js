@@ -1,6 +1,7 @@
 var BaseAnimator = require( './BaseAnimator' );
 var VoxelGradient = require( '../model/materials/VoxelGradient' );
 var ColorUtil = require( '../utils/Color' );
+var GradientUtil = require( '../utils/Gradient' );
 var FPS = require( '../utils/FPS' );
 
 var AnimatorMaterialGradient = function( mesh ) {
@@ -13,32 +14,34 @@ var AnimatorMaterialGradient = function( mesh ) {
 	if( !( this.material instanceof VoxelGradient ) )
 		throw new Error( 'The material which is being used needs to be a VoxelGradient' );
 
-	this.colours = this.material.gradientBufferView32uint;
-	this.targetColours = new Uint32Array( this.colours.length );
-	this.targetColours.set( this.material.gradientBufferView32uint );
+	this.colors = this.material.gradientBufferView32uint;
+	this.targetColors = new Uint32Array( this.colors.length );
+	this.targetColors.set( this.material.gradientBufferView32uint );
 };
 
 var p = AnimatorMaterialGradient.prototype = BaseAnimator.prototype;
 
-p.setTarget = function( colours, weights ) {
+p.setTarget = function( colors ) {
 
-	ColorUtil.writeGradient( this.targetColours, colours, weights );
-
-	console.log( this.targetColours );
+	for (var i = 0; i < colors.length; i++) {
+		this.targetColors[i] = colors[i];
+	};
 
 	this.dirty = true;
 };
 
 p.update = function() {
 
-	for( var i = 0, len = this.colours.length; i < len; i++ ) {
+	for( var i = 0, len = this.colors.length; i < len; i++ ) {
 
-		this.colours[ i ] = ColorUtil.lerp( this.colours[ i ], this.targetColours[ i ], this.ease * FPS.animSpeedCompensation );
+		this.colors[ i ] = ColorUtil.lerp( this.colors[ i ], this.targetColors[ i ], this.ease * FPS.animSpeedCompensation );
 	}
 
-	console.log( '--------', this.colours[ 0 ], this.targetColours[ 0 ] );
+	GradientUtil.makeUnique(this.colors, 0xFF000000);
 
-	this.dirty = this.colours[ 0 ] != this.targetColours[ 0 ];
+	//console.log( '--------', ColorUtil.pretty(this.colors[ 0 ]), ColorUtil.pretty(this.targetColors[ 0 ]) );
+
+	this.dirty = this.colors[ 0 ] != this.targetColors[ 0 ];
 };
 
 module.exports = AnimatorMaterialGradient;

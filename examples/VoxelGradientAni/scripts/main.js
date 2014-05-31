@@ -3,18 +3,39 @@
  */
 var ssView = new SHORTSWORD.View();
 
-var colours = [
-	
-	[ 0xFFFF00FF, 0xFF00FF00 ],
-	[ 0xFFFF00FF, 0xFF0000FF ],
-	[ 0xFF333333, 0xFF00FFFF ],
-	[ 0xFF00FF00, 0xFF0000FF ]
+var lerpColors = [
+	[ 0xFF000000, 0xFFFF00FF, 0xFFFFFFFF ],
+	[ 0xFF000000, 0xFF00FFFF, 0xFFFFFFFF ],
+	[ 0xFF000000, 0xFFFF0000, 0xFFFFFFFF ],
+	[ 0xFF000000, 0xFF00FF00, 0xFFFFFFFF ]
 ];
 
-var weight = [ 0, 1 ];
+var lerpWeights = [ 0, .25, 1];
+
+var colors = [];
+for (var i = 0; i < lerpColors.length; i++) {
+	colors[i] = SHORTSWORD.ColorUtils.sampleGradient(
+		lerpColors[i],
+		lerpWeights,
+		SHORTSWORD.materials.VoxelGradient.steps
+	)
+
+	console.log(i, "------");
+	for (var j = 0; j < colors[i].length; j++) {
+		console.log(SHORTSWORD.ColorUtils.pretty(colors[i][j]));
+	};
+
+	SHORTSWORD.GradientUtils.preventColor(colors[i], 0xFF000000);
+	SHORTSWORD.GradientUtils.makeUnique(colors[i]);
+	SHORTSWORD.GradientUtils.bump(colors[i]);
+
+	console.log(i, "------");
+	for (var j = 0; j < colors[i].length; j++) {
+		console.log(SHORTSWORD.ColorUtils.pretty(colors[i][j]));
+	};
+};
 
 var animator = null;
-
 
 var _this = this;
 SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/Luigi_obj.obj", function(geometry1) {
@@ -23,14 +44,13 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/Luigi_obj.obj", function(geo
 			geometry1,
 			geometry2,
 			new SHORTSWORD.materials.VoxelGradient({
-				colours: [ 0xFFFF0000, 0xFFFFFFFF ],
-				steps: 3
+				colors: colors[0]
 			})
 		);
 
 		animator = mesh.addAnimator( SHORTSWORD.animators.MaterialGradient );
-		changeColours();
-		setInterval( changeColours, 3000 );
+		changeColors();
+		setInterval( changeColors, 4000 );
 		
 
 		ssView.scene.add(mesh);
@@ -51,8 +71,8 @@ window.onmousemove = function(event) {
 	mouseMove.y = event.y / window.innerHeight * 2 - 1;
 };
 
-function changeColours() {
+function changeColors() {
 
-	var idx = Math.round( ( colours.length - 1 ) * Math.random() );
-	animator.setTarget( colours[ idx ], weight );
+	var idx = Math.round( ( colors.length - 1 ) * Math.random() );
+	animator.setTarget( colors[ idx ]);
 }

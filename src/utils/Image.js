@@ -33,6 +33,20 @@ module.exports = {
 		var imageData = this.getData( image );
 
 		return new Uint32Array( imageData.data.buffer );
+	},
+	
+	loadAsCanvas: function(url, callback) {
+		var img = new Image();
+		var canvas = document.createElement('canvas');
+		canvas.id = "voxelColors";
+		var canvasContext = canvas.getContext('2d');
+		img.onload = function(){
+		    canvas.width = img.width;
+		    canvas.height = img.height;
+		    canvasContext.drawImage(img, 0, 0, img.width, img.height);
+		    callback(canvas);
+		}
+		img.src = url;
 	}
 };
 

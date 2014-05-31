@@ -2,9 +2,9 @@ var RemapCurves = require('./RemapCurves');
 
 bumpRotation = 0;
 
-// var defaultRemapR = RemapCurves.makeGamma(2);
-// var defaultRemapG = RemapCurves.makeGamma(1);
-// var defaultRemapB = RemapCurves.makeGamma(.5);
+var defaultRemapR = RemapCurves.makeGamma(2);
+var defaultRemapG = RemapCurves.makeGamma(1);
+var defaultRemapB = RemapCurves.makeGamma(.5);
 module.exports = {
 	lerp: function(color1, color2, ratio, remapR, remapG, remapB) {
 		var a1 = (color1 >> 24) & 0xff;
@@ -20,31 +20,40 @@ module.exports = {
 			   (~~(r1 + (r2 - r1) * ratio)) << 16 |
 			   (~~(g1 + (g2 - g1) * ratio)) << 8 |
 			   ~~(b1 + (b2 - b1) * ratio)) >>> 0;
-
-		
-		//fun deviations from lerp
-		// remapR = remapR || defaultRemapR;
-		// remapG = remapG || defaultRemapG;
-		// remapB = remapB || defaultRemapB;
-
-		// var ratioR = remapR(ratio);
-		// var ratioG = remapG(ratio);
-		// var ratioB = remapB(ratio);
-
-		// return (~~(a1 + (a2 - a1) * ratio) << 24) |
-		// 	(~~(r1 + (r2 - r1) * ratioB) << 16) |
-		// 	(~~(g1 + (g2 - g1) * ratioG) << 8) |
-		// 	~~(b1 + (b2 - b1) * ratioR);
 	},
-	gradientColour: function( percentage, colours, weights ) {
+	ramp: function(color1, color2, ratio, remapR, remapG, remapB) {
+
+		var a1 = (color1 >> 24) & 0xff;
+		var r1 = (color1 >> 16) & 0xff;
+		var g1 = (color1 >> 8) & 0xff;
+		var b1 = color1 & 0xff;
+		var a2 = (color2 >>> 24) & 0xff;
+		var r2 = (color2 >> 16) & 0xff;
+		var g2 = (color2 >> 8) & 0xff;
+		var b2 = color2 & 0xff;
+		
+		remapR = remapR || defaultRemapR;
+		remapG = remapG || defaultRemapG;
+		remapB = remapB || defaultRemapB;
+
+		var ratioR = remapR(ratio);
+		var ratioG = remapG(ratio);
+		var ratioB = remapB(ratio);
+
+		return (~~(a1 + (a2 - a1) * ratio) << 24) |
+		 	(~~(r1 + (r2 - r1) * ratioB) << 16) |
+		 	(~~(g1 + (g2 - g1) * ratioG) << 8) |
+		 	~~(b1 + (b2 - b1) * ratioR);
+	},
+	gradientColor: function( percentage, colors, weights ) {
 
 		var startIdx = 0,
 			endIdx = 1,
 			startPerc = 0,
 			endPerc = 0,
 			ratio = 0,
-			startColour = 0,
-			endColour = 0,
+			startColor = 0,
+			endColor = 0,
 			sa, ea, sr, er, sg, eg, sb, eb;
 
 		for( var i = 0, len = weights.length; i < len; i++ ) {
@@ -64,19 +73,19 @@ module.exports = {
 
 		startPerc = weights[ startIdx ];
 		endPerc = weights[ endIdx ];
-		startColour = colours[ startIdx ];
-		endColour = colours[ endIdx ];
+		startColor = colors[ startIdx ];
+		endColor = colors[ endIdx ];
 
 		ratio = ( percentage - startPerc ) / ( endPerc - startPerc );
 
-		return this.lerp( startColour, endColour, ratio );
+		return this.lerp( startColor, endColor, ratio );
 	},
-	writeGradient: function( array, colours, weights ) {
-
-		for( var i = 0, len = array.length, num = len - 1; i < len; i++ ) {
-
-			array[ i ] = this.gradientColour( i / num, colours, weights );
+	sampleGradient: function( colors, weights, steps ) {
+		var array = [];
+		for( var i = 0, num = steps - 1; i < steps; i++ ) {
+			array[ i ] = this.gradientColor( i / num, colors, weights );
 		}
+		return array;
 	},
 	pretty: function (color) {
 		var a = (color >> 24) & 0xff;
@@ -122,5 +131,14 @@ module.exports = {
 			(~~g << 8) |
 			~~b;
 
+	},
+	extractRowFromCanvas: function(canvas, y) {
+		var row = [];
+		var w = canvas.width;
+		var context = canvas.getContext('2d');
+		if(y > canvas.height) throw("Cannot grab row " + y + " from an image of height " + canvas.height);
+		var rowData = context.getImageData(0, y, canvas.width, 1);
+		var rowData32 = new Uint32Array(rowData.data.buffer);
+		return rowData32;
 	}
 }

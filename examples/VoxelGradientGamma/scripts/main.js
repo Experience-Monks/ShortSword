@@ -9,8 +9,8 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/Luigi_obj.obj", function(geo
 		var mesh = new SHORTSWORD.BlendMesh(
 			geometry1,
 			geometry2,
-			new SHORTSWORD.materials.VoxelGradient({
-				gammaColor: 6,
+			new SHORTSWORD.materials.VoxelGradientCurves({
+				gammaColor: 2,
 				gammaRamp: .8
 			})
 		);

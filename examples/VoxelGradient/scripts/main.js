@@ -9,9 +9,10 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/Luigi_obj.obj", function(geo
 		var mesh = new SHORTSWORD.BlendMesh(
 			geometry1,
 			geometry2,
-			new SHORTSWORD.materials.VoxelGradient({
-				colours: [ 0xFFFF0000, 0xFFFFFFFF ],
-				steps: 3
+			new SHORTSWORD.materials.VoxelGradientLerp({
+				colors: [ 0xFF000000, 0xffff3f3f, 0xFFFFFFFF ],
+				weights: [0, .25, 1],
+				bumpFirst: true	//good to bump if the first color is the same as the clearColor
 			})
 		);
 		ssView.scene.add(mesh);

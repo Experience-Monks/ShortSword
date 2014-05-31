@@ -18,7 +18,9 @@ SHORTSWORD = {
 	Object3D : require('./model/Object3D'),
 	Camera3D : require('./model/Camera3D'),
 	Loader : require('./loader/Loader'),
+	GradientUtils : require('./utils/Gradient'),
 	ColorUtils : require('./utils/Color'),
+	ImageUtils : require('./utils/Image'),
 	URLParamUtils : require('./utils/URLParams'),
 	GeometryUtils : require('./utils/Geometry'),
 	GeometryGarage : require('./utils/GeometryGarage'),
@@ -33,6 +35,8 @@ SHORTSWORD = {
 	materials: {
 		Voxel: require( './model/materials/Voxel' ),
 		VoxelGradient: require( './model/materials/VoxelGradient' ),
+		VoxelGradientLerp: require( './model/materials/VoxelGradientLerp' ),
+		VoxelGradientCurves: require( './model/materials/VoxelGradientCurves' ),
 		VoxelLookUp: require( './model/materials/VoxelLookUp' ),
 		VoxelImageLookUp: require( './model/materials/VoxelImageLookUp' )
 	},

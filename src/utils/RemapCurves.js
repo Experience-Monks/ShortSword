@@ -7,6 +7,25 @@ function makeGamma(pow) {
 function sine(inVal) {
 	return Math.sin(inVal * Math.PI - Math.PI * .5) * .5 + .5;
 };
+function makePowerSine(pow) {
+	return function(inVal) {
+		for (var i = 0; i < pow; i++) {
+			inVal = sine(inVal);
+		};
+		return inVal;
+	}
+};
+function cosine(inVal) {
+	return inVal + inVal - (Math.sin(inVal * Math.PI - Math.PI * .5) * .5 + .5);
+};
+function makePowerCosine(pow) {
+	return function(inVal) {
+		for (var i = 0; i < pow; i++) {
+			inVal = cosine(inVal);
+		};
+		return inVal;
+	}
+};
 function makeInvertedGamma(pow) {
 	var gamma = makeGamma(pow);
 	return function(inVal) {
@@ -31,6 +50,9 @@ module.exports = {
 	makeGamma: makeGamma,
 	makeInvertedGamma: makeInvertedGamma,
 	sine: sine,
+	makePowerSine: makePowerSine,
+	cosine: cosine,
+	makePowerCosine: makePowerCosine,
 	makeGammaSine: makeGammaSine,
 	interpret: interpret
 }

@@ -10,7 +10,7 @@ var hypotheticalJSONData = {
 		"g" : "sine",
 		"b" : "gammaSine(1.6)"
 	},
-	"gammaColor" : 0.6,
+	"gammaColor" : 1.6,
 	"gammaRamp" : 2.5
 }
 
@@ -18,23 +18,29 @@ var hypotheticalJSONData = {
 //var remapG = SHORTSWORD.RemapCurves.linear;
 //var remapB = SHORTSWORD.RemapCurves.linear;
 
-//var remapR = SHORTSWORD.RemapCurves.makeGamma(.75);
-//var remapG = SHORTSWORD.RemapCurves.sine;
-//var remapB = SHORTSWORD.RemapCurves.makeGammaSine(1.6);
+//var remapR = SHORTSWORD.RemapCurves.makeGamma(2);
+var remapR = SHORTSWORD.RemapCurves.makePowerCosine(1);
+//var remapG = SHORTSWORD.RemapCurves.makePowerCosine(3);
+var remapG = SHORTSWORD.RemapCurves.makeGamma(.5);
+//var remapG = SHORTSWORD.RemapCurves.cosine;
+var remapB = SHORTSWORD.RemapCurves.makePowerSine(2);
 
-var remapR = SHORTSWORD.RemapCurves.interpret(hypotheticalJSONData.channelRamps.r);
-var remapG = SHORTSWORD.RemapCurves.interpret(hypotheticalJSONData.channelRamps.g);
-var remapB = SHORTSWORD.RemapCurves.interpret(hypotheticalJSONData.channelRamps.b);
+//var remapR = SHORTSWORD.RemapCurves.interpret(hypotheticalJSONData.channelRamps.r);
+//var remapG = SHORTSWORD.RemapCurves.interpret(hypotheticalJSONData.channelRamps.g);
+//var remapB = SHORTSWORD.RemapCurves.interpret(hypotheticalJSONData.channelRamps.b);
 
 var _this = this;
 var fileName = SHORTSWORD.URLParamUtils.getParam("obj") || "cube.obj";
 var voxels = SHORTSWORD.URLParamUtils.getParam("voxels");
 if(!voxels) voxels = 60000;
+var fill = SHORTSWORD.URLParamUtils.getParam("fill");
+if(fill === undefined) fill = true;
+
 var scale = SHORTSWORD.URLParamUtils.getParam("scale") || 60;
 SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/" + fileName, function(geometry) {
-	SHORTSWORD.GeometryGarage.fillSurfaces([geometry], voxels, function(){console.log("DONE!")});
+	if(fill) SHORTSWORD.GeometryGarage.fillSurfaces([geometry], voxels, function(){console.log("DONE!")});
 	var mesh = new SHORTSWORD.Mesh(geometry, 
-		new SHORTSWORD.materials.VoxelGradient({
+		new SHORTSWORD.materials.VoxelGradientCurves({
 			gammaColor: hypotheticalJSONData.gammaColor,
 			gammaRamp: hypotheticalJSONData.gammaRamp,
 			//remapR: SHORTSWORD.RemapCurves.makeGamma(.5),
@@ -74,7 +80,7 @@ ssView.renderManager.onEnterFrame.add(function() {
 	graphThese.g = remapG(timeToGraph) * 60;
 	graphThese.b = remapB(timeToGraph) * 60;
 
-	SHORTSWORD.GeometryGarage.doSomeWork();
+	if(fill) SHORTSWORD.GeometryGarage.doSomeWork();
 	if(!_this.objModel) return;
 	mouseTarget.x -= (mouseTarget.x - mouseTargetTarget.x) * .1;
 	mouseTarget.y -= (mouseTarget.y - mouseTargetTarget.y) * .1;
