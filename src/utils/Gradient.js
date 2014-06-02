@@ -1,7 +1,7 @@
 var ColorUtils = require('./Color');
 module.exports = {
 	bump: function(gradient) {
-		for (var i = 0, steps = gradient.length; i < steps - 2; i++) {
+		for (var i = 0, steps = gradient.length - 1; i < steps; i++) {
 			gradient[i] = gradient[i+1];
 		};
 	},
