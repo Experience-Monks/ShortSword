@@ -39,7 +39,7 @@ Camera3D.prototype.setLensHorizontalFit = function ( frameWidth, frameHeight ) {
 	if ( frameHeight === undefined ) frameHeight = 24;
 
 	this.fov = 2 * THREE.Math.radToDeg( Math.atan( frameHeight / ( frameWidth * 2 ) ) );
-	this.translationMatrix.makeTranslation(0, 20 * frameHeight / frameWidth, 0);
+	this.translationMatrix.makeTranslation(0, (frameHeight / frameWidth) * 36, 0);
 	this.updateProjectionMatrix();
 }
 
