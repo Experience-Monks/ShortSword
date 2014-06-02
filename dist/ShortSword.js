@@ -1469,7 +1469,9 @@ VoxelGradientMaterial.prototype = {
 
 			this.clearColor = clearColor;
 
-			GradientUtils.makeUnique(this.gradientBufferView32uint, clearColor);
+			GradientUtils.preventColor(this.gradientBufferView32uint, clearColor);
+
+			GradientUtils.makeUnique(this.gradientBufferView32uint);
 		}
 	},
 
