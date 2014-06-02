@@ -2378,7 +2378,7 @@ module.exports = {
 		var string = "GRADIENT\n";
 		var gradientSteps = gradient.length;
 		for (var i = 1; i < gradientSteps; i++) {
-			string += ColorUtils.pretty(gradient[i] + "\n");
+			string += ColorUtils.pretty(gradient[i]) + "\n";
 		}
 		return string;
 	},
