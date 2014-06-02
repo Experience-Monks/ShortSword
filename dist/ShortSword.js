@@ -2380,6 +2380,7 @@ module.exports = {
 		for (var i = 1; i < gradientSteps; i++) {
 			string += ColorUtils.pretty(gradient[i] + "\n");
 		}
+		return string;
 	},
 };
 },{"./Color":26}],32:[function(require,module,exports){

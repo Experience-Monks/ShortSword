@@ -42,5 +42,6 @@ module.exports = {
 		for (var i = 1; i < gradientSteps; i++) {
 			string += ColorUtils.pretty(gradient[i] + "\n");
 		}
+		return string;
 	},
 };
