@@ -22,6 +22,8 @@ function BlendMesh(geometry1, geometry2, material, cacheRelative) {
 		this.scrambleOrder = GeometryUtils.orderlyScramble([geometry1]);
 	}
 
+	this.animationWeights = [];
+
 	this.geometryBlendBuffer = this.geometry1.clone();
 
 
@@ -86,6 +88,8 @@ Object.defineProperty( BlendMesh.prototype, 'blend', {
 
 var RemapFunctions = require('./RemapFunctions');
 
+var ArrayUtils = require('../utils/Array');
+
 
 BlendMesh.prototype._updateGeometryRelative = function() {
 	var temp = new THREE.Vector3();
@@ -103,16 +107,18 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 				var blend = this.blend;
 				var blendRemap = RemapFunctions.remapRippleSine;
 
-				if(this.geometry.vertices.length < this.geometry1.vertices.length) {
-					GeometryUtils.quickBufferClone(this.geometry.vertices, this.geometry1.vertices, this.geometry1.vertices.length);
+				if(geometry.vertices.length < this.geometry1.vertices.length) {
+					GeometryUtils.quickBufferClone(geometry.vertices, this.geometry1.vertices, this.geometry1.vertices.length);
 				}
 
-				if(!this.remapExtra) this.remapExtra = [];
-				var remapExtra = this.remapExtra;
-				var vertices = geometry.vertices;
-				for (var i = remapExtra.length; i < this.geometry.vertices.length; i++) {
-					remapExtra[i] = vertices[i].x;
-				};
+				var animationWeights = this.animationWeights;
+				if(animationWeights.length < geometry.vertices.length) {
+					var scaleIndexToOffset = 2 / geometry.vertices.length;
+					for (var i = geometry.vertices.length - 1; i >= 0; i--) {
+						animationWeights[i] = i * scaleIndexToOffset;
+					}
+					ArrayUtils.orderlyScramble(animationWeights, this.scrambleOrder);
+				}
 
 				for (var i = 0; i < this.attributeList.length; i++) {
 					var attributeName = this.attributeList[i];
@@ -125,7 +131,7 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 						attribute[i].copy(
 							attribute1[i]
 						).add(
-							temp.copy(attributeDelta[i]).multiplyScalar(blendRemap(blend, remapExtra[i]))
+							temp.copy(attributeDelta[i]).multiplyScalar(blendRemap(3*blend - animationWeights[i]))
 						)
 					};
 				}

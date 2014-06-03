@@ -1,5 +1,5 @@
 var RemapFunctions = {
-	remapLinear : function (valIn, extra) {
+	remapLinear : function (valIn) {
 		return valIn;
 	},
 	remapRippleSine: function() {
@@ -15,8 +15,8 @@ var RemapFunctions = {
 		function quickSinCurveLookup(valIn) {
 			return quickSinCurveLookupTable[~~(valIn * quickSinCurveLookupSteps)];
 		};
-		return function (valIn, extra) {
-			return quickSinCurveLookup(Math.min(1, Math.max(0, (range * valIn) - rangeHalf + extra)));
+		return function (valIn) {
+			return quickSinCurveLookup(Math.min(1, Math.max(0, valIn)));
 		};
 	}()
 }

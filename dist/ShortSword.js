@@ -284,14 +284,15 @@ function Loader() {
 Loader.prototype = {
 	queue: [],
 	current: undefined,
-	loadGeometryOBJ:function (url, callback) {
-		this.load(url, callback, GeometryOBJParser);
+	loadGeometryOBJ:function (url, callback, options) {
+		this.load(url, callback, GeometryOBJParser, options);
 	},
-	load: function (url, callback, parser) {
+	load: function (url, callback, parser, options) {
 		this.queue.push({
 			url: url,
 			callback: callback,
-			parser: GeometryOBJParser
+			parser: GeometryOBJParser,
+			options: options
 		});
 		this.next();
 	},
@@ -312,7 +313,7 @@ Loader.prototype = {
 
 	    xmlhttp.onreadystatechange = function() {
 	        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-	            item.callback(item.parser.parse(xmlhttp.responseText));
+	            item.callback(item.parser.parse(xmlhttp.responseText, item.options));
 	            this.next();
 	        }
 	    }.bind(this);
@@ -333,7 +334,12 @@ function GeometryOBJParser() {
 
 GeometryOBJParser.prototype = {
 	parse: function(data, options) {
-		options = options || {faces:true};
+		options = options || {};
+		options.faces = options.faces === undefined ? true : options.faces;
+		options.offset = options.offset !== undefined ? options.offset : {};
+		options.offset.x = options.offset.x !== undefined ? options.offset.x : 0;
+		options.offset.y = options.offset.y !== undefined ? options.offset.y : 0;
+		options.offset.z = options.offset.z !== undefined ? options.offset.z : 0;
 		var dataLines = data.split('\n');
 		var vertices = [];
 		var length = dataLines.length - 1;
@@ -361,7 +367,7 @@ GeometryOBJParser.prototype = {
 			centroid.add(vertices[i]);
 		};
 		centroid.multiplyScalar(1/totalSamples);
-		
+		centroid.add(options.offset);
 		for (var i = vertices.length - 1; i >= 0; i--) {
 			vertices[i].x -= centroid.x;
 			vertices[i].y -= centroid.y;
@@ -483,6 +489,8 @@ function BlendMesh(geometry1, geometry2, material, cacheRelative) {
 		this.scrambleOrder = GeometryUtils.orderlyScramble([geometry1]);
 	}
 
+	this.animationWeights = [];
+
 	this.geometryBlendBuffer = this.geometry1.clone();
 
 
@@ -547,6 +555,8 @@ Object.defineProperty( BlendMesh.prototype, 'blend', {
 
 var RemapFunctions = require('./RemapFunctions');
 
+var ArrayUtils = require('../utils/Array');
+
 
 BlendMesh.prototype._updateGeometryRelative = function() {
 	var temp = new THREE.Vector3();
@@ -564,16 +574,18 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 				var blend = this.blend;
 				var blendRemap = RemapFunctions.remapRippleSine;
 
-				if(this.geometry.vertices.length < this.geometry1.vertices.length) {
-					GeometryUtils.quickBufferClone(this.geometry.vertices, this.geometry1.vertices, this.geometry1.vertices.length);
+				if(geometry.vertices.length < this.geometry1.vertices.length) {
+					GeometryUtils.quickBufferClone(geometry.vertices, this.geometry1.vertices, this.geometry1.vertices.length);
 				}
 
-				if(!this.remapExtra) this.remapExtra = [];
-				var remapExtra = this.remapExtra;
-				var vertices = geometry.vertices;
-				for (var i = remapExtra.length; i < this.geometry.vertices.length; i++) {
-					remapExtra[i] = vertices[i].x;
-				};
+				var animationWeights = this.animationWeights;
+				if(animationWeights.length < geometry.vertices.length) {
+					var scaleIndexToOffset = 2 / geometry.vertices.length;
+					for (var i = geometry.vertices.length - 1; i >= 0; i--) {
+						animationWeights[i] = i * scaleIndexToOffset;
+					}
+					ArrayUtils.orderlyScramble(animationWeights, this.scrambleOrder);
+				}
 
 				for (var i = 0; i < this.attributeList.length; i++) {
 					var attributeName = this.attributeList[i];
@@ -586,7 +598,7 @@ BlendMesh.prototype._updateGeometryRelative = function() {
 						attribute[i].copy(
 							attribute1[i]
 						).add(
-							temp.copy(attributeDelta[i]).multiplyScalar(blendRemap(blend, remapExtra[i]))
+							temp.copy(attributeDelta[i]).multiplyScalar(blendRemap(3*blend - animationWeights[i]))
 						)
 					};
 				}
@@ -600,7 +612,7 @@ BlendMesh.prototype.updateGeometryDelta = function() {
 
 module.exports = BlendMesh;
 
-},{"../animation/AnimatorVertexBlend":2,"../utils/Geometry":29,"../utils/PerformanceTweaker":33,"../vendor/three":38,"./Mesh":13,"./RemapFunctions":15,"./materials/VoxelGradient":19}],9:[function(require,module,exports){
+},{"../animation/AnimatorVertexBlend":2,"../utils/Array":24,"../utils/Geometry":29,"../utils/PerformanceTweaker":33,"../vendor/three":38,"./Mesh":13,"./RemapFunctions":15,"./materials/VoxelGradient":19}],9:[function(require,module,exports){
 var Object3D = require('./Object3D');
 require('../vendor/three');
 /**
@@ -1318,7 +1330,7 @@ module.exports = Object3D;
 
 },{"../vendor/three":38}],15:[function(require,module,exports){
 var RemapFunctions = {
-	remapLinear : function (valIn, extra) {
+	remapLinear : function (valIn) {
 		return valIn;
 	},
 	remapRippleSine: function() {
@@ -1334,8 +1346,8 @@ var RemapFunctions = {
 		function quickSinCurveLookup(valIn) {
 			return quickSinCurveLookupTable[~~(valIn * quickSinCurveLookupSteps)];
 		};
-		return function (valIn, extra) {
-			return quickSinCurveLookup(Math.min(1, Math.max(0, (range * valIn) - rangeHalf + extra)));
+		return function (valIn) {
+			return quickSinCurveLookup(Math.min(1, Math.max(0, valIn)));
 		};
 	}()
 }
@@ -2212,6 +2224,18 @@ var GeometryUtils = {
 			geometry[attributeList[ia]].splice(length, spliceLength);
 		}
 	},
+	increase: function(geometry, length) {
+		while(geometry.vertices.length < length) {
+			geometry.vertices = geometry.vertices.concat(
+				geometry.vertices.slice(0, 
+					Math.min(
+						geometry.vertices.length,
+						length - geometry.vertices.length
+					)
+				)
+			)
+		}
+	},
 	checkIfGeometryAttributesLengthsMatch : function(geometries) {
 		var length = -1;
 		for (var ig = 0; ig < geometries.length; ig++) {
@@ -2231,6 +2255,7 @@ var GeometryUtils = {
 		var length = geometry[attributeList[0]].length;
 		if(!geometry.faces || geometry.faces.length == 0) {
 			console.log("WARNING: Cannot fill geometry unless it has faces defined");
+			return -1;
 		}
 		var proportionalFaces = geometry.proportionalFaces || [];
 		if(!geometry.proportionalFaces) {
@@ -2270,6 +2295,10 @@ var GeometryUtils = {
 			geometry.vertices.push(proportionalFaces[lastProportionalFaceVisited%pfLength].createRandomPoint())
 		}
 		geometry.lastProportionalFaceVisited = lastProportionalFaceVisited;
+	},
+	fillEitherSurfacesToMatch: function(geometry1, geometry2) {
+		if(geometry1.vertices.length < geometry2.vertices.length) this.fillSurfaces(geometry1, geometry2.vertices.length);
+		if(geometry2.vertices.length < geometry1.vertices.length) this.fillSurfaces(geometry2, geometry1.vertices.length);
 	},
 	quickBufferClone : function(dstBuffer, srcBuffer, newTotal) {
 		for (var i = dstBuffer.length; i < newTotal; i++) {

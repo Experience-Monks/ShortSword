@@ -6,14 +6,15 @@ function Loader() {
 Loader.prototype = {
 	queue: [],
 	current: undefined,
-	loadGeometryOBJ:function (url, callback) {
-		this.load(url, callback, GeometryOBJParser);
+	loadGeometryOBJ:function (url, callback, options) {
+		this.load(url, callback, GeometryOBJParser, options);
 	},
-	load: function (url, callback, parser) {
+	load: function (url, callback, parser, options) {
 		this.queue.push({
 			url: url,
 			callback: callback,
-			parser: GeometryOBJParser
+			parser: GeometryOBJParser,
+			options: options
 		});
 		this.next();
 	},
@@ -34,7 +35,7 @@ Loader.prototype = {
 
 	    xmlhttp.onreadystatechange = function() {
 	        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-	            item.callback(item.parser.parse(xmlhttp.responseText));
+	            item.callback(item.parser.parse(xmlhttp.responseText, item.options));
 	            this.next();
 	        }
 	    }.bind(this);

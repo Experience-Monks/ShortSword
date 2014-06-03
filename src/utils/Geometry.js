@@ -137,6 +137,18 @@ var GeometryUtils = {
 			geometry[attributeList[ia]].splice(length, spliceLength);
 		}
 	},
+	increase: function(geometry, length) {
+		while(geometry.vertices.length < length) {
+			geometry.vertices = geometry.vertices.concat(
+				geometry.vertices.slice(0, 
+					Math.min(
+						geometry.vertices.length,
+						length - geometry.vertices.length
+					)
+				)
+			)
+		}
+	},
 	checkIfGeometryAttributesLengthsMatch : function(geometries) {
 		var length = -1;
 		for (var ig = 0; ig < geometries.length; ig++) {
@@ -156,6 +168,7 @@ var GeometryUtils = {
 		var length = geometry[attributeList[0]].length;
 		if(!geometry.faces || geometry.faces.length == 0) {
 			console.log("WARNING: Cannot fill geometry unless it has faces defined");
+			return -1;
 		}
 		var proportionalFaces = geometry.proportionalFaces || [];
 		if(!geometry.proportionalFaces) {
@@ -195,6 +208,10 @@ var GeometryUtils = {
 			geometry.vertices.push(proportionalFaces[lastProportionalFaceVisited%pfLength].createRandomPoint())
 		}
 		geometry.lastProportionalFaceVisited = lastProportionalFaceVisited;
+	},
+	fillEitherSurfacesToMatch: function(geometry1, geometry2) {
+		if(geometry1.vertices.length < geometry2.vertices.length) this.fillSurfaces(geometry1, geometry2.vertices.length);
+		if(geometry2.vertices.length < geometry1.vertices.length) this.fillSurfaces(geometry2, geometry1.vertices.length);
 	},
 	quickBufferClone : function(dstBuffer, srcBuffer, newTotal) {
 		for (var i = dstBuffer.length; i < newTotal; i++) {
