@@ -39,8 +39,8 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/" + fileName1, function(geom
 var mouseTarget = new THREE.Vector3(0, 0, 100);
 var mouseTargetTarget = mouseTarget.clone();
 
-SHORTSWORD.PerformanceTweaker.upgradeWhen = 45;
-SHORTSWORD.PerformanceTweaker.degradeWhen = 30;
+SHORTSWORD.PerformanceTweaker.upgradeWhen = 60;
+SHORTSWORD.PerformanceTweaker.degradeWhen = 45;
 
 var canvasGraph = new SHORTSWORD.CanvasGraph();
 canvasGraph.addValue(SHORTSWORD.FPS, "fps", "green", "FPS Smoothed");
