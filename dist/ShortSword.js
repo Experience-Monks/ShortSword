@@ -10057,16 +10057,16 @@ View.prototype = {
 				style.position = "fixed";
 				style.left = "0px";
 				style.top = "0px";
-				style.width = window.innerWidth;
-				style.height = window.innerHeight;
+				style.width = window.innerWidth + "px";
+				style.height = window.innerHeight + "px";
 				break;
 			default:
 		}
 	},
 
 	setSize: function(w, h) {
-		this.canvas.style.width = w;
-		this.canvas.style.height = h;
+		this.canvas.style.width = w + "px";
+		this.canvas.style.height = h + "px";
 		this.camera.setAspect(w/h);
 		this.camera.setLens(w, h);
 
