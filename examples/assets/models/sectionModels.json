@@ -1,0 +1,10 @@
+{
+	"sections" : {
+		"1" : "cube.obj",
+		"2" : "landscape.obj",
+		"3" : "Luigi_obj.obj",
+		"4" : "mario_obj.obj",
+		"5" : "mario.obj",
+		"6" : "yoshi.obj"
+	}
+}
