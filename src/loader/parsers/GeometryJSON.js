@@ -52,9 +52,9 @@ GeometryJSONParser.prototype = {
 			for (var i = 0, len = inFaces.length; i < len; i++) {
 				var faceData = inFaces[i];
 				faces.push(new Face(
-						vertices[faceData[0]-1],
-						vertices[faceData[1]-1],
-						vertices[faceData[2]-1]
+						vertices[faceData.x-1],
+						vertices[faceData.y-1],
+						vertices[faceData.z-1]
 					)
 				);
 			};
