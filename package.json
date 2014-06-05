@@ -20,5 +20,9 @@
   },
   "engines": {
     "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "tar": "~0.1.19",
+    "fstream": "~0.1.25"
   }
 }

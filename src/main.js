@@ -30,7 +30,8 @@ SHORTSWORD = {
 	CanvasGraph : require('./utils/CanvasGraph'),
 	PerformanceTweaker : require('./utils/PerformanceTweaker'),
 	parsers: {
-		GeometryOBJ: require('./loader/parsers/GeometryOBJ')
+		GeometryOBJ: require('./loader/parsers/GeometryOBJ'),
+		GeometryJSON: require('./loader/parsers/GeometryJSON')
 	},
 	materials: {
 		Voxel: require( './model/materials/Voxel' ),

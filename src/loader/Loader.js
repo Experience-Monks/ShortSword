@@ -1,4 +1,5 @@
 var GeometryOBJParser = require('./parsers/GeometryOBJ');
+var GeometryJSONParser = require('./parsers/GeometryJSON');
 function Loader() {
 	
 }
@@ -9,11 +10,14 @@ Loader.prototype = {
 	loadGeometryOBJ:function (url, callback, options) {
 		this.load(url, callback, GeometryOBJParser, options);
 	},
+	loadGeometryJSON:function (url, callback, options) {
+		this.load(url, callback, GeometryJSONParser, options);
+	},
 	load: function (url, callback, parser, options) {
 		this.queue.push({
 			url: url,
 			callback: callback,
-			parser: GeometryOBJParser,
+			parser: parser,
 			options: options
 		});
 		this.next();
