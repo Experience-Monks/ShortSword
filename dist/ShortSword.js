@@ -2179,9 +2179,28 @@ var ArrayUtils = require('./Array');
 var Geometry = require('../model/Geometry');
 
 var attributeList = ["vertices"];
+octTreeModes = {
+	NORMAL : 0,
+	SUPER_X : 1
+};
 var GeometryUtils = {
 	octTreeSort: function() {
 		var tree = [];
+		var recurseTreeSortSuperX = function(vertices, loop) {
+			loop--;
+			vertices.sort(function(a, b) {return b.x - a.x});
+			var tempLow = vertices.slice(0, ~~(vertices.length * .5));
+			if (tempLow.length >= 2) {
+				if(loop) tempLow = recurseTreeSortSuperX(tempLow, loop);
+				else tempLow = recurseTreeSortY(tempLow);
+			}
+			var tempHigh = vertices.slice(~~(vertices.length * .5), vertices.length);
+			if (tempHigh.length >= 2) {
+				if(loop > 0) tempHigh = recurseTreeSortSuperX(tempHigh, loop);
+				else tempHigh = recurseTreeSortY(tempHigh);
+			}
+			return [tempLow, tempHigh];
+		}
 		var recurseTreeSortX = function(vertices) {
 			vertices.sort(function(a, b) {return b.x - a.x});
 			var tempLow = vertices.slice(0, ~~(vertices.length * .5));
@@ -2214,11 +2233,19 @@ var GeometryUtils = {
 			};
 		}
 
+		var mode = octTreeModes.SUPER_X;
+
 		return function(geometry) {
 			var timeBefore = new Date;
 			var total = geometry.vertices.length;
 			
-			geometry.vertices = recurseTreeSortX(geometry.vertices);
+			switch(mode) {
+				case octTreeModes.SUPER_X:
+					geometry.vertices = recurseTreeSortSuperX(geometry.vertices, 8);
+					break;
+				default: 
+					geometry.vertices = recurseTreeSortX(geometry.vertices);
+			}
 			var arrFlat = [];
 			var timeMiddle = new Date;
 			
