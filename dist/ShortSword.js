@@ -5,17 +5,20 @@ var ColorUtil = require( '../utils/Color' );
 var GradientUtil = require( '../utils/Gradient' );
 var FPS = require( '../utils/FPS' );
 
-var AnimatorMaterialGradient = function( mesh ) {
+var AnimatorMaterialGradient = function( mesh, speed ) {
 
+	this.speed = speed !== undefined ? speed : .005;
 	BaseAnimator.call( this, mesh );
 
 	this.material = mesh.material;
-	this.ease = 0.005;
 
 	if( !( this.material instanceof VoxelGradient ) )
 		throw new Error( 'The material which is being used needs to be a VoxelGradient' );
 
 	this.colors = this.material.gradientBufferView32uint;
+
+	this.startColors = new Uint32Array( this.colors.length );
+	this.startColors.set( this.material.gradientBufferView32uint );
 	this.targetColors = new Uint32Array( this.colors.length );
 	this.targetColors.set( this.material.gradientBufferView32uint );
 };
@@ -23,7 +26,10 @@ var AnimatorMaterialGradient = function( mesh ) {
 var p = AnimatorMaterialGradient.prototype = BaseAnimator.prototype;
 
 p.setTarget = function( colors ) {
+	this.animationValue = 0;
+	this.isAnimated = false;
 	for (var i = 0; i < colors.length; i++) {
+		this.startColors[i] = this.colors[i];
 		this.targetColors[i] = colors[i];
 	};
 
@@ -31,10 +37,13 @@ p.setTarget = function( colors ) {
 };
 
 p.update = function() {
+	if(this.isAnimated) return;
+	this.animationValue += this.speed * FPS.animSpeedCompensation;
+	if(this.animationValue > 1) this.animationValue = 1;
+	if(this.animationValue == 1) this.isAnimated = true;
 
 	for( var i = 0, len = this.colors.length; i < len; i++ ) {
-
-		this.colors[ i ] = ColorUtil.lerp( this.colors[ i ], this.targetColors[ i ], this.ease * FPS.animSpeedCompensation );
+		this.colors[ i ] = ColorUtil.lerp( this.startColors[ i ], this.targetColors[ i ], this.animationValue );
 	}
 
 	GradientUtil.makeUnique(this.colors, 0xFF000000);
