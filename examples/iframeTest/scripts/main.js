@@ -4,10 +4,10 @@
 var ssView = new SHORTSWORD.View();
 
 var _this = this;
-var fileName = SHORTSWORD.URLParamUtils.getParam("obj") || "cube.obj";
+var fileName = SHORTSWORD.URLParamUtils.getParam("obj") || "mario.obj";
 var voxels = SHORTSWORD.URLParamUtils.getParam("voxels");
 if(!voxels) voxels = 60000;
-var scale = SHORTSWORD.URLParamUtils.getParam("scale") || 20;
+var scale = SHORTSWORD.URLParamUtils.getParam("scale") || 60;
 SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/" + fileName, function(geometry) {
 	SHORTSWORD.GeometryGarage.fillSurfaces([geometry], voxels, function(){console.log("DONE!")});
 	var mesh = new SHORTSWORD.Mesh(geometry, 
@@ -21,6 +21,8 @@ SHORTSWORD.Loader.loadGeometryOBJ("../assets/models/" + fileName, function(geome
 	_this.objModel.scale.multiplyScalar(scale);
 });
 
+ssView.camera.setLens = ssView.camera.setLensHorizontalFit;
+ssView.setSize(window.innerWidth, window.innerHeight);
 var mouseTarget = new THREE.Vector3(0, 0, 100);
 var mouseTargetTarget = mouseTarget.clone();
 var horizontalLayout = .125;
@@ -39,4 +41,4 @@ window.onmousemove = function(event) {
 	mouseTargetTarget.x = 100 * (event.x / window.innerWidth * 2 - 1);
 	mouseTargetTarget.y = -100 * (event.y / window.innerHeight * 2 - 1);
 	horizontalLayoutTarget = Math.min(.875, Math.max(.125, (event.y / window.innerHeight)));
-}.bind(this);
+}.bind(this);	

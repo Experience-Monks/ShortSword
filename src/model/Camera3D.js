@@ -16,7 +16,7 @@ function Camera3D(props) {
 
 	this.projectionMatrix = new THREE.Matrix4();
 	this.projectionMatrixInverse = new THREE.Matrix4();
-	this.translationMatrix = new THREE.Matrix4();
+	this.hackyOffset = {x:0, y:.75};
 
 	this.updateProjectionMatrix();
 }
@@ -24,9 +24,9 @@ function Camera3D(props) {
 /**
  * Camera3D extends Object3D
  */
-Camera3D.prototype = Object.create(Object3D.prototype);
+var p = Camera3D.prototype = Object.create(Object3D.prototype);
 
-Camera3D.prototype.setLens = function ( focalLength, frameHeight ) {
+p.setLens = function ( focalLength, frameHeight ) {
 
 	if ( frameHeight === undefined ) frameHeight = 24;
 
@@ -34,23 +34,29 @@ Camera3D.prototype.setLens = function ( focalLength, frameHeight ) {
 	this.updateProjectionMatrix();
 }
 
-Camera3D.prototype.setLensHorizontalFit = function ( frameWidth, frameHeight ) {
+p.setLensHorizontalFit = function ( frameWidth, frameHeight ) {
 
 	if ( frameHeight === undefined ) frameHeight = 24;
 
 	this.fov = 2 * THREE.Math.radToDeg( Math.atan( frameHeight / ( frameWidth * 2 ) ) );
-	this.translationMatrix.makeTranslation(0, (frameHeight / frameWidth) * 36, 0);
 	this.updateProjectionMatrix();
 }
 
-Camera3D.prototype.updateProjectionMatrix = function () {
+p.updateProjectionMatrix = function () {
 
 	this.projectionMatrix.makePerspective( this.fov, this.aspect, this.near, this.far );
-	this.projectionMatrix.multiply(this.translationMatrix);
+	//this.projectionMatrix.elements[2] += this.hackyOffset.x;
+	this.projectionMatrix.elements[9] += this.hackyOffset.y;
+
 };
 
-Camera3D.prototype.setAspect = function(aspect) {
+p.setAspect = function(aspect) {
 	this.aspect = aspect;
+	this.updateProjectionMatrix();
+};
+
+p.recenter = function(horizontalRatio) {
+	this.hackyOffset.y = -(horizontalRatio * 2 - 1);
 	this.updateProjectionMatrix();
 }
 
