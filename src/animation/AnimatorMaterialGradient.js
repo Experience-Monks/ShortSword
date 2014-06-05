@@ -7,6 +7,7 @@ var FPS = require( '../utils/FPS' );
 var AnimatorMaterialGradient = function( mesh, speed ) {
 
 	this.speed = speed !== undefined ? speed : .005;
+	this.animationValue = 0;
 	BaseAnimator.call( this, mesh );
 
 	this.material = mesh.material;
