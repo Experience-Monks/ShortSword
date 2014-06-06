@@ -1,4 +1,4 @@
-\/**
+/**
  * ShortSword is a library for rendering realtime animated voxels to a canvas.
  * Supports standard canvas element.
  *

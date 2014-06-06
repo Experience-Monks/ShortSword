@@ -518,6 +518,7 @@ SHORTSWORD = {
 	GradientUtils : require('./utils/Gradient'),
 	ColorUtils : require('./utils/Color'),
 	ImageUtils : require('./utils/Image'),
+	ArrayUtils : require('./utils/Array'),
 	URLParamUtils : require('./utils/URLParams'),
 	GeometryUtils : require('./utils/Geometry'),
 	GeometryGarage : require('./utils/GeometryGarage'),
@@ -548,7 +549,7 @@ SHORTSWORD = {
 		GlitchOffsetSmearBlock : require('./view/effects/GlitchOffsetSmearBlock')
 	}
 }
-},{"./animation/AnimatorMaterialGradient":1,"./animation/AnimatorVertexBlend":2,"./animation/AnimatorVertexRandom":3,"./loader/Loader":5,"./loader/parsers/GeometryJSON":6,"./loader/parsers/GeometryOBJ":7,"./model/BlendMesh":9,"./model/Camera3D":10,"./model/Face":12,"./model/Mesh":14,"./model/Object3D":15,"./model/Scene":17,"./model/materials/Voxel":19,"./model/materials/VoxelGradient":20,"./model/materials/VoxelGradientCurves":21,"./model/materials/VoxelGradientLerp":22,"./model/materials/VoxelImageLookUp":23,"./model/materials/VoxelLookUp":24,"./utils/CanvasGraph":26,"./utils/Color":27,"./utils/FPS":29,"./utils/Geometry":30,"./utils/GeometryGarage":31,"./utils/Gradient":32,"./utils/Image":33,"./utils/PerformanceTweaker":34,"./utils/RemapCurves":35,"./utils/TestFactory":36,"./utils/URLParams":37,"./view/View":42,"./view/effects/GlitchOffset":43,"./view/effects/GlitchOffsetSmearBlock":44}],9:[function(require,module,exports){
+},{"./animation/AnimatorMaterialGradient":1,"./animation/AnimatorVertexBlend":2,"./animation/AnimatorVertexRandom":3,"./loader/Loader":5,"./loader/parsers/GeometryJSON":6,"./loader/parsers/GeometryOBJ":7,"./model/BlendMesh":9,"./model/Camera3D":10,"./model/Face":12,"./model/Mesh":14,"./model/Object3D":15,"./model/Scene":17,"./model/materials/Voxel":19,"./model/materials/VoxelGradient":20,"./model/materials/VoxelGradientCurves":21,"./model/materials/VoxelGradientLerp":22,"./model/materials/VoxelImageLookUp":23,"./model/materials/VoxelLookUp":24,"./utils/Array":25,"./utils/CanvasGraph":26,"./utils/Color":27,"./utils/FPS":29,"./utils/Geometry":30,"./utils/GeometryGarage":31,"./utils/Gradient":32,"./utils/Image":33,"./utils/PerformanceTweaker":34,"./utils/RemapCurves":35,"./utils/TestFactory":36,"./utils/URLParams":37,"./view/View":42,"./view/effects/GlitchOffset":43,"./view/effects/GlitchOffsetSmearBlock":44}],9:[function(require,module,exports){
 var Mesh = require('./Mesh');
 var GeometryUtils = require('../utils/Geometry');
 require('../vendor/three');
