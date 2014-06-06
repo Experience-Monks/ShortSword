@@ -1,4 +1,4 @@
-/**
+\/**
  * ShortSword is a library for rendering realtime animated voxels to a canvas.
  * Supports standard canvas element.
  *
@@ -21,6 +21,7 @@ SHORTSWORD = {
 	GradientUtils : require('./utils/Gradient'),
 	ColorUtils : require('./utils/Color'),
 	ImageUtils : require('./utils/Image'),
+	ArrayUtils : require('./utils/Array'),
 	URLParamUtils : require('./utils/URLParams'),
 	GeometryUtils : require('./utils/Geometry'),
 	GeometryGarage : require('./utils/GeometryGarage'),
