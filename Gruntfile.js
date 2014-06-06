@@ -159,12 +159,26 @@ module.exports = function(grunt) {
 				manifest: 'sectionModels.json',
 				output: 'sectionModels.tar.gz'
 			}
+		},
+		shell: {                                // Task
+			patch: {                      // Target
+				options: {                      // Options
+					stderr: false
+				},
+	            command: [
+	                'git commit -am "patched"',
+	                'bower version patch',
+	                'git pull',
+	                'git push'
+	            ].join('&&')
+			}
 		}
+
 	});
 
 
 	grunt.loadTasks('tasks');
-
+	grunt.loadNpmTasks('grunt-shell');
 	grunt.registerTask('serve', function(target) {
 		if (target === 'dist') {
 			return grunt.task.run(['build', 'connect:dist:keepalive']);
@@ -204,4 +218,6 @@ module.exports = function(grunt) {
 		'dev',
 		'build'
 	]);
+
+	grunt.registerTask('patch', ['shell:patch']);
 };
