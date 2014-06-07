@@ -165,12 +165,12 @@ module.exports = function(grunt) {
 				options: {                      // Options
 					stderr: false
 				},
-	            command: [
-	                'git commit -am "patched"',
-	                'bower version patch',
-	                'git pull',
-	                'git push'
-	            ].join('&&')
+				command: [
+					'git commit -am "patched"',
+					'bower version patch',
+					'git pull',
+					'git push'
+				].join('&&')
 			}
 		}
 
