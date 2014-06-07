@@ -351,10 +351,12 @@ GeometryJSONParser.prototype = {
 		var data = JSON.parse(dataString);
 		options = options || {};
 		options.faces = options.faces === undefined ? true : options.faces;
-		options.offset = options.offset !== undefined ? options.offset : {};
-		options.offset.x = options.offset.x !== undefined ? options.offset.x : 0;
-		options.offset.y = options.offset.y !== undefined ? options.offset.y : 0;
-		options.offset.z = options.offset.z !== undefined ? options.offset.z : 0;
+		var transform = options.transform = options.transform !== undefined ? options.transform : {};
+		var offset = transform.offset = transform.offset !== undefined ? transform.offset : {};
+		offset.x = offset.x !== undefined ? offset.x : 0;
+		offset.y = offset.y !== undefined ? offset.y : 0;
+		offset.z = offset.z !== undefined ? offset.z : 0;
+		var scale = transform.scale = transform.scale !== undefined ? transform.scale : 1;
 		var inVertices = data.vertices;
 		var vertices = [];
 		for (var i = 0, len = data.vertices.length; i < len; i++) {
@@ -376,11 +378,17 @@ GeometryJSONParser.prototype = {
 			centroid.add(vertices[i]);
 		};
 		centroid.multiplyScalar(1/totalSamples);
-		centroid.add(options.offset);
+		offset.x /= scale;
+		offset.y /= scale;
+		offset.z /= scale;
+		centroid.add(offset);
 		for (var i = vertices.length - 1; i >= 0; i--) {
 			vertices[i].x -= centroid.x;
 			vertices[i].y -= centroid.y;
 			vertices[i].z -= centroid.z;
+			vertices[i].x *= scale;
+			vertices[i].y *= scale;
+			vertices[i].z *= scale;
 		};
 		
 		var props = {
