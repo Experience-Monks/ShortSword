@@ -128,21 +128,11 @@ var GeometryUtils = {
 	},
 	orderlyScramble: function(geometries, newOrder) {
 		var timeBefore = new Date;
-		console.log("orderlyScramble start!!!");
+		
 		if(!this.checkIfGeometryAttributesLengthsMatch(geometries)) return;
 		var length = geometries[0][attributeList[0]].length;
 		if(!newOrder) {
-			var order = [];
-			for (var i = 0; i < length; i++) {
-				order[i] = i;
-			};
-
-			newOrder = [];
-			for (var i = 0; i < length; i++) {
-				var randomIndex = ~~(Math.random() * order.length);
-				newOrder[i] = order[randomIndex];
-				order.splice(randomIndex, 1);
-			};
+			newOrder = ArrayUtils.generateRandomOrder(length);
 		}
 
 		for (var ig = 0; ig < geometries.length; ig++) {
